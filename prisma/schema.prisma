@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// MODELO DE USUARIOS
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  nombre    String
+  apellido  String
+  role      UserRole @default(VENDEDOR)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relaciones
+  ventas    Venta[]
+  
+  @@map("usuarios")
+}
+
+enum UserRole {
+  ADMINISTRADOR
+  VENDEDOR
+}
+
+// MODELO DE RUTAS
+model Ruta {
+  id           String   @id @default(cuid())
+  nombre       String   @unique
+  puertoOrigen String
+  puertoDestino String
+  precio       Decimal  @db.Decimal(10, 2)
+  activa       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relaciones
+  embarcacionRutas EmbarcacionRuta[]
+  ventas          Venta[]
+  
+  @@map("rutas")
+}
+
+// MODELO DE EMBARCACIONES
+model Embarcacion {
+  id         String   @id @default(cuid())
+  nombre     String   @unique
+  capacidad  Int
+  estado     EstadoEmbarcacion @default(ACTIVA)
+  tipo       String?  // Ejemplo: "Lancha", "Ferry", "Bote"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relaciones
+  embarcacionRutas EmbarcacionRuta[]
+  ventas          Venta[]
+  
+  @@map("embarcaciones")
+}
+
+enum EstadoEmbarcacion {
+  ACTIVA
+  MANTENIMIENTO
+  INACTIVA
+}
+
+// TABLA INTERMEDIA: EMBARCACION-RUTA (Muchos a Muchos)
+model EmbarcacionRuta {
+  id            String      @id @default(cuid())
+  embarcacionId String
+  rutaId        String
+  horasSalida   String[]    // Array de horarios: ["08:00", "14:00", "18:00"]
+  diasOperacion String[]    // Días de la semana: ["lunes", "martes", ...]
+  activa        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  // Relaciones
+  embarcacion   Embarcacion @relation(fields: [embarcacionId], references: [id])
+  ruta          Ruta        @relation(fields: [rutaId], references: [id])
+  
+  @@unique([embarcacionId, rutaId])
+  @@map("embarcacion_rutas")
+}
+
+// MODELO DE CLIENTES
+model Cliente {
+  id           String   @id @default(cuid())
+  dni          String   @unique
+  nombre       String
+  apellido     String
+  telefono     String?
+  nacionalidad String   @default("Peruana")
+  email        String?
+  direccion    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Relaciones
+  ventas       Venta[]
+  
+  @@map("clientes")
+}
+
+// MODELO DE VENTAS (TICKETS)
+model Venta {
+  id              String      @id @default(cuid())
+  numeroVenta     String      @unique
+  clienteId       String
+  rutaId          String
+  embarcacionId   String
+  userId          String      // Vendedor que realizó la venta
+  
+  // Detalles del viaje
+  fechaViaje      DateTime
+  horaEmbarque    String
+  horaViaje       String
+  cantidadPasajes Int         @default(1)
+  puertoOrigen    String
+  puertoDestino   String
+  
+  // Información financiera
+  precioUnitario  Decimal     @db.Decimal(10, 2)
+  subtotal        Decimal     @db.Decimal(10, 2)
+  impuestos       Decimal     @db.Decimal(10, 2) @default(0)
+  total           Decimal     @db.Decimal(10, 2)
+  
+  // Estados y metadatos
+  estado          EstadoVenta @default(CONFIRMADA)
+  metodoPago      String      @default("EFECTIVO")
+  observaciones   String?
+  
+  // Timestamps
+  fechaVenta      DateTime    @default(now())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relaciones
+  cliente         Cliente     @relation(fields: [clienteId], references: [id])
+  ruta            Ruta        @relation(fields: [rutaId], references: [id])
+  embarcacion     Embarcacion @relation(fields: [embarcacionId], references: [id])
+  vendedor        User        @relation(fields: [userId], references: [id])
+  
+  @@map("ventas")
+}
+
+enum EstadoVenta {
+  CONFIRMADA
+  ANULADA
+  REEMBOLSADA
+}
+
+// MODELO DE CONFIGURACIONES DEL SISTEMA
+model Configuracion {
+  id    String @id @default(cuid())
+  clave String @unique
+  valor String
+  tipo  String @default("STRING") // STRING, NUMBER, BOOLEAN, JSON
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("configuraciones")
+}
