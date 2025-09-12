@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,9 +5,9 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Para migraciones
 }
 
-// MODELO DE USUARIOS
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -22,79 +19,73 @@ model User {
   activo    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // Relaciones
+  // Relaciones 
   ventas    Venta[]
-  
+  anulaciones Anulacion[] // Relación con las anulaciones realizadas por el usuario
+
+
   @@map("usuarios")
 }
 
-enum UserRole {
-  ADMINISTRADOR
-  VENDEDOR
+model PuertoEmbarque {
+  id          String   @id @default(cuid())
+  nombre      String   @unique
+  descripcion String?
+  direccion   String?
+  activo      Boolean  @default(true)
+  orden       Int      @default(0)  // Para ordenar los puertos
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ventas      Venta[]
+
+  @@map("puertos_embarque")
 }
 
-// MODELO DE RUTAS
 model Ruta {
-  id           String   @id @default(cuid())
-  nombre       String   @unique
-  puertoOrigen String
-  puertoDestino String
-  precio       Decimal  @db.Decimal(10, 2)
-  activa       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relaciones
+  id               String            @id @default(cuid())
+  nombre           String            @unique
+  puertoOrigen     String
+  puertoDestino    String
+  precio           Decimal           @db.Decimal(10, 2)
+  activa           Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   embarcacionRutas EmbarcacionRuta[]
-  ventas          Venta[]
-  
+  ventas           Venta[]
+
   @@map("rutas")
 }
 
-// MODELO DE EMBARCACIONES
 model Embarcacion {
-  id         String   @id @default(cuid())
-  nombre     String   @unique
-  capacidad  Int
-  estado     EstadoEmbarcacion @default(ACTIVA)
-  tipo       String?  // Ejemplo: "Lancha", "Ferry", "Bote"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
-  // Relaciones
+  id               String            @id @default(cuid())
+  nombre           String            @unique
+  capacidad        Int
+  estado           EstadoEmbarcacion @default(ACTIVA)
+  tipo             String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   embarcacionRutas EmbarcacionRuta[]
-  ventas          Venta[]
-  
+  ventas           Venta[]
+
   @@map("embarcaciones")
 }
 
-enum EstadoEmbarcacion {
-  ACTIVA
-  MANTENIMIENTO
-  INACTIVA
-}
-
-// TABLA INTERMEDIA: EMBARCACION-RUTA (Muchos a Muchos)
 model EmbarcacionRuta {
   id            String      @id @default(cuid())
   embarcacionId String
   rutaId        String
-  horasSalida   String[]    // Array de horarios: ["08:00", "14:00", "18:00"]
-  diasOperacion String[]    // Días de la semana: ["lunes", "martes", ...]
+  horasSalida   String[]
+  diasOperacion String[]
   activa        Boolean     @default(true)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  
-  // Relaciones
   embarcacion   Embarcacion @relation(fields: [embarcacionId], references: [id])
   ruta          Ruta        @relation(fields: [rutaId], references: [id])
-  
+
   @@unique([embarcacionId, rutaId])
   @@map("embarcacion_rutas")
 }
 
-// MODELO DE CLIENTES
 model Cliente {
   id           String   @id @default(cuid())
   dni          String   @unique
@@ -106,70 +97,95 @@ model Cliente {
   direccion    String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
-  // Relaciones
   ventas       Venta[]
-  
+
   @@map("clientes")
 }
 
-// MODELO DE VENTAS (TICKETS)
 model Venta {
   id              String      @id @default(cuid())
   numeroVenta     String      @unique
   clienteId       String
   rutaId          String
   embarcacionId   String
-  userId          String      // Vendedor que realizó la venta
-  
-  // Detalles del viaje
+  userId          String
+  puertoEmbarqueId String 
   fechaViaje      DateTime
   horaEmbarque    String
   horaViaje       String
   cantidadPasajes Int         @default(1)
   puertoOrigen    String
   puertoDestino   String
-  
-  // Información financiera
   precioUnitario  Decimal     @db.Decimal(10, 2)
   subtotal        Decimal     @db.Decimal(10, 2)
-  impuestos       Decimal     @db.Decimal(10, 2) @default(0)
+  impuestos       Decimal     @default(0) @db.Decimal(10, 2)
   total           Decimal     @db.Decimal(10, 2)
-  
-  // Estados y metadatos
+  // NUEVOS CAMPOS PARA PAGO HÍBRIDO
+  tipoPago         String      @default("UNICO") // "UNICO" o "HIBRIDO"
+  metodoPago       String      @default("EFECTIVO")
+  metodosPago      Json?       // Array de métodos para pago híbrido
   estado          EstadoVenta @default(CONFIRMADA)
-  metodoPago      String      @default("EFECTIVO")
   observaciones   String?
-  
-  // Timestamps
   fechaVenta      DateTime    @default(now())
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
-  
   // Relaciones
   cliente         Cliente     @relation(fields: [clienteId], references: [id])
-  ruta            Ruta        @relation(fields: [rutaId], references: [id])
   embarcacion     Embarcacion @relation(fields: [embarcacionId], references: [id])
+  ruta            Ruta        @relation(fields: [rutaId], references: [id])
   vendedor        User        @relation(fields: [userId], references: [id])
-  
+  puertoEmbarque  PuertoEmbarque @relation(fields: [puertoEmbarqueId], references: [id]) 
+  anulacion Anulacion? // Relación con la posible anulación de la venta
+
   @@map("ventas")
+}
+
+// Modelo para registrar anulaciones
+model Anulacion {
+  id            String   @id @default(cuid())
+  ventaId       String   @unique
+  motivo        String   // Motivo de la anulación
+  observaciones String?  // Observaciones adicionales
+  usuarioId     String   // Usuario que anula
+  fechaAnulacion DateTime @default(now())
+  asientosLiberados Int    // Cantidad de asientos liberados
+  montoReembolso Decimal? @db.Decimal(10, 2) // Monto a reembolsar si aplica
+  tipoAnulacion String   @default("ANULACION") // "ANULACION" o "REEMBOLSO"
+  
+  // Relaciones
+  venta    Venta @relation(fields: [ventaId], references: [id])
+  usuario  User  @relation(fields: [usuarioId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("anulaciones")
+}
+
+model Configuracion {
+  id        String   @id @default(cuid())
+  clave     String   @unique
+  valor     String
+  tipo      String   @default("STRING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("configuraciones")
+}
+
+enum UserRole {
+  ADMINISTRADOR
+  VENDEDOR
+}
+
+enum EstadoEmbarcacion {
+  ACTIVA
+  MANTENIMIENTO
+  INACTIVA
 }
 
 enum EstadoVenta {
   CONFIRMADA
   ANULADA
   REEMBOLSADA
-}
-
-// MODELO DE CONFIGURACIONES DEL SISTEMA
-model Configuracion {
-  id    String @id @default(cuid())
-  clave String @unique
-  valor String
-  tipo  String @default("STRING") // STRING, NUMBER, BOOLEAN, JSON
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@map("configuraciones")
 }

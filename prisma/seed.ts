@@ -6,7 +6,53 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Iniciando seed de datos...");
 
-  // 1. CREAR USUARIOS INICIALES
+  // 1. CREAR PUERTOS DE EMBARQUE PRIMERO (necesarios para las ventas)
+  const puertos = await Promise.all([
+    prisma.puertoEmbarque.upsert({
+      where: { nombre: "Puerto Principal - Malecón" },
+      update: {},
+      create: {
+        nombre: "Puerto Principal - Malecón",
+        descripcion: "Puerto principal de la ciudad",
+        direccion: "Malecón Tarapacá",
+        orden: 1,
+      },
+    }),
+    prisma.puertoEmbarque.upsert({
+      where: { nombre: "Embarcadero Bella Vista" },
+      update: {},
+      create: {
+        nombre: "Embarcadero Bella Vista",
+        descripcion: "Embarcadero en zona Bellavista",
+        direccion: "Av. La Marina - Bellavista",
+        orden: 2,
+      },
+    }),
+    prisma.puertoEmbarque.upsert({
+      where: { nombre: "Puerto Mercado" },
+      update: {},
+      create: {
+        nombre: "Puerto Mercado",
+        descripcion: "Puerto cerca al mercado central",
+        direccion: "Jr. Próspero",
+        orden: 3,
+      },
+    }),
+    prisma.puertoEmbarque.upsert({
+      where: { nombre: "Embarcadero Nuevo" },
+      update: {},
+      create: {
+        nombre: "Embarcadero Nuevo",
+        descripcion: "Puerto de reciente construcción",
+        direccion: "Carretera Iquitos-Nauta",
+        orden: 4,
+      },
+    }),
+  ]);
+
+  console.log("✅ Puertos de embarque creados:", puertos.length);
+
+  // 2. CREAR USUARIOS INICIALES
   const adminPassword = await hash("admin123", 12);
   const vendedorPassword = await hash("vendedor123", 12);
 
@@ -41,7 +87,7 @@ async function main() {
     vendedor: vendedor.email,
   });
 
-  // 2. CREAR RUTAS INICIALES
+  // 3. CREAR RUTAS INICIALES
   const rutas = await Promise.all([
     prisma.ruta.upsert({
       where: { nombre: "Iquitos - Yurimaguas" },
@@ -77,7 +123,7 @@ async function main() {
 
   console.log("✅ Rutas creadas:", rutas.length);
 
-  // 3. CREAR EMBARCACIONES
+  // 4. CREAR EMBARCACIONES
   const embarcaciones = await Promise.all([
     prisma.embarcacion.upsert({
       where: { nombre: "Amazonas Express" },
@@ -113,7 +159,7 @@ async function main() {
 
   console.log("✅ Embarcaciones creadas:", embarcaciones.length);
 
-  // 4. ASIGNAR EMBARCACIONES A RUTAS
+  // 5. ASIGNAR EMBARCACIONES A RUTAS
   const embarcacionRutas = await Promise.all([
     // Amazonas Express: Iquitos - Yurimaguas
     prisma.embarcacionRuta.upsert({
@@ -167,7 +213,7 @@ async function main() {
 
   console.log("✅ Embarcación-Rutas asignadas:", embarcacionRutas.length);
 
-  // 5. CLIENTES DE PRUEBA
+  // 6. CLIENTES DE PRUEBA
   const clientes = await Promise.all([
     prisma.cliente.upsert({
       where: { dni: "12345678" },
@@ -197,7 +243,7 @@ async function main() {
 
   console.log("✅ Clientes creados:", clientes.length);
 
-  // 6. CONFIGURACIONES INICIALES DEL SISTEMA
+  // 7. CONFIGURACIONES INICIALES DEL SISTEMA
   const configuraciones = await Promise.all([
     prisma.configuracion.upsert({
       where: { clave: "empresa_nombre" },
@@ -238,6 +284,56 @@ async function main() {
   ]);
 
   console.log("✅ Configuraciones creadas:", configuraciones.length);
+
+  // 8. VENTAS DE EJEMPLO (OPCIONAL - usando el primer puerto creado)
+  const fechaViajeEjemplo = new Date();
+  fechaViajeEjemplo.setDate(fechaViajeEjemplo.getDate() + 7); // Una semana desde hoy
+
+  try {
+    const ventaEjemplo = await prisma.venta.upsert({
+      where: {
+        numeroVenta:
+          "V" +
+          new Date().toISOString().slice(0, 10).replace(/-/g, "") +
+          "0001",
+      },
+      update: {},
+      create: {
+        numeroVenta:
+          "V" +
+          new Date().toISOString().slice(0, 10).replace(/-/g, "") +
+          "0001",
+        clienteId: clientes[0].id,
+        rutaId: rutas[0].id,
+        embarcacionId: embarcaciones[0].id,
+        userId: vendedor.id,
+        puertoEmbarqueId: puertos[0].id, // Usar el primer puerto creado
+        fechaViaje: fechaViajeEjemplo,
+        horaEmbarque: "05:30",
+        horaViaje: "06:00",
+        cantidadPasajes: 2,
+        puertoOrigen: rutas[0].puertoOrigen,
+        puertoDestino: rutas[0].puertoDestino,
+        precioUnitario: 45.0,
+        subtotal: 90.0,
+        impuestos: 0.0,
+        total: 90.0,
+        tipoPago: "UNICO",
+        metodoPago: "EFECTIVO",
+        estado: "CONFIRMADA",
+        observaciones: "Venta de ejemplo creada durante el seed",
+      },
+    });
+
+    console.log("✅ Venta de ejemplo creada:", ventaEjemplo.numeroVenta);
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Error desconocido";
+    console.log(
+      "ℹ️  Venta de ejemplo ya existe o no se pudo crear:",
+      errorMessage
+    );
+  }
 
   console.log("🎉 Seed completado exitosamente!");
 }

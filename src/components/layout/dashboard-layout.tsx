@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-gray-100">
       {/* Sidebar */}
       <aside className="flex-shrink-0">
         <Sidebar isCollapsed={isCollapsed} />

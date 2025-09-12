@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRequireAuth } from "@/hooks/use-auth";
 import NuevaVentaForm from "@/components/ventas/nueva-venta-form";
 import { formatearFechaViaje } from "@/lib/utils/fecha-utils";
+import ModalAnularVenta from "@/components/anulaciones/modal-anular-venta";
+import { Venta, AnulacionResponse } from "@/types";
 import {
   Plus,
   Search,
@@ -19,35 +21,8 @@ import {
   MoreVertical,
   Trash2,
   Printer,
+  Ship,
 } from "lucide-react";
-
-interface Venta {
-  id: string;
-  numeroVenta: string;
-  fechaVenta: string;
-  fechaViaje: string;
-  cliente: {
-    nombre: string;
-    apellido: string;
-    dni: string;
-  };
-  ruta: {
-    nombre: string;
-    puertoOrigen: string;
-    puertoDestino: string;
-  };
-  embarcacion: {
-    nombre: string;
-  };
-  cantidadPasajes: number;
-  total: number;
-  estado: "CONFIRMADA" | "ANULADA" | "REEMBOLSADA";
-  metodoPago: string;
-  vendedor: {
-    nombre: string;
-    apellido: string;
-  };
-}
 
 interface Filtros {
   fechaInicio: string;
@@ -57,17 +32,19 @@ interface Filtros {
 }
 
 export default function VentasPage() {
-  useRequireAuth(); // Solo llamamos al hook sin desestructurar
+  useRequireAuth();
   const [showNuevaVenta, setShowNuevaVenta] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFiltros, setShowFiltros] = useState(false);
   const [selectedVenta, setSelectedVenta] = useState<Venta | null>(null);
   const [showDetalles, setShowDetalles] = useState(false);
+  const [showAnularModal, setShowAnularModal] = useState(false);
+  const [ventaAAnular, setVentaAAnular] = useState<Venta | null>(null);
 
   const [filtros, setFiltros] = useState<Filtros>({
-    fechaInicio: "", // Sin filtro inicial - mostrar todas las ventas
-    fechaFin: "", // Sin filtro inicial - mostrar todas las ventas
+    fechaInicio: "",
+    fechaFin: "",
     estado: "",
     busqueda: "",
   });
@@ -107,10 +84,40 @@ export default function VentasPage() {
     }
   }, [filtros, pagination.currentPage]);
 
-  // Cargar ventas al montar el componente
   useEffect(() => {
     cargarVentas();
   }, [cargarVentas]);
+
+  // Efecto para cerrar los menús de impresión cuando se hace clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const printMenus = document.querySelectorAll(".print-menu");
+      const moreMenus = document.querySelectorAll(".more-menu");
+
+      // Cerrar menús de impresión
+      printMenus.forEach((menu) => {
+        if (
+          !menu.contains(event.target as Node) &&
+          !menu.previousElementSibling?.contains(event.target as Node)
+        ) {
+          menu.classList.add("hidden");
+        }
+      });
+
+      // Cerrar menús de más opciones
+      moreMenus.forEach((menu) => {
+        if (
+          !menu.contains(event.target as Node) &&
+          !menu.previousElementSibling?.contains(event.target as Node)
+        ) {
+          menu.classList.add("hidden");
+        }
+      });
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   const handleFiltroChange = (key: keyof Filtros, value: string) => {
     setFiltros((prev) => ({ ...prev, [key]: value }));
@@ -119,50 +126,286 @@ export default function VentasPage() {
 
   const limpiarFiltros = () => {
     setFiltros({
-      fechaInicio: "", // Sin filtros de fecha
+      fechaInicio: "",
       fechaFin: "",
       estado: "",
       busqueda: "",
     });
   };
 
-  const exportarVentas = async () => {
-    try {
-      const params = new URLSearchParams({
-        export: "true",
-        ...(filtros.fechaInicio && { fechaInicio: filtros.fechaInicio }),
-        ...(filtros.fechaFin && { fechaFin: filtros.fechaFin }),
-        ...(filtros.estado && { estado: filtros.estado }),
-        ...(filtros.busqueda && { busqueda: filtros.busqueda }),
-      });
-
-      const response = await fetch(`/api/ventas/export?${params}`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `ventas_${new Date().toISOString().split("T")[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error("Error exportando ventas:", error);
-    }
-  };
-
+  // Función para imprimir ticket
   const imprimirTicket = async (ventaId: string) => {
     try {
       const response = await fetch(`/api/ventas/${ventaId}/ticket`);
       if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        window.open(url, "_blank");
+        const html = await response.text();
+
+        const printWindow = window.open("", "_blank");
+
+        if (printWindow) {
+          printWindow.document.open();
+          printWindow.document.write(html);
+          printWindow.document.close();
+
+          printWindow.onload = () => {
+            printWindow.focus();
+            printWindow.print();
+
+            // Cerrar muy rápido después de mostrar el diálogo
+            setTimeout(() => {
+              if (!printWindow.closed) {
+                printWindow.close();
+              }
+            }, 800); // 800ms es suficiente para que aparezca el diálogo
+          };
+        }
       }
     } catch (error) {
       console.error("Error imprimiendo ticket:", error);
+    }
+  };
+
+  // Función para imprimir comprobante A4
+  const imprimirComprobanteA4 = async (ventaId: string) => {
+    try {
+      const response = await fetch(`/api/ventas/${ventaId}/comprobante`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        // Abrir el PDF en una nueva ventana
+        const printWindow = window.open(url, "_blank");
+
+        if (printWindow) {
+          // Esperar a que se cargue el PDF y mostrar el diálogo de impresión
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+
+          // Cerrar la ventana y limpiar recursos cuando se cierre
+          printWindow.onafterprint = () => {
+            printWindow.close();
+            URL.revokeObjectURL(url);
+          };
+        }
+      } else {
+        console.error("Error al generar comprobante A4");
+      }
+    } catch (error) {
+      console.error("Error imprimiendo comprobante A4:", error);
+    }
+  };
+
+  // Función para descargar comprobante A4 como PDF
+  // Función actualizada para descargar PDF
+  const descargarComprobanteA4 = async (venta: Venta) => {
+    const nombreCliente = `${venta.cliente.nombre} ${venta.cliente.apellido}`;
+    const nombreArchivo = `${nombreCliente} - ${venta.numeroVenta}.pdf`;
+
+    // Mostrar notificación de descarga
+    const notificacionDescarga = mostrarNotificacion(
+      "descargando",
+      "Preparando descarga...",
+      `Comprobante PDF: ${venta.numeroVenta}`
+    );
+
+    try {
+      const response = await fetch(`/api/ventas/${venta.id}/comprobante`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        // Crear enlace de descarga
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+
+        // Limpiar
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Remover notificación de descarga y mostrar éxito
+        removerNotificacion(notificacionDescarga);
+        mostrarNotificacion(
+          "exito",
+          "PDF descargado correctamente",
+          nombreArchivo
+        );
+      } else {
+        removerNotificacion(notificacionDescarga);
+        mostrarNotificacion(
+          "error",
+          "Error al generar PDF",
+          "Por favor, intenta nuevamente"
+        );
+      }
+    } catch (error) {
+      console.error("Error descargando comprobante A4:", error);
+      removerNotificacion(notificacionDescarga);
+      mostrarNotificacion(
+        "error",
+        "Error de conexión",
+        "No se pudo descargar el PDF"
+      );
+    }
+  };
+
+  // Función actualizada para descargar imagen
+  const descargarComprobanteImagen = async (venta: Venta) => {
+    const nombreCliente = `${venta.cliente.nombre} ${venta.cliente.apellido}`;
+    const nombreArchivo = `${nombreCliente} - ${venta.numeroVenta}.png`;
+
+    // Mostrar notificación de descarga
+    const notificacionDescarga = mostrarNotificacion(
+      "descargando",
+      "Generando imagen...",
+      `Comprobante PNG: ${venta.numeroVenta}`
+    );
+
+    try {
+      const response = await fetch(
+        `/api/ventas/${venta.id}/comprobante-imagen`
+      );
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        // Crear enlace de descarga
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+
+        // Limpiar
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Remover notificación de descarga y mostrar éxito
+        removerNotificacion(notificacionDescarga);
+        mostrarNotificacion(
+          "exito",
+          "Imagen descargada correctamente",
+          nombreArchivo
+        );
+      } else {
+        removerNotificacion(notificacionDescarga);
+        mostrarNotificacion(
+          "error",
+          "Error al generar imagen",
+          "Por favor, intenta nuevamente"
+        );
+      }
+    } catch (error) {
+      console.error("Error descargando imagen del comprobante:", error);
+      removerNotificacion(notificacionDescarga);
+      mostrarNotificacion(
+        "error",
+        "Error de conexión",
+        "No se pudo descargar la imagen"
+      );
+    }
+  };
+  // Función para abrir modal de anulación
+  const handleAnularVenta = (venta: Venta) => {
+    setVentaAAnular(venta);
+    setShowAnularModal(true);
+    // Cerrar otros menús
+    document.querySelectorAll(".more-menu").forEach((menu) => {
+      menu.classList.add("hidden");
+    });
+  };
+
+  // Función para manejar el éxito de la anulación
+  const handleAnulacionSuccess = (resultado: AnulacionResponse) => {
+    // Actualizar la venta en la lista
+    setVentas((prev) =>
+      prev.map((venta) =>
+        venta.id === resultado.ventaActualizada.id
+          ? ({
+              ...venta,
+              estado: resultado.ventaActualizada.estado,
+              anulacion: resultado.anulacion, // Esto ahora es compatible
+            } as Venta)
+          : venta
+      )
+    );
+
+    // Mostrar notificación de éxito
+    mostrarNotificacion(
+      "exito",
+      "Venta anulada exitosamente",
+      resultado.mensaje
+    );
+
+    // Cerrar modales
+    setShowAnularModal(false);
+    setVentaAAnular(null);
+  };
+
+  // Función helper para mostrar notificaciones
+  const mostrarNotificacion = (
+    tipo: "descargando" | "exito" | "error",
+    mensaje: string,
+    detalle?: string
+  ) => {
+    const notification = document.createElement("div");
+
+    const colores = {
+      descargando: "bg-blue-50 border-blue-200 text-blue-800",
+      exito: "bg-green-50 border-green-200 text-green-800",
+      error: "bg-red-50 border-red-200 text-red-800",
+    };
+
+    const iconos = {
+      descargando: `<svg class="h-5 w-5 text-blue-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+    </svg>`,
+      exito: `<svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>`,
+      error: `<svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+    </svg>`,
+    };
+
+    notification.className = `fixed top-4 right-4 ${colores[tipo]} px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 transition-all duration-300`;
+    notification.innerHTML = `
+    ${iconos[tipo]}
+    <div>
+      <p class="font-medium">${mensaje}</p>
+      ${detalle ? `<p class="text-sm">${detalle}</p>` : ""}
+    </div>
+  `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remover después de un tiempo (excepto para "descargando")
+    if (tipo !== "descargando") {
+      setTimeout(() => {
+        notification.classList.add("opacity-0", "transition-opacity");
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    return notification;
+  };
+
+  // Función para remover notificación específica
+  const removerNotificacion = (notification: HTMLElement) => {
+    if (document.body.contains(notification)) {
+      notification.classList.add("opacity-0", "transition-opacity");
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
     }
   };
 
@@ -179,10 +422,31 @@ export default function VentasPage() {
     }
   };
 
+  // Función helper para truncar texto con tooltip
+  const TruncatedText = ({
+    text,
+    maxLength = 20,
+    className = "",
+  }: {
+    text: string;
+    maxLength?: number;
+    className?: string;
+  }) => {
+    if (text.length <= maxLength) {
+      return <span className={className}>{text}</span>;
+    }
+
+    return (
+      <span className={`cursor-help ${className}`} title={text}>
+        {text.substring(0, maxLength)}...
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
             Gestión de Ventas
@@ -191,45 +455,39 @@ export default function VentasPage() {
             Administra las ventas de pasajes fluviales
           </p>
         </div>
+
         <button
           onClick={() => setShowNuevaVenta(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 font-medium"
+          className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-lg flex items-center space-x-3 font-medium shadow-md hover:shadow-xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-md"
         >
-          <Plus className="h-5 w-5" />
+          <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-md transition-colors duration-200">
+            <Plus className="h-4 w-4" />
+          </div>
           <span>Nueva Venta</span>
+          <div className="hidden sm:block w-2 h-2 bg-blue-300 rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-200"></div>
         </button>
       </div>
 
       {/* Barra de acciones */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-80 lg:w-96">
               <Search className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Buscar por cliente, DNI o número de venta..."
+                placeholder="Buscar por cliente, DNI o número de venta"
                 value={filtros.busqueda}
                 onChange={(e) => handleFiltroChange("busqueda", e.target.value)}
-                className="pl-10 pr-4 py-2 w-80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
               />
             </div>
             <button
               onClick={() => setShowFiltros(!showFiltros)}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 bg-white shadow-sm"
+              className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 bg-white shadow-sm w-full sm:w-auto"
             >
               <Filter className="h-4 w-4" />
               <span>Filtros</span>
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={exportarVentas}
-              className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 bg-white shadow-sm"
-            >
-              <Download className="h-4 w-4" />
-              <span>Exportar</span>
             </button>
           </div>
         </div>
@@ -313,129 +571,294 @@ export default function VentasPage() {
                 </p>
               )}
             </div>
-            {loading && (
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-            )}
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Número
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Cliente
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Ruta
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Fecha Viaje
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Pasajes
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Total
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                  Estado
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {ventas.map((venta) => (
-                <tr key={venta.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-900">
-                      {venta.numeroVenta}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Venta:{" "}
-                      {new Date(venta.fechaVenta).toLocaleDateString("es-PE", {
-                        timeZone: "America/Lima",
-                      })}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-900">
-                      {venta.cliente.nombre} {venta.cliente.apellido}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      DNI: {venta.cliente.dni}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-900">
-                      {venta.ruta.nombre}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {venta.embarcacion.nombre}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      {formatearFechaViaje(venta.fechaViaje)}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <User className="h-4 w-4 mr-1" />
-                      {venta.cantidadPasajes}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold text-gray-900">
-                      S/ {venta.total.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {venta.metodoPago}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoColor(
-                        venta.estado
-                      )}`}
-                    >
-                      {venta.estado}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedVenta(venta);
-                          setShowDetalles(true);
-                        }}
-                        className="p-1 text-gray-400 hover:text-blue-600"
-                        title="Ver detalles"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => imprimirTicket(venta.id)}
-                        className="p-1 text-gray-400 hover:text-green-600"
-                        title="Imprimir ticket"
-                      >
-                        <Printer className="h-4 w-4" />
-                      </button>
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Cargando ventas...</span>
+            </div>
+          ) : ventas.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-500">
+                No se encontraron ventas con los filtros aplicados
+              </div>
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[120px]">
+                    Número
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[160px]">
+                    Cliente
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[180px]">
+                    Ruta
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[180px]">
+                    Puerto Embarque
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider  min-w-[120px]">
+                    Fecha Viaje
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[80px]">
+                    Pasajes
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[100px]">
+                    Total
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[100px]">
+                    Estado
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider min-w-[120px]">
+                    Acciones
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {ventas.map((venta) => (
+                  <tr key={venta.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900">
+                        {venta.numeroVenta}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Venta:{" "}
+                        {new Date(venta.fechaVenta).toLocaleDateString(
+                          "es-PE",
+                          {
+                            timeZone: "America/Lima",
+                          }
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900">
+                        <TruncatedText
+                          text={`${venta.cliente.nombre} ${venta.cliente.apellido}`}
+                          maxLength={25}
+                        />
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        DNI: {venta.cliente.dni}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900">
+                        <TruncatedText
+                          text={venta.ruta.nombre}
+                          maxLength={22}
+                        />
+                      </div>
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <Ship className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <TruncatedText
+                          text={venta.embarcacion.nombre}
+                          maxLength={20}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-start space-x-1">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-gray-900">
+                            <TruncatedText
+                              text={venta.puertoEmbarque.nombre}
+                              maxLength={20}
+                              className="block"
+                            />
+                          </div>
+                          {venta.puertoEmbarque.direccion && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              <TruncatedText
+                                text={venta.puertoEmbarque.direccion}
+                                maxLength={18}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center text-sm text-gray-900">
+                        <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span className="whitespace-nowrap">
+                          {formatearFechaViaje(venta.fechaViaje)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center text-sm text-gray-900">
+                        <User className="h-4 w-4 mr-1" />
+                        {venta.cantidadPasajes}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-gray-900">
+                        S/ {venta.total.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        <TruncatedText text={venta.metodoPago} maxLength={12} />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getEstadoColor(
+                          venta.estado
+                        )}`}
+                      >
+                        {venta.estado}
+                      </span>
+                    </td>
+                    {/* Columna de acciones actualizada en la tabla */}
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end space-x-3">
+                        <button
+                          onClick={() => {
+                            setSelectedVenta(venta);
+                            setShowDetalles(true);
+                          }}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Ver detalles"
+                        >
+                          <Eye className="h-5 w-5" />
+                        </button>
+
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              const target = e.currentTarget.nextElementSibling;
+                              if (target) {
+                                target.classList.toggle("hidden");
+                              }
+                              // Cerrar otros menús abiertos
+                              document
+                                .querySelectorAll(".print-menu")
+                                .forEach((menu) => {
+                                  if (menu !== target) {
+                                    menu.classList.add("hidden");
+                                  }
+                                });
+                            }}
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="Opciones de impresión"
+                          >
+                            <Printer className="h-5 w-5" />
+                          </button>
+
+                          {/* Menú desplegable de impresión */}
+                          <div className="print-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-44">
+                            <button
+                              onClick={() => {
+                                imprimirTicket(venta.id);
+                                document
+                                  .querySelectorAll(".print-menu")
+                                  .forEach((menu) =>
+                                    menu.classList.add("hidden")
+                                  );
+                              }}
+                              className="w-full px-4 py-3 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                            >
+                              <Printer className="h-5 w-5 mr-2 text-emerald-600" />
+                              Ticket 80mm
+                            </button>
+                            <button
+                              onClick={() => {
+                                imprimirComprobanteA4(venta.id);
+                                document
+                                  .querySelectorAll(".print-menu")
+                                  .forEach((menu) =>
+                                    menu.classList.add("hidden")
+                                  );
+                              }}
+                              className="w-full px-4 py-3 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                            >
+                              <Printer className="h-5 w-5 mr-2 text-emerald-600" />
+                              Comprobante A4
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* NUEVO: Menú de más opciones (3 puntos) */}
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              const target = e.currentTarget.nextElementSibling;
+                              if (target) {
+                                target.classList.toggle("hidden");
+                              }
+                              // Cerrar otros menús abiertos
+                              document
+                                .querySelectorAll(".more-menu")
+                                .forEach((menu) => {
+                                  if (menu !== target) {
+                                    menu.classList.add("hidden");
+                                  }
+                                });
+                            }}
+                            className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Más opciones"
+                          >
+                            <MoreVertical className="h-5 w-5" />
+                          </button>
+
+                          {/* Menú desplegable de más opciones */}
+                          <div className="more-menu hidden absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 w-48">
+                            <button
+                              onClick={() => {
+                                descargarComprobanteA4(venta);
+                                document
+                                  .querySelectorAll(".more-menu")
+                                  .forEach((menu) =>
+                                    menu.classList.add("hidden")
+                                  );
+                              }}
+                              className="w-full px-4 py-3 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                            >
+                              <Download className="h-5 w-5 mr-2 text-blue-600" />
+                              Descargar PDF
+                            </button>
+                            <button
+                              onClick={() => {
+                                descargarComprobanteImagen(venta);
+                                document
+                                  .querySelectorAll(".more-menu")
+                                  .forEach((menu) =>
+                                    menu.classList.add("hidden")
+                                  );
+                              }}
+                              className="w-full px-4 py-3 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                            >
+                              <Download className="h-5 w-5 mr-2 text-green-600" />
+                              Descargar Imagen
+                            </button>
+
+                            {/* Separador */}
+                            <div className="border-t border-gray-200 my-1"></div>
+
+                            {venta.estado === "CONFIRMADA" && (
+                              <button
+                                // Reemplazar el onClick del botón Anular Venta:
+                                onClick={() => handleAnularVenta(venta)}
+                                className="w-full px-4 py-3 text-sm text-left text-red-600 hover:bg-red-50 flex items-center"
+                              >
+                                <Trash2 className="h-5 w-5 mr-2" />
+                                Anular Venta
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
           {ventas.length === 0 && !loading && (
             <div className="text-center py-12">
@@ -462,7 +885,7 @@ export default function VentasPage() {
                   }))
                 }
                 disabled={pagination.currentPage <= 1}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Anterior
               </button>
@@ -477,7 +900,7 @@ export default function VentasPage() {
                   }))
                 }
                 disabled={pagination.currentPage >= pagination.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
                 Siguiente
               </button>
@@ -513,10 +936,10 @@ export default function VentasPage() {
         </div>
       )}
 
-      {/* Modal Detalles de Venta */}
+      {/* Modal Detalles de Venta MEJORADO */}
       {showDetalles && selectedVenta && (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl drop-shadow-xl border border-gray-200">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl drop-shadow-xl border border-gray-200">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900">
                 Detalles de Venta - {selectedVenta.numeroVenta}
@@ -538,7 +961,7 @@ export default function VentasPage() {
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-700">Nombre:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 text-right">
                       {selectedVenta.cliente.nombre}{" "}
                       {selectedVenta.cliente.apellido}
                     </span>
@@ -549,6 +972,22 @@ export default function VentasPage() {
                       {selectedVenta.cliente.dni}
                     </span>
                   </div>
+                  {selectedVenta.cliente.telefono && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">Teléfono:</span>
+                      <span className="font-medium text-gray-900">
+                        {selectedVenta.cliente.telefono}
+                      </span>
+                    </div>
+                  )}
+                  {selectedVenta.cliente.email && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">Email:</span>
+                      <span className="font-medium text-gray-900">
+                        {selectedVenta.cliente.email}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -558,19 +997,37 @@ export default function VentasPage() {
                   <MapPin className="h-5 w-5 mr-2" />
                   Viaje
                 </h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-700">Ruta:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 text-right max-w-[60%] break-words">
                       {selectedVenta.ruta.nombre}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700">Embarcación:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 text-right max-w-[60%] break-words">
                       {selectedVenta.embarcacion.nombre}
                     </span>
                   </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-gray-700">Puerto de Embarque:</span>
+                    <span className="font-medium text-gray-900 text-right max-w-[60%] break-words">
+                      {selectedVenta.puertoEmbarque.nombre}
+                    </span>
+                  </div>
+                  {selectedVenta.puertoEmbarque.direccion && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">
+                        Dirección del Puerto:
+                      </span>
+                      <span className="font-medium text-gray-900 text-right max-w-[60%] break-words">
+                        {selectedVenta.puertoEmbarque.direccion}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between">
                     <span className="text-gray-700">Fecha de viaje:</span>
                     <span className="font-medium text-gray-900">
@@ -635,7 +1092,7 @@ export default function VentasPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700">Vendedor:</span>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 text-right max-w-[60%] break-words">
                       {selectedVenta.vendedor.nombre}{" "}
                       {selectedVenta.vendedor.apellido}
                     </span>
@@ -645,15 +1102,99 @@ export default function VentasPage() {
 
               {/* Botones de acción */}
               <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => imprimirTicket(selectedVenta.id)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Printer className="h-4 w-4" />
-                  <span>Imprimir Ticket</span>
-                </button>
+                <div className="relative">
+                  <button
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    onClick={() => {
+                      const dropdownMenu =
+                        document.getElementById("print-dropdown");
+                      if (dropdownMenu) {
+                        dropdownMenu.classList.toggle("hidden");
+                      }
+                    }}
+                  >
+                    <Printer className="h-4 w-4" />
+                    <span>Opciones</span>
+                  </button>
+
+                  {/* Menú desplegable de opciones completo */}
+                  <div
+                    id="print-dropdown"
+                    className="absolute right-0 mt-2 hidden bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50 w-48"
+                  >
+                    {/* Opciones de impresión */}
+                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50">
+                      Imprimir
+                    </div>
+                    <button
+                      onClick={() => {
+                        imprimirTicket(selectedVenta.id);
+                        document
+                          .getElementById("print-dropdown")
+                          ?.classList.add("hidden");
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Ticket 80mm
+                    </button>
+                    <button
+                      onClick={() => {
+                        imprimirComprobanteA4(selectedVenta.id);
+                        document
+                          .getElementById("print-dropdown")
+                          ?.classList.add("hidden");
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Comprobante A4
+                    </button>
+
+                    {/* Separador */}
+                    <div className="border-t border-gray-200"></div>
+
+                    {/* Opciones de descarga */}
+                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50">
+                      Descargar
+                    </div>
+                    <button
+                      onClick={() => {
+                        descargarComprobanteA4(selectedVenta);
+                        document
+                          .getElementById("print-dropdown")
+                          ?.classList.add("hidden");
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Download className="h-4 w-4 mr-2 text-blue-600" />
+                      Descargar PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        descargarComprobanteImagen(selectedVenta);
+                        document
+                          .getElementById("print-dropdown")
+                          ?.classList.add("hidden");
+                      }}
+                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Download className="h-4 w-4 mr-2 text-green-600" />
+                      Descargar Imagen
+                    </button>
+                  </div>
+                </div>
+
                 {selectedVenta.estado === "CONFIRMADA" && (
-                  <button className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                  <button
+                    onClick={() => {
+                      // Cerrar el modal de detalles primero
+                      setShowDetalles(false);
+                      // Abrir el modal de anulación
+                      handleAnularVenta(selectedVenta);
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
                     <Trash2 className="h-4 w-4" />
                     <span>Anular</span>
                   </button>
@@ -662,6 +1203,18 @@ export default function VentasPage() {
             </div>
           </div>
         </div>
+      )}
+      {/* Modal Anular Venta */}
+      {showAnularModal && ventaAAnular && (
+        <ModalAnularVenta
+          isOpen={showAnularModal}
+          onClose={() => {
+            setShowAnularModal(false);
+            setVentaAAnular(null);
+          }}
+          venta={ventaAAnular}
+          onSuccess={handleAnulacionSuccess}
+        />
       )}
     </div>
   );

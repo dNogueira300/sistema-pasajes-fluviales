@@ -8,11 +8,13 @@ import {
   Home,
   Users,
   Route,
-  Anchor,
+  //Anchor,
   UserPlus,
   ShoppingCart,
   Settings,
   BarChart3,
+  Ban,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,10 +40,24 @@ const navigation: NavItem[] = [
     description: "Gestionar venta de pasajes",
   },
   {
+    name: "Anulaciones",
+    href: "/dashboard/anulaciones",
+    icon: Ban,
+    description: "Gestionar anulaciones y reembolsos",
+  },
+
+  {
     name: "Clientes",
     href: "/dashboard/clientes",
     icon: Users,
     description: "Gestionar información de clientes",
+  },
+  {
+    name: "Puertos de Embarque",
+    href: "/dashboard/puertos",
+    icon: MapPin,
+    roles: ["ADMINISTRADOR"],
+    description: "Gestión de puertos de embarque",
   },
   {
     name: "Rutas",
@@ -53,7 +69,7 @@ const navigation: NavItem[] = [
   {
     name: "Embarcaciones",
     href: "/dashboard/embarcaciones",
-    icon: Anchor,
+    icon: Ship,
     roles: ["ADMINISTRADOR"],
     description: "Gestionar embarcaciones",
   },
@@ -85,7 +101,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
-  const { user, hasAnyRole } = useRequireAuth();
+  const { hasAnyRole } = useRequireAuth();
 
   // Filtrar navegación basada en roles
   const filteredNavigation = navigation.filter(
@@ -95,43 +111,25 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
   return (
     <div
       className={cn(
-        "bg-white shadow-lg border-r border-gray-200 h-full flex flex-col transition-all duration-300",
+        "bg-gray-900 shadow-lg border-r border-gray-800 h-full flex flex-col transition-all duration-300",
         isCollapsed ? "w-16" : "w-64"
       )}
     >
       {/* Logo y título */}
-      <div className="flex items-center justify-center p-6 border-b border-gray-200">
+      <div className="flex items-center justify-center p-6 border-b border-gray-800">
         <div className="flex items-center space-x-3">
           <div className="bg-blue-600 rounded-lg p-2">
             <Ship className="h-6 w-6 text-white" />
           </div>
           {!isCollapsed && (
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Alto Impacto</h1>
-              <p className="text-xs text-gray-500">Travel System</p>
+            <div className="flex-shrink-0">
+              <h1 className="text-lg font-bold text-white whitespace-nowrap">
+                Alto Impacto Travel
+              </h1>
             </div>
           )}
         </div>
       </div>
-
-      {/* Información del usuario */}
-      {!isCollapsed && (
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center space-x-3">
-            <div className="bg-blue-100 rounded-full p-2">
-              <Users className="h-5 w-5 text-blue-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.name}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {user?.role === "ADMINISTRADOR" ? "Administrador" : "Vendedor"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Navegación */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -144,10 +142,12 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group",
+                "flex items-center relative",
+                isCollapsed ? "justify-center" : "space-x-3",
+                "px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group",
                 isActive
-                  ? "bg-blue-100 text-blue-700 border border-blue-200"
-                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-blue-900/50 text-blue-300 border border-blue-800"
+                  : "text-gray-300 hover:bg-gray-800 hover:text-blue-200"
               )}
               title={isCollapsed ? item.description : undefined}
             >
@@ -155,14 +155,14 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
                 className={cn(
                   "flex-shrink-0 h-5 w-5",
                   isActive
-                    ? "text-blue-600"
-                    : "text-gray-400 group-hover:text-gray-600"
+                    ? "text-blue-400"
+                    : "text-gray-400 group-hover:text-blue-300"
                 )}
               />
               {!isCollapsed && <span className="truncate">{item.name}</span>}
               {!isCollapsed && isActive && (
                 <div className="ml-auto">
-                  <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
+                  <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
                 </div>
               )}
             </Link>
@@ -172,10 +172,10 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
 
       {/* Información adicional en la parte inferior */}
       {!isCollapsed && (
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="text-xs text-gray-500 text-center">
+        <div className="p-4 border-t border-gray-800 bg-gray-800">
+          <div className="text-xs text-gray-400 text-center">
             <p>Sistema v1.0.0</p>
-            <p className="mt-1">TDS_G01 - 2025</p>
+            <p>© 2025 Alto Impacto Travel</p>
           </div>
         </div>
       )}

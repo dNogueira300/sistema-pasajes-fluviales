@@ -9,6 +9,11 @@ import {
 } from "@/lib/actions/ventas";
 import { EstadoVenta } from "@/types";
 
+interface MetodoPago {
+  tipo: string;
+  monto: number;
+}
+
 // GET - Obtener ventas con filtros
 export async function GET(request: NextRequest) {
   try {
@@ -59,11 +64,14 @@ export async function POST(request: NextRequest) {
       cliente: clienteData,
       rutaId,
       embarcacionId,
+      puertoEmbarqueId,
       fechaViaje,
       horaViaje,
       horaEmbarque,
       cantidadPasajes,
+      tipoPago,
       metodoPago,
+      metodosPago,
       observaciones,
     } = body;
 
@@ -78,6 +86,7 @@ export async function POST(request: NextRequest) {
     if (
       !rutaId ||
       !embarcacionId ||
+      !puertoEmbarqueId ||
       !fechaViaje ||
       !horaViaje ||
       !horaEmbarque
@@ -93,6 +102,44 @@ export async function POST(request: NextRequest) {
         { error: "Cantidad de pasajes inválida" },
         { status: 400 }
       );
+    }
+
+    // Validaciones para método de pago
+    if (!tipoPago || (tipoPago !== "UNICO" && tipoPago !== "HIBRIDO")) {
+      return NextResponse.json(
+        { error: "Tipo de pago inválido" },
+        { status: 400 }
+      );
+    }
+
+    if (tipoPago === "UNICO" && !metodoPago) {
+      return NextResponse.json(
+        { error: "Método de pago requerido para pago único" },
+        { status: 400 }
+      );
+    }
+
+    if (tipoPago === "HIBRIDO") {
+      if (
+        !metodosPago ||
+        !Array.isArray(metodosPago) ||
+        metodosPago.length === 0
+      ) {
+        return NextResponse.json(
+          { error: "Métodos de pago requeridos para pago híbrido" },
+          { status: 400 }
+        );
+      }
+
+      // Validar que cada método tenga los campos requeridos
+      for (const metodo of metodosPago) {
+        if (!metodo.tipo || !metodo.monto || metodo.monto <= 0) {
+          return NextResponse.json(
+            { error: "Datos incompletos en métodos de pago" },
+            { status: 400 }
+          );
+        }
+      }
     }
 
     // Buscar o crear cliente
@@ -113,6 +160,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Calcular total esperado
+    const totalEsperado = parseFloat(ruta.precio.toString()) * cantidadPasajes;
+
+    // Validar montos para pago híbrido
+    if (tipoPago === "HIBRIDO") {
+      const totalPagado = metodosPago.reduce(
+        (sum: number, metodo: MetodoPago) => sum + metodo.monto,
+        0
+      );
+
+      // Permitir una diferencia mínima por redondeo (0.01)
+      if (Math.abs(totalPagado - totalEsperado) > 0.01) {
+        return NextResponse.json(
+          {
+            error: `El total de los métodos de pago (S/ ${totalPagado.toFixed(
+              2
+            )}) no coincide con el total de la venta (S/ ${totalEsperado.toFixed(
+              2
+            )})`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Validar que la fecha de viaje no sea anterior a hoy
     const fechaViajeObj = crearFechaViaje(fechaViaje);
     const hoy = new Date();
@@ -125,12 +197,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear la venta
-    const venta = await crearVenta({
+    // Preparar datos para la creación de venta
+    const datosVenta = {
       clienteId: cliente.id,
       rutaId,
       embarcacionId,
       userId: session.user.id,
+      puertoEmbarqueId,
       fechaViaje: crearFechaViaje(fechaViaje),
       horaEmbarque,
       horaViaje,
@@ -138,9 +211,14 @@ export async function POST(request: NextRequest) {
       puertoOrigen: ruta.puertoOrigen,
       puertoDestino: ruta.puertoDestino,
       precioUnitario: parseFloat(ruta.precio.toString()),
-      metodoPago: metodoPago || "EFECTIVO",
+      tipoPago,
+      metodoPago: tipoPago === "UNICO" ? metodoPago : "HIBRIDO",
+      metodosPago: tipoPago === "HIBRIDO" ? metodosPago : null,
       observaciones,
-    });
+    };
+
+    // Crear la venta
+    const venta = await crearVenta(datosVenta);
 
     return NextResponse.json(venta, { status: 201 });
   } catch (error) {

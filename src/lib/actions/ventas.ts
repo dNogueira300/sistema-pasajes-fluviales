@@ -1,7 +1,19 @@
 import { PrismaClient } from "@prisma/client";
 import { EstadoVenta } from "@/types";
 
-const prisma = new PrismaClient();
+interface MetodoPago {
+  tipo: string;
+  monto: number;
+}
+
+// Crear una sola instancia global de Prisma
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Generar número único de venta
 export async function generateVentaNumber(): Promise<string> {
@@ -33,6 +45,14 @@ export async function generateVentaNumber(): Promise<string> {
 
   const numero = (ventasHoy + 1).toString().padStart(3, "0");
   return `V${year}${month}${day}-${numero}`;
+}
+
+// Obtener puertos de embarque activos
+export async function getPuertosEmbarque() {
+  return await prisma.puertoEmbarque.findMany({
+    where: { activo: true },
+    orderBy: { orden: "asc" },
+  });
 }
 
 // Obtener rutas activas
@@ -84,47 +104,117 @@ export async function verificarDisponibilidad(
   // Obtener capacidad de la embarcación
   const embarcacion = await prisma.embarcacion.findUnique({
     where: { id: embarcacionId },
+    select: { capacidad: true, estado: true },
   });
 
   if (!embarcacion) {
     throw new Error("Embarcación no encontrada");
   }
 
+  if (embarcacion.estado !== "ACTIVA") {
+    throw new Error("Embarcación no está activa");
+  }
+
+  // Verificar que la embarcación está asignada a la ruta con esa hora
+  const embarcacionRuta = await prisma.embarcacionRuta.findFirst({
+    where: {
+      embarcacionId,
+      rutaId,
+      activa: true,
+      horasSalida: {
+        has: horaViaje,
+      },
+    },
+  });
+
+  if (!embarcacionRuta) {
+    throw new Error("La embarcación no opera en esa ruta y horario");
+  }
+
+  const fechaConsulta = new Date(fechaViaje);
+
+  // Inicio del día (00:00:00)
+  const inicioDia = new Date(
+    fechaConsulta.getFullYear(),
+    fechaConsulta.getMonth(),
+    fechaConsulta.getDate(),
+    0,
+    0,
+    0,
+    0
+  );
+
+  // Fin del día (23:59:59)
+  const finDia = new Date(
+    fechaConsulta.getFullYear(),
+    fechaConsulta.getMonth(),
+    fechaConsulta.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
+
+  console.log("🔍 Verificando disponibilidad:", {
+    embarcacionId,
+    rutaId,
+    fechaViaje: fechaViaje.toISOString(),
+    horaViaje,
+    inicioDia: inicioDia.toISOString(),
+    finDia: finDia.toISOString(),
+    cantidadSolicitada,
+  });
+
   // Contar pasajes vendidos para ese viaje específico
-  const pasajesVendidos = await prisma.venta.aggregate({
+  const ventasExistentes = await prisma.venta.findMany({
     where: {
       embarcacionId,
       rutaId,
       fechaViaje: {
-        gte: new Date(
-          fechaViaje.getFullYear(),
-          fechaViaje.getMonth(),
-          fechaViaje.getDate()
-        ),
-        lt: new Date(
-          fechaViaje.getFullYear(),
-          fechaViaje.getMonth(),
-          fechaViaje.getDate() + 1
-        ),
+        gte: inicioDia,
+        lte: finDia,
       },
-      horaViaje,
+      horaViaje: horaViaje,
       estado: {
-        in: ["CONFIRMADA"],
+        in: ["CONFIRMADA"], // Solo contar ventas confirmadas
       },
     },
-    _sum: {
+    select: {
+      id: true,
+      numeroVenta: true,
       cantidadPasajes: true,
+      fechaViaje: true,
+      horaViaje: true,
+      estado: true,
     },
   });
 
-  const totalVendidos = pasajesVendidos._sum.cantidadPasajes || 0;
+  console.log("📋 Ventas encontradas:", ventasExistentes);
+
+  // Sumar total de pasajes vendidos
+  const totalVendidos = ventasExistentes.reduce(
+    (sum, venta) => sum + venta.cantidadPasajes,
+    0
+  );
+
   const disponibles = embarcacion.capacidad - totalVendidos;
+
+  console.log("📊 Resumen disponibilidad:", {
+    capacidadTotal: embarcacion.capacidad,
+    totalVendidos,
+    disponibles,
+    puedeVender: disponibles >= cantidadSolicitada,
+  });
 
   return {
     capacidadTotal: embarcacion.capacidad,
     vendidos: totalVendidos,
     disponibles,
     puedeVender: disponibles >= cantidadSolicitada,
+    mensaje:
+      disponibles >= cantidadSolicitada
+        ? `Hay ${disponibles} asientos disponibles`
+        : `Solo quedan ${disponibles} asientos disponibles. No se puede vender ${cantidadSolicitada} pasajes.`,
   };
 }
 
@@ -156,15 +246,37 @@ export async function buscarOCrearCliente(clienteData: {
     });
   } else {
     // Si existe, actualizar información si es necesaria
-    if (clienteData.telefono || clienteData.email) {
+    const datosAActualizar: Partial<{
+      nombre: string;
+      apellido: string;
+      telefono: string;
+      email: string;
+      nacionalidad: string;
+    }> = {};
+
+    if (clienteData.nombre !== cliente.nombre) {
+      datosAActualizar.nombre = clienteData.nombre;
+    }
+    if (clienteData.apellido !== cliente.apellido) {
+      datosAActualizar.apellido = clienteData.apellido;
+    }
+    if (clienteData.telefono && cliente.telefono !== clienteData.telefono) {
+      datosAActualizar.telefono = clienteData.telefono;
+    }
+    if (clienteData.email && cliente.email !== clienteData.email) {
+      datosAActualizar.email = clienteData.email;
+    }
+    if (
+      clienteData.nacionalidad &&
+      cliente.nacionalidad !== clienteData.nacionalidad
+    ) {
+      datosAActualizar.nacionalidad = clienteData.nacionalidad;
+    }
+
+    if (Object.keys(datosAActualizar).length > 0) {
       cliente = await prisma.cliente.update({
         where: { id: cliente.id },
-        data: {
-          telefono: clienteData.telefono || cliente.telefono,
-          email: clienteData.email || cliente.email,
-          nombre: clienteData.nombre,
-          apellido: clienteData.apellido,
-        },
+        data: datosAActualizar,
       });
     }
   }
@@ -172,12 +284,13 @@ export async function buscarOCrearCliente(clienteData: {
   return cliente;
 }
 
-// Crear venta
+// Crear venta - VERSIÓN SIMPLIFICADA SIN TRANSACCIONES COMPLEJAS
 export async function crearVenta(ventaData: {
   clienteId: string;
   rutaId: string;
   embarcacionId: string;
   userId: string;
+  puertoEmbarqueId: string;
   fechaViaje: Date;
   horaEmbarque: string;
   horaViaje: string;
@@ -185,73 +298,112 @@ export async function crearVenta(ventaData: {
   puertoOrigen: string;
   puertoDestino: string;
   precioUnitario: number;
+  tipoPago: "UNICO" | "HIBRIDO";
   metodoPago?: string;
+  metodosPago?: MetodoPago[];
   observaciones?: string;
 }) {
-  // Verificar disponibilidad una vez más antes de crear
-  const disponibilidad = await verificarDisponibilidad(
-    ventaData.embarcacionId,
-    ventaData.rutaId,
-    ventaData.fechaViaje,
-    ventaData.horaViaje,
-    ventaData.cantidadPasajes
-  );
+  try {
+    // 1. Verificaciones previas sin transacción
+    const puertoEmbarque = await prisma.puertoEmbarque.findUnique({
+      where: { id: ventaData.puertoEmbarqueId },
+    });
 
-  if (!disponibilidad.puedeVender) {
-    throw new Error(
-      `Solo hay ${disponibilidad.disponibles} asientos disponibles`
+    if (!puertoEmbarque || !puertoEmbarque.activo) {
+      throw new Error("Puerto de embarque no válido");
+    }
+
+    // 2. Verificar disponibilidad una vez más
+    const disponibilidad = await verificarDisponibilidad(
+      ventaData.embarcacionId,
+      ventaData.rutaId,
+      ventaData.fechaViaje,
+      ventaData.horaViaje,
+      ventaData.cantidadPasajes
     );
-  }
 
-  // Calcular totales
-  const subtotal = ventaData.precioUnitario * ventaData.cantidadPasajes;
-  const impuestos = 0; // Por ahora no aplicamos impuestos
-  const total = subtotal + impuestos;
+    if (!disponibilidad.puedeVender) {
+      throw new Error(
+        `Solo hay ${disponibilidad.disponibles} asientos disponibles. No se puede vender ${ventaData.cantidadPasajes} pasajes.`
+      );
+    }
 
-  // Generar número de venta
-  const numeroVenta = await generateVentaNumber();
+    // 3. Calcular totales
+    const subtotal = ventaData.precioUnitario * ventaData.cantidadPasajes;
+    const impuestos = 0;
+    const total = subtotal + impuestos;
 
-  // Crear la venta
-  const venta = await prisma.venta.create({
-    data: {
-      numeroVenta,
-      clienteId: ventaData.clienteId,
-      rutaId: ventaData.rutaId,
-      embarcacionId: ventaData.embarcacionId,
-      userId: ventaData.userId,
-      fechaViaje: ventaData.fechaViaje,
-      horaEmbarque: ventaData.horaEmbarque,
-      horaViaje: ventaData.horaViaje,
-      cantidadPasajes: ventaData.cantidadPasajes,
-      puertoOrigen: ventaData.puertoOrigen,
-      puertoDestino: ventaData.puertoDestino,
-      precioUnitario: ventaData.precioUnitario,
-      subtotal,
-      impuestos,
-      total,
-      metodoPago: ventaData.metodoPago || "EFECTIVO",
-      observaciones: ventaData.observaciones,
-      estado: "CONFIRMADA",
-    },
-    include: {
-      cliente: true,
-      ruta: true,
-      embarcacion: true,
-      vendedor: {
-        select: {
-          id: true,
-          nombre: true,
-          apellido: true,
-          email: true,
+    // 4. Validar totales para pago híbrido
+    if (ventaData.tipoPago === "HIBRIDO" && ventaData.metodosPago) {
+      const totalPagado = ventaData.metodosPago.reduce(
+        (sum: number, metodo: MetodoPago) => sum + metodo.monto,
+        0
+      );
+      if (Math.abs(totalPagado - total) > 0.01) {
+        throw new Error(
+          `El total de los métodos de pago (S/ ${totalPagado.toFixed(
+            2
+          )}) no coincide con el total de la venta (S/ ${total.toFixed(2)})`
+        );
+      }
+    }
+
+    // 5. Generar número de venta
+    const numeroVenta = await generateVentaNumber();
+
+    // 6. Crear la venta directamente (sin transacción por ahora)
+    const venta = await prisma.venta.create({
+      data: {
+        numeroVenta,
+        clienteId: ventaData.clienteId,
+        rutaId: ventaData.rutaId,
+        embarcacionId: ventaData.embarcacionId,
+        userId: ventaData.userId,
+        puertoEmbarqueId: ventaData.puertoEmbarqueId,
+        fechaViaje: ventaData.fechaViaje,
+        horaEmbarque: ventaData.horaEmbarque,
+        horaViaje: ventaData.horaViaje,
+        cantidadPasajes: ventaData.cantidadPasajes,
+        puertoOrigen: ventaData.puertoOrigen,
+        puertoDestino: ventaData.puertoDestino,
+        precioUnitario: ventaData.precioUnitario,
+        subtotal,
+        impuestos,
+        total,
+        tipoPago: ventaData.tipoPago,
+        metodoPago:
+          ventaData.metodoPago ||
+          (ventaData.tipoPago === "HIBRIDO" ? "HIBRIDO" : "EFECTIVO"),
+        metodosPago: ventaData.metodosPago
+          ? JSON.parse(JSON.stringify(ventaData.metodosPago))
+          : null,
+        observaciones: ventaData.observaciones,
+        estado: "CONFIRMADA",
+      },
+      include: {
+        cliente: true,
+        ruta: true,
+        embarcacion: true,
+        puertoEmbarque: true,
+        vendedor: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true,
+            email: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  return venta;
+    return venta;
+  } catch (error) {
+    console.error("Error en crearVenta:", error);
+    throw error;
+  }
 }
 
-// Obtener ventas con filtros
+// Resto de funciones sin cambios...
 export async function getVentas(filtros?: {
   fechaInicio?: Date;
   fechaFin?: Date;
@@ -270,7 +422,6 @@ export async function getVentas(filtros?: {
   const whereClause: import("@prisma/client").Prisma.VentaWhereInput = {};
 
   if (filtros?.fechaInicio && filtros?.fechaFin) {
-    // Solo aplicar filtro de fecha si ambos campos tienen valor
     const fechaInicio = new Date(filtros.fechaInicio + "T00:00:00-05:00");
     const fechaFin = new Date(filtros.fechaFin + "T23:59:59-05:00");
 
@@ -279,13 +430,11 @@ export async function getVentas(filtros?: {
       lte: fechaFin,
     };
   } else if (filtros?.fechaInicio) {
-    // Solo fecha inicio
     const fechaInicio = new Date(filtros.fechaInicio + "T00:00:00-05:00");
     whereClause.fechaVenta = {
       gte: fechaInicio,
     };
   } else if (filtros?.fechaFin) {
-    // Solo fecha fin
     const fechaFin = new Date(filtros.fechaFin + "T23:59:59-05:00");
     whereClause.fechaVenta = {
       lte: fechaFin,
@@ -310,10 +459,18 @@ export async function getVentas(filtros?: {
 
   if (filtros?.busqueda) {
     whereClause.OR = [
-      { numeroVenta: { contains: filtros.busqueda } },
-      { cliente: { nombre: { contains: filtros.busqueda } } },
-      { cliente: { apellido: { contains: filtros.busqueda } } },
-      { cliente: { dni: { contains: filtros.busqueda } } },
+      { numeroVenta: { contains: filtros.busqueda, mode: "insensitive" } },
+      {
+        cliente: {
+          nombre: { contains: filtros.busqueda, mode: "insensitive" },
+        },
+      },
+      {
+        cliente: {
+          apellido: { contains: filtros.busqueda, mode: "insensitive" },
+        },
+      },
+      { cliente: { dni: { contains: filtros.busqueda, mode: "insensitive" } } },
     ];
   }
 
@@ -324,6 +481,7 @@ export async function getVentas(filtros?: {
         cliente: true,
         ruta: true,
         embarcacion: true,
+        puertoEmbarque: true,
         vendedor: {
           select: {
             nombre: true,
@@ -338,7 +496,6 @@ export async function getVentas(filtros?: {
     prisma.venta.count({ where: whereClause }),
   ]);
 
-  // Convertir precios Decimal a number
   const ventasConPreciosConvertidos = ventas.map((venta) => ({
     ...venta,
     precioUnitario: parseFloat(venta.precioUnitario.toString()),
@@ -371,6 +528,7 @@ export async function anularVenta(ventaId: string, motivo?: string) {
       cliente: true,
       ruta: true,
       embarcacion: true,
+      puertoEmbarque: true,
     },
   });
 }
@@ -385,6 +543,7 @@ export async function buscarClientePorDNI(dni: string) {
         take: 5,
         include: {
           ruta: true,
+          puertoEmbarque: true,
         },
       },
     },

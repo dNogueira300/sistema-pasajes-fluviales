@@ -71,3 +71,43 @@ export function formatearFechaParaReporte(fecha: Date | string): string {
     year: "numeric",
   });
 }
+
+// Validar si se puede anular una venta basado en fecha y hora
+export function puedeAnularVentaPorFecha(venta: {
+  fechaViaje: Date | string;
+  horaViaje: string;
+}): {
+  puedeAnular: boolean;
+  tiempoRestante: number; // en milisegundos
+  horasRestantes: number;
+  mensaje: string;
+} {
+  const ahora = new Date();
+  const fechaViaje = new Date(venta.fechaViaje);
+
+  // Extraer horas y minutos de horaViaje (formato "HH:MM")
+  const [horas, minutos] = venta.horaViaje.split(":").map(Number);
+  fechaViaje.setHours(horas, minutos, 0, 0);
+
+  const tiempoRestante = fechaViaje.getTime() - ahora.getTime();
+  const horasRestantes = Math.ceil(tiempoRestante / (1000 * 60 * 60));
+
+  if (tiempoRestante <= 0) {
+    return {
+      puedeAnular: false,
+      tiempoRestante: 0,
+      horasRestantes: 0,
+      mensaje: "El viaje ya ha partido o está en curso",
+    };
+  }
+
+  return {
+    puedeAnular: true,
+    tiempoRestante,
+    horasRestantes,
+    mensaje:
+      horasRestantes <= 2
+        ? `Anulación urgente: ${horasRestantes} hora(s) restante(s)`
+        : `Tiempo restante: ${horasRestantes} hora(s)`,
+  };
+}
