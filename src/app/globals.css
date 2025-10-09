@@ -1,31 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  /* Tema oscuro como principal */
+  /* Tema mixto equilibrado - Fase 1 */
   --background: #0f172a;
-  /* slate-900 */
-  --foreground: #f8fafc;
-  /* slate-50 */
+  /* slate-900 - igual al sidebar */
+  --foreground: #f1f5f9;
+  /* slate-100 */
 
-  /* Paleta de colores del sistema */
-  --primary-blue: #3b82f6;
-  /* blue-500 */
-  --primary-orange: #f97316;
-  /* orange-500 */
-  --accent-blue: #1e40af;
-  /* blue-700 */
-  --accent-orange: #ea580c;
-  /* orange-600 */
+  /* Paleta cohesiva */
+  --bg-primary: #0f172a;
+  /* slate-900 - fondo base */
+  --bg-secondary: #1e293b;
+  /* slate-800 - contenedores principales */
+  --bg-tertiary: #334155;
+  /* slate-700 - elementos internos */
+  --bg-hover: #475569;
+  /* slate-600 - estados hover */
 
-  /* Colores de superficie */
-  --surface: #1e293b;
-  /* slate-800 */
-  --surface-hover: #334155;
-  /* slate-700 */
-  --border: #475569;
+  /* Superficies con glassmorphism */
+  --surface-glass: rgba(30, 41, 59, 0.8);
+  /* slate-800 con transparencia */
+  --surface-card: rgba(51, 65, 85, 0.6);
+  /* slate-700 con transparencia */
+
+  /* Textos */
+  --text-primary: #f1f5f9;
+  /* slate-100 - principal */
+  --text-secondary: #cbd5e1;
+  /* slate-300 - secundario */
+  --text-muted: #94a3b8;
+  /* slate-400 - deshabilitado */
+
+  /* Bordes */
+  --border-primary: #475569;
   /* slate-600 */
-  --border-light: #64748b;
+  --border-secondary: #64748b;
   /* slate-500 */
+  --border-subtle: rgba(71, 85, 105, 0.3);
+  /* slate-600 transparente */
+
+  /* Acentos (mantener los existentes) */
+  --accent-blue: #3b82f6;
+  --accent-orange: #f97316;
+  --accent-blue-dark: #1e40af;
+  --accent-orange-dark: #ea580c;
+
+  /* Estados */
+  --success: #10b981;
+  /* emerald-500 */
+  --warning: #f59e0b;
+  /* amber-500 */
+  --error: #ef4444;
+  /* red-500 */
 }
 
 @theme inline {
@@ -36,7 +62,61 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Clases utilitarias para el tema mixto */
+.bg-surface-glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.bg-surface-card {
+  background: var(--surface-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.border-themed {
+  border-color: var(--border-subtle);
+}
+
+.text-themed-primary {
+  color: var(--text-primary);
+}
+
+.text-themed-secondary {
+  color: var(--text-secondary);
+}
+
+.text-themed-muted {
+  color: var(--text-muted);
+}
+
+/* Efectos de hover para elementos interactivos */
+.hover-surface:hover {
+  background: var(--bg-hover);
+  transition: background-color 0.2s ease;
+}
+
+/* Scrollbars personalizados para el tema oscuro */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-hover);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-secondary);
 }

@@ -1,7 +1,12 @@
+// src/app/api/ventas/disponibilidad/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { verificarDisponibilidad } from "@/lib/actions/ventas";
+import {
+  verificarDisponibilidad,
+  validarDiaOperacion,
+} from "@/lib/actions/ventas";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,9 +53,8 @@ export async function POST(request: NextRequest) {
 
     // Si fechaViaje es string (formato YYYY-MM-DD), crear fecha en zona horaria local
     if (typeof fechaViaje === "string") {
-      // Crear fecha sin problemas de zona horaria
       const [year, month, day] = fechaViaje.split("-").map(Number);
-      fechaViajeDate = new Date(year, month - 1, day); // month - 1 porque Date usa 0-based months
+      fechaViajeDate = new Date(year, month - 1, day);
     } else {
       fechaViajeDate = new Date(fechaViaje);
     }
@@ -75,6 +79,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ⭐ NUEVO: Validar día de operación
+    const validacionDia = await validarDiaOperacion(
+      embarcacionId,
+      rutaId,
+      fechaViajeDate
+    );
+
+    if (!validacionDia.valido) {
+      return NextResponse.json(
+        {
+          error: validacionDia.mensaje,
+          diasOperativos: validacionDia.diasOperativos,
+          puedeVender: false,
+        },
+        { status: 400 }
+      );
+    }
+
     // Verificar disponibilidad
     const disponibilidad = await verificarDisponibilidad(
       embarcacionId,
@@ -86,7 +108,11 @@ export async function POST(request: NextRequest) {
 
     console.log("✅ Disponibilidad calculada:", disponibilidad);
 
-    return NextResponse.json(disponibilidad);
+    // Incluir información de días operativos en la respuesta
+    return NextResponse.json({
+      ...disponibilidad,
+      diasOperativos: validacionDia.diasOperativos,
+    });
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Error interno del servidor";
@@ -94,7 +120,6 @@ export async function POST(request: NextRequest) {
     console.error("Error verificando disponibilidad:", {
       error: errorMessage,
       timestamp: new Date().toISOString(),
-      body: request.body,
     });
 
     // Manejar errores específicos

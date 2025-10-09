@@ -1,4 +1,4 @@
-// src/components/anulaciones/modal-anular-venta.tsx - CORREGIDO
+// src/components/anulaciones/modal-anular-venta.tsx - DARK THEME
 
 "use client";
 
@@ -181,40 +181,42 @@ export default function ModalAnularVenta({
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case "CONFIRMADA":
-        return "bg-green-100 text-green-800";
+        return "bg-green-900/50 text-green-300 border-green-700/50";
       case "ANULADA":
-        return "bg-red-100 text-red-800";
+        return "bg-red-900/50 text-red-300 border-red-700/50";
       case "REEMBOLSADA":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-900/50 text-yellow-300 border-yellow-700/50";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-700/50 text-slate-300 border-slate-600/50";
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl drop-shadow-xl border border-gray-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl sticky top-0">
           <div className="flex items-center space-x-3">
             <div
               className={`p-2 rounded-lg ${
-                validacionFecha.puedeAnular ? "bg-blue-100" : "bg-red-100"
+                validacionFecha.puedeAnular
+                  ? "bg-blue-900/50 backdrop-blur-sm"
+                  : "bg-red-900/50 backdrop-blur-sm"
               }`}
             >
               {validacionFecha.puedeAnular ? (
-                <Shield className="h-6 w-6 text-blue-600" />
+                <Shield className="h-6 w-6 text-blue-400" />
               ) : (
-                <XCircle className="h-6 w-6 text-red-600" />
+                <XCircle className="h-6 w-6 text-red-400" />
               )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-slate-100">
                 Anular Venta - #{venta.numeroVenta}
               </h2>
-              <p className="text-sm text-gray-900">
+              <p className="text-sm text-slate-300">
                 {validacionFecha.puedeAnular
                   ? "Validación de anulación"
                   : "Anulación no permitida"}
@@ -223,7 +225,7 @@ export default function ModalAnularVenta({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
             disabled={loading}
           >
             <X className="h-5 w-5" />
@@ -233,42 +235,42 @@ export default function ModalAnularVenta({
         <div className="p-6 space-y-6">
           {/* Información del viaje - SIEMPRE VISIBLE */}
           <div
-            className={`rounded-lg p-5 border-2 ${
+            className={`rounded-xl p-5 border-2 backdrop-blur-md transition-all duration-200 ${
               validacionFecha.puedeAnular
                 ? validacionFecha.esUrgente
-                  ? "bg-amber-50 border-amber-200"
-                  : "bg-blue-50 border-blue-200"
-                : "bg-red-50 border-red-200"
+                  ? "bg-amber-900/30 border-amber-600/50"
+                  : "bg-blue-900/30 border-blue-600/50"
+                : "bg-red-900/30 border-red-600/50"
             }`}
           >
             <div className="flex items-start space-x-4">
               <div
-                className={`p-2 rounded-lg ${
+                className={`p-2 rounded-lg backdrop-blur-sm ${
                   validacionFecha.puedeAnular
                     ? validacionFecha.esUrgente
-                      ? "bg-amber-100"
-                      : "bg-blue-100"
-                    : "bg-red-100"
+                      ? "bg-amber-800/50"
+                      : "bg-blue-800/50"
+                    : "bg-red-800/50"
                 }`}
               >
                 {validacionFecha.puedeAnular ? (
                   validacionFecha.esUrgente ? (
-                    <AlertTriangle className="h-6 w-6 text-amber-600" />
+                    <AlertTriangle className="h-6 w-6 text-amber-400" />
                   ) : (
-                    <CheckCircle className="h-6 w-6 text-blue-600" />
+                    <CheckCircle className="h-6 w-6 text-blue-400" />
                   )
                 ) : (
-                  <XCircle className="h-6 w-6 text-red-600" />
+                  <XCircle className="h-6 w-6 text-red-400" />
                 )}
               </div>
               <div className="flex-1">
                 <h3
-                  className={`font-semibold mb-2 text-gray-900 ${
+                  className={`font-semibold mb-2 ${
                     validacionFecha.puedeAnular
                       ? validacionFecha.esUrgente
-                        ? "text-amber-900"
-                        : "text-blue-900"
-                      : "text-red-900"
+                        ? "text-amber-200"
+                        : "text-blue-200"
+                      : "text-red-200"
                   }`}
                 >
                   {validacionFecha.puedeAnular
@@ -279,18 +281,18 @@ export default function ModalAnularVenta({
                 </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-700" />
-                    <span className="font-medium text-gray-700">
+                    <Calendar className="h-4 w-4 text-slate-400" />
+                    <span className="font-medium text-slate-300">
                       Fecha programada:
                     </span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-slate-100">
                       {validacionFecha.fechaFormateada}
                       {venta.horaViaje && ` a las ${venta.horaViaje}`}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-gray-700" />
-                    <span className="font-medium text-gray-700">
+                    <Clock className="h-4 w-4 text-slate-400" />
+                    <span className="font-medium text-slate-300">
                       {validacionFecha.puedeAnular
                         ? "Tiempo restante:"
                         : "Estado:"}
@@ -299,9 +301,9 @@ export default function ModalAnularVenta({
                       className={`font-semibold ${
                         validacionFecha.puedeAnular
                           ? validacionFecha.esUrgente
-                            ? "text-amber-700"
-                            : "text-blue-700"
-                          : "text-red-700"
+                            ? "text-amber-300"
+                            : "text-blue-300"
+                          : "text-red-300"
                       }`}
                     >
                       {validacionFecha.puedeAnular
@@ -310,42 +312,42 @@ export default function ModalAnularVenta({
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-gray-700" />
-                    <span className="font-medium text-gray-700">Ruta:</span>
-                    <span className="font-semibold text-gray-900">
+                    <MapPin className="h-4 w-4 text-slate-400" />
+                    <span className="font-medium text-slate-300">Ruta:</span>
+                    <span className="font-semibold text-slate-100">
                       {venta.ruta.nombre}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-gray-700" />
-                    <span className="font-medium text-gray-700">Cliente:</span>
-                    <span className="font-semibold text-gray-900">
+                    <User className="h-4 w-4 text-slate-400" />
+                    <span className="font-medium text-slate-300">Cliente:</span>
+                    <span className="font-semibold text-slate-100">
                       {venta.cliente.nombre} {venta.cliente.apellido}
                     </span>
                   </div>
                 </div>
                 <div
-                  className={`mt-3 p-3 rounded-lg ${
+                  className={`mt-3 p-3 rounded-lg backdrop-blur-sm ${
                     validacionFecha.puedeAnular
                       ? validacionFecha.esUrgente
-                        ? "bg-amber-100"
-                        : "bg-blue-100"
-                      : "bg-red-100"
+                        ? "bg-amber-800/30"
+                        : "bg-blue-800/30"
+                      : "bg-red-800/30"
                   }`}
                 >
                   <p
                     className={`text-sm font-medium ${
                       validacionFecha.puedeAnular
                         ? validacionFecha.esUrgente
-                          ? "text-amber-800"
-                          : "text-blue-800"
-                        : "text-red-800"
+                          ? "text-amber-200"
+                          : "text-blue-200"
+                        : "text-red-200"
                     }`}
                   >
                     {validacionFecha.mensaje}
                   </p>
                   {!validacionFecha.puedeAnular && (
-                    <p className="text-sm text-red-700 mt-2">
+                    <p className="text-sm text-red-300 mt-2">
                       Las ventas no pueden ser anuladas después de la fecha y
                       hora programada del viaje. Para gestionar esta situación,
                       contacte al administrador del sistema.
@@ -359,11 +361,11 @@ export default function ModalAnularVenta({
           {/* Contenido según validación */}
           {step === "validacion" && !validacionFecha.puedeAnular && (
             <div className="text-center py-8">
-              <XCircle className="h-20 w-20 text-red-500 mx-auto mb-6" />
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <XCircle className="h-20 w-20 text-red-400 mx-auto mb-6" />
+              <h3 className="text-xl font-bold text-slate-100 mb-3">
                 No se puede anular esta venta
               </h3>
-              <p className="text-gray-600 mb-2 max-w-md mx-auto">
+              <p className="text-slate-300 mb-2 max-w-md mx-auto">
                 El viaje programado para el{" "}
                 <strong>{validacionFecha.fechaFormateada}</strong>
                 {venta.horaViaje && (
@@ -374,13 +376,13 @@ export default function ModalAnularVenta({
                 )}{" "}
                 ya ha partido o está en curso.
               </p>
-              <p className="text-sm text-gray-500 mb-8">
+              <p className="text-sm text-slate-400 mb-8">
                 Las anulaciones deben realizarse antes de la fecha y hora del
                 viaje.
               </p>
               <button
                 onClick={onClose}
-                className="px-8 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
+                className="px-8 py-3 bg-slate-700/50 text-slate-200 rounded-xl hover:bg-slate-600/50 font-medium backdrop-blur-sm transition-all duration-200 border border-slate-600/50"
               >
                 Entendido
               </button>
@@ -393,27 +395,27 @@ export default function ModalAnularVenta({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Información del cliente */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
                     <User className="h-5 w-5 mr-2" />
                     Cliente
                   </h3>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="bg-slate-700/30 rounded-xl p-4 space-y-2 backdrop-blur-md border border-slate-600/50">
                     <div className="flex justify-between">
-                      <span className="text-gray-700">Nombre:</span>
-                      <span className="font-medium text-gray-900 text-right">
+                      <span className="text-slate-400">Nombre:</span>
+                      <span className="font-medium text-slate-100 text-right">
                         {venta.cliente.nombre} {venta.cliente.apellido}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">DNI:</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-slate-400">DNI:</span>
+                      <span className="font-medium text-slate-100">
                         {venta.cliente.dni}
                       </span>
                     </div>
                     {venta.cliente.telefono && (
                       <div className="flex justify-between">
-                        <span className="text-gray-700">Teléfono:</span>
-                        <span className="font-medium text-gray-900">
+                        <span className="text-slate-400">Teléfono:</span>
+                        <span className="font-medium text-slate-100">
                           {venta.cliente.telefono}
                         </span>
                       </div>
@@ -423,33 +425,33 @@ export default function ModalAnularVenta({
 
                 {/* Información de pago */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
                     <CreditCard className="h-5 w-5 mr-2" />
                     Pago
                   </h3>
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  <div className="bg-slate-700/30 rounded-xl p-4 space-y-2 backdrop-blur-md border border-slate-600/50">
                     <div className="flex justify-between">
-                      <span className="text-gray-700">Método:</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-slate-400">Método:</span>
+                      <span className="font-medium text-slate-100">
                         {venta.metodoPago}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">Total:</span>
-                      <span className="font-bold text-lg text-gray-900">
+                      <span className="text-slate-400">Total:</span>
+                      <span className="font-bold text-lg text-slate-100">
                         S/ {Number(venta.total).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">Pasajes:</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-slate-400">Pasajes:</span>
+                      <span className="font-medium text-slate-100">
                         {venta.cantidadPasajes}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">Estado:</span>
+                      <span className="text-slate-400">Estado:</span>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getEstadoColor(
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border backdrop-blur-sm ${getEstadoColor(
                           venta.estado
                         )}`}
                       >
@@ -461,17 +463,20 @@ export default function ModalAnularVenta({
               </div>
 
               {/* Formulario de anulación */}
-              <form onSubmit={handleSubmit} className="space-y-6 border-t pt-6">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-6 border-t border-slate-600/50 pt-6"
+              >
                 {/* Advertencia de urgencia */}
                 {validacionFecha.esUrgente && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="bg-amber-900/30 border border-amber-600/50 rounded-xl p-4 backdrop-blur-md">
                     <div className="flex items-start">
-                      <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+                      <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5 mr-3 flex-shrink-0" />
                       <div>
-                        <h4 className="font-semibold text-amber-900 mb-1">
+                        <h4 className="font-semibold text-amber-200 mb-1">
                           Anulación de Último Momento
                         </h4>
-                        <p className="text-amber-800 text-sm">
+                        <p className="text-amber-300 text-sm">
                           El viaje está programado en menos de 2 horas. Procese
                           esta anulación con urgencia para liberar los asientos
                           y notificar al equipo operativo.
@@ -483,12 +488,12 @@ export default function ModalAnularVenta({
 
                 {/* Tipo de anulación */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
                     <DollarSign className="h-5 w-5 mr-2" />
                     Tipo de anulación
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <label className="flex items-center p-4 border-2 border-slate-600/50 rounded-xl cursor-pointer hover:bg-slate-700/30 transition-all duration-200 backdrop-blur-sm">
                       <input
                         type="radio"
                         name="tipoAnulacion"
@@ -500,20 +505,20 @@ export default function ModalAnularVenta({
                             tipoAnulacion: e.target.value as TipoAnulacion,
                           }))
                         }
-                        className="mr-3 text-blue-600"
+                        className="mr-3 text-blue-600 bg-slate-700 border-slate-600"
                       />
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-slate-100">
                           Anulación
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-slate-400">
                           Sin reembolso de dinero
                         </div>
                       </div>
                     </label>
 
                     {session?.user.role === "ADMINISTRADOR" && (
-                      <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <label className="flex items-center p-4 border-2 border-slate-600/50 rounded-xl cursor-pointer hover:bg-slate-700/30 transition-all duration-200 backdrop-blur-sm">
                         <input
                           type="radio"
                           name="tipoAnulacion"
@@ -525,13 +530,13 @@ export default function ModalAnularVenta({
                               tipoAnulacion: e.target.value as TipoAnulacion,
                             }))
                           }
-                          className="mr-3 text-blue-600"
+                          className="mr-3 text-blue-600 bg-slate-700 border-slate-600"
                         />
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-slate-100">
                             Reembolso
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-slate-400">
                             Con devolución de dinero
                           </div>
                         </div>
@@ -543,12 +548,12 @@ export default function ModalAnularVenta({
                 {/* Monto de reembolso */}
                 {formData.tipoAnulacion === "REEMBOLSO" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
                       Monto a reembolsar *
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">S/</span>
+                        <span className="text-slate-400 sm:text-sm">S/</span>
                       </div>
                       <input
                         type="number"
@@ -562,12 +567,12 @@ export default function ModalAnularVenta({
                             montoReembolso: parseFloat(e.target.value) || 0,
                           }))
                         }
-                        className="block w-full pl-12 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                        className="block w-full pl-12 pr-3 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
                         placeholder="0.00"
                         required
                       />
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-slate-400 mt-1">
                       Máximo: S/ {Number(venta.total).toFixed(2)}
                     </p>
                   </div>
@@ -575,7 +580,7 @@ export default function ModalAnularVenta({
 
                 {/* Motivo */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Motivo de anulación *
                   </label>
                   <select
@@ -586,12 +591,16 @@ export default function ModalAnularVenta({
                         motivo: e.target.value,
                       }))
                     }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    className="block w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
                     required
                   >
                     <option value="">Seleccionar motivo...</option>
                     {motivosComunes.map((motivo) => (
-                      <option key={motivo} value={motivo}>
+                      <option
+                        key={motivo}
+                        value={motivo}
+                        className="bg-slate-800 text-slate-100"
+                      >
                         {motivo}
                       </option>
                     ))}
@@ -600,7 +609,7 @@ export default function ModalAnularVenta({
 
                 {/* Observaciones */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Observaciones adicionales
                     {formData.motivo === "Otro motivo" && " *"}
                   </label>
@@ -613,7 +622,7 @@ export default function ModalAnularVenta({
                       }))
                     }
                     rows={3}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    className="block w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 resize-none backdrop-blur-sm transition-all duration-200"
                     placeholder={
                       formData.motivo === "Otro motivo"
                         ? "Especificar el motivo..."
@@ -625,10 +634,10 @@ export default function ModalAnularVenta({
 
                 {/* Error */}
                 {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="bg-red-900/30 border border-red-600/50 rounded-xl p-4 backdrop-blur-md">
                     <div className="flex items-start">
-                      <XCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-                      <div className="text-sm text-red-800 whitespace-pre-line">
+                      <XCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <div className="text-sm text-red-200 whitespace-pre-line">
                         {error}
                       </div>
                     </div>
@@ -636,19 +645,19 @@ export default function ModalAnularVenta({
                 )}
 
                 {/* Botones */}
-                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <div className="flex justify-end space-x-4 pt-6 border-t border-slate-600/50">
                   <button
                     type="button"
                     onClick={onClose}
                     disabled={loading}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 font-medium"
+                    className="px-6 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 disabled:opacity-50 font-medium backdrop-blur-sm transition-all duration-200"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={loading || !formData.motivo.trim()}
-                    className={`px-6 py-3 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center ${
+                    className={`px-6 py-3 text-white rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-all duration-200 shadow-lg hover:shadow-xl ${
                       validacionFecha.esUrgente
                         ? "bg-amber-600 hover:bg-amber-700"
                         : "bg-red-600 hover:bg-red-700"

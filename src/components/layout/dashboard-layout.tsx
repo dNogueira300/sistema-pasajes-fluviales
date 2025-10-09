@@ -1,3 +1,4 @@
+// components/layout/dashboard-layout.tsx
 "use client";
 
 import { useState } from "react";
@@ -16,19 +17,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="h-screen flex bg-gray-100">
-      {/* Sidebar */}
-      <aside className="flex-shrink-0">
+    <div className="h-screen flex bg-slate-900 overflow-hidden">
+      {/* Sidebar sin separaciones visuales */}
+      <aside className="flex-shrink-0 z-20">
         <Sidebar isCollapsed={isCollapsed} />
       </aside>
 
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+      {/* Contenido principal fluido */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header integrado sin separación */}
         <Header isCollapsed={isCollapsed} onToggleSidebar={toggleSidebar} />
 
-        {/* Contenido */}
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        {/* Contenido principal con fondo continuo */}
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );

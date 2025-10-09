@@ -218,6 +218,98 @@ export async function verificarDisponibilidad(
   };
 }
 
+function normalizarDia(dia: string): string {
+  return dia
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Elimina acentos
+    .trim();
+}
+
+/**
+ * Valida que la fecha de viaje coincida con los días de operación
+ * de la embarcación en la ruta seleccionada
+ */
+export async function validarDiaOperacion(
+  embarcacionId: string,
+  rutaId: string,
+  fechaViaje: Date
+): Promise<{ valido: boolean; mensaje?: string; diasOperativos: string[] }> {
+  try {
+    // Obtener la relación embarcación-ruta
+    const embarcacionRuta = await prisma.embarcacionRuta.findFirst({
+      where: {
+        embarcacionId,
+        rutaId,
+        activa: true,
+      },
+    });
+
+    if (!embarcacionRuta) {
+      return {
+        valido: false,
+        mensaje: "La embarcación no está asignada a esta ruta",
+        diasOperativos: [],
+      };
+    }
+
+    // Mapeo de días de la semana (SIN acentos para mantener consistencia)
+    const diasSemana = [
+      "DOMINGO",
+      "LUNES",
+      "MARTES",
+      "MIERCOLES", // Sin acento
+      "JUEVES",
+      "VIERNES",
+      "SABADO", // Sin acento
+    ];
+
+    // Obtener el día de la semana de la fecha de viaje
+    const diaDeViaje = diasSemana[fechaViaje.getDay()];
+
+    // Normalizar el día calculado
+    const diaViajeNormalizado = normalizarDia(diaDeViaje);
+
+    // Normalizar TODOS los días operativos para la comparación
+    const diasOperativos = embarcacionRuta.diasOperacion || [];
+    const diasOperativosNormalizados = diasOperativos.map((d) =>
+      normalizarDia(d)
+    );
+
+    // Log para debugging
+    console.log("🔍 Validación de día de operación:", {
+      fechaViaje: fechaViaje.toISOString(),
+      diaCalculado: diaDeViaje,
+      diaNormalizado: diaViajeNormalizado,
+      diasOperativos: diasOperativos,
+      diasNormalizados: diasOperativosNormalizados,
+      embarcacionId,
+      rutaId,
+    });
+
+    // Verificar si el día está en los días operativos (comparación normalizada)
+    const esValido = diasOperativosNormalizados.includes(diaViajeNormalizado);
+
+    if (!esValido) {
+      return {
+        valido: false,
+        mensaje: `La embarcación no opera los días ${diaDeViaje}. Esta ruta opera: ${diasOperativos.join(
+          ", "
+        )}`,
+        diasOperativos,
+      };
+    }
+
+    return {
+      valido: true,
+      diasOperativos,
+    };
+  } catch (error) {
+    console.error("Error validando día de operación:", error);
+    throw new Error("Error al validar día de operación");
+  }
+}
+
 // Buscar o crear cliente
 export async function buscarOCrearCliente(clienteData: {
   dni: string;
@@ -304,7 +396,18 @@ export async function crearVenta(ventaData: {
   observaciones?: string;
 }) {
   try {
-    // 1. Verificaciones previas sin transacción
+    // 1. Validar día de operación (NUEVO)
+    const validacionDia = await validarDiaOperacion(
+      ventaData.embarcacionId,
+      ventaData.rutaId,
+      ventaData.fechaViaje
+    );
+
+    if (!validacionDia.valido) {
+      throw new Error(validacionDia.mensaje || "Día de operación no válido");
+    }
+
+    // Verificaciones previas sin transacción
     const puertoEmbarque = await prisma.puertoEmbarque.findUnique({
       where: { id: ventaData.puertoEmbarqueId },
     });
@@ -379,6 +482,7 @@ export async function crearVenta(ventaData: {
           : null,
         observaciones: ventaData.observaciones,
         estado: "CONFIRMADA",
+        fechaVenta: new Date(),
       },
       include: {
         cliente: true,
@@ -548,4 +652,89 @@ export async function buscarClientePorDNI(dni: string) {
       },
     },
   });
+}
+
+// Obtener estadísticas de ventas
+
+export async function getEstadisticasVentas() {
+  try {
+    // Importar las funciones de fecha
+    const { obtenerInicioDiaPeru, obtenerFinDiaPeru } = await import(
+      "@/lib/utils/fecha-utils"
+    );
+
+    // Obtener inicio y fin del día en zona horaria de Perú
+    const hoyInicio = obtenerInicioDiaPeru();
+    const hoyFin = obtenerFinDiaPeru();
+
+    console.log("📅 Rango de fechas para estadísticas:", {
+      hoyInicio: hoyInicio.toISOString(),
+      hoyFin: hoyFin.toISOString(),
+      hoyInicioPeru: hoyInicio.toLocaleString("es-PE", {
+        timeZone: "America/Lima",
+      }),
+      hoyFinPeru: hoyFin.toLocaleString("es-PE", { timeZone: "America/Lima" }),
+    });
+
+    // Ejecutar todas las consultas en paralelo
+    const [
+      totalVentas,
+      ventasHoy,
+      ventasConfirmadas,
+      ventasAnuladas,
+      totalRecaudadoConfirmadas,
+      ventasReembolsadas,
+    ] = await Promise.all([
+      // Total de ventas
+      prisma.venta.count(),
+
+      // Ventas de hoy (en zona horaria de Perú)
+      prisma.venta.count({
+        where: {
+          fechaVenta: {
+            gte: hoyInicio,
+            lte: hoyFin,
+          },
+        },
+      }),
+
+      // Ventas confirmadas
+      prisma.venta.count({
+        where: { estado: "CONFIRMADA" },
+      }),
+
+      // Ventas anuladas
+      prisma.venta.count({
+        where: { estado: "ANULADA" },
+      }),
+
+      // Total recaudado solo de ventas confirmadas
+      prisma.venta.aggregate({
+        where: { estado: "CONFIRMADA" },
+        _sum: { total: true },
+      }),
+
+      // Ventas reembolsadas
+      prisma.venta.count({
+        where: { estado: "REEMBOLSADA" },
+      }),
+    ]);
+
+    // Total recaudado real (solo ventas confirmadas)
+    const totalRecaudado = totalRecaudadoConfirmadas._sum.total
+      ? parseFloat(totalRecaudadoConfirmadas._sum.total.toString())
+      : 0;
+
+    return {
+      totalVentas,
+      ventasHoy,
+      ventasConfirmadas,
+      ventasAnuladas,
+      totalRecaudado,
+      ventasReembolsadas,
+    };
+  } catch (error) {
+    console.error("Error obteniendo estadísticas de ventas:", error);
+    throw new Error("Error al obtener estadísticas de ventas");
+  }
 }

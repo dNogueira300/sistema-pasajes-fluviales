@@ -150,24 +150,24 @@ export default function NuevoClienteForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl drop-shadow-xl border border-gray-200">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-lg font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
+        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl">
+          <h2 className="text-xl font-semibold text-slate-100">
             Registrar Nuevo Cliente
           </h2>
           <button
             onClick={onClose}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="p-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 DNI *
               </label>
               <input
@@ -175,14 +175,14 @@ export default function NuevoClienteForm({
                 required
                 value={formulario.dni}
                 onChange={(e) => handleInputChange("dni", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
                 placeholder="12345678"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Nombre *
                 </label>
                 <input
@@ -190,11 +190,12 @@ export default function NuevoClienteForm({
                   required
                   value={formulario.nombre}
                   onChange={(e) => handleInputChange("nombre", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  placeholder="Juan"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Apellido *
                 </label>
                 <input
@@ -204,23 +205,28 @@ export default function NuevoClienteForm({
                   onChange={(e) =>
                     handleInputChange("apellido", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  placeholder="Pérez"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Teléfono
               </label>
               <div className="flex">
                 <select
                   value={codigoPais}
                   onChange={(e) => setCodigoPais(e.target.value)}
-                  className="w-32 px-2 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 border-r-0 text-sm"
+                  className="w-32 px-3 py-3 border border-slate-600/50 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 border-r-0 text-sm backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
                 >
                   {codigosPaises.map((item) => (
-                    <option key={item.codigo} value={item.codigo}>
+                    <option
+                      key={item.codigo}
+                      value={item.codigo}
+                      className="bg-slate-800 text-slate-100"
+                    >
                       {item.bandera} {item.codigo}
                     </option>
                   ))}
@@ -233,33 +239,37 @@ export default function NuevoClienteForm({
                     const value = e.target.value.replace(/\D/g, "");
                     handleInputChange("telefono", value);
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                  className="flex-1 px-4 py-3 border border-slate-600/50 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
                   placeholder="987654321"
                   maxLength={9}
                 />
               </div>
+
               {formulario.telefono && (
-                <div className="mt-1 text-xs text-gray-500">
-                  Teléfono completo: {formatearTelefonoCompleto()}
+                <div className="mt-2 text-xs text-slate-400">
+                  Teléfono completo:{" "}
+                  <span className="text-slate-300">
+                    {formatearTelefonoCompleto()}
+                  </span>
                 </div>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Email
               </label>
               <input
                 type="email"
                 value={formulario.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
                 placeholder="cliente@ejemplo.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Nacionalidad
               </label>
               <select
@@ -267,10 +277,14 @@ export default function NuevoClienteForm({
                 onChange={(e) =>
                   handleInputChange("nacionalidad", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
               >
                 {nacionalidadesCompletas.map((nacionalidad) => (
-                  <option key={nacionalidad} value={nacionalidad}>
+                  <option
+                    key={nacionalidad}
+                    value={nacionalidad}
+                    className="bg-slate-800 text-slate-100"
+                  >
                     {nacionalidad}
                   </option>
                 ))}
@@ -278,30 +292,30 @@ export default function NuevoClienteForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
                 Dirección
               </label>
               <textarea
                 value={formulario.direccion}
                 onChange={(e) => handleInputChange("direccion", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 resize-none backdrop-blur-sm transition-all duration-200"
                 rows={2}
                 placeholder="Dirección completa (opcional)"
               />
             </div>
 
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-sm"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 <span>Crear Cliente</span>

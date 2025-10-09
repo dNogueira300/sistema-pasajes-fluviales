@@ -1,3 +1,4 @@
+// hooks/use-auth.ts
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -44,8 +45,24 @@ export function useAuth(requireAuth = true) {
 }
 
 // Hook específico para páginas que requieren autenticación
-export function useRequireAuth() {
-  return useAuth(true);
+export function useRequireAuth(requiredRole?: UserRole) {
+  const auth = useAuth(true);
+  const router = useRouter();
+
+  // Extraer las propiedades específicas que necesitamos
+  const { isAuthenticated, hasRole } = auth;
+
+  useEffect(() => {
+    // Si se especifica un rol requerido y el usuario no lo tiene, redirigir
+    if (requiredRole && isAuthenticated && !hasRole(requiredRole)) {
+      router.push("/dashboard");
+    }
+  }, [isAuthenticated, hasRole, requiredRole, router]);
+
+  return {
+    ...auth,
+    hasRequiredRole: requiredRole ? hasRole(requiredRole) : true,
+  };
 }
 
 // Hook específico para páginas públicas (login, etc.)

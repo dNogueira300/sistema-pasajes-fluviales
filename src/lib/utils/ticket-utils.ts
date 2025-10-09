@@ -1,6 +1,7 @@
 // lib/utils/ticket-utils.ts
 import { formatearFechaViaje } from "./fecha-utils";
 import { getLogoBWBase64 } from "@/lib/utils/logo-utils";
+import { getConfiguracionEmpresa } from "@/lib/actions/configuracion";
 
 interface MetodoPago {
   tipo: string;
@@ -54,6 +55,9 @@ interface VentaTicket {
 export async function generarTicketTermico(
   venta: VentaTicket
 ): Promise<string> {
+  // Obtener configuración de la empresa
+  const empresa = await getConfiguracionEmpresa();
+  // Formatear la fecha de emisión
   const fechaEmision = new Date(venta.fechaVenta).toLocaleString("es-PE", {
     timeZone: "America/Lima",
     day: "2-digit",
@@ -273,20 +277,17 @@ export async function generarTicketTermico(
         <div class="logo-container">
           <img src="${logoBase64}" alt="Logo Alto Impacto Travel" class="logo" />
         </div>
-        <div class="empresa">ALTO IMPACTO TRAVEL</div>
+        <div class="empresa">${empresa.nombre}</div>
         <div class="empresa-subtitulo">VENTA DE PASAJES FLUVIALES</div>
         <div class="empresa-info">
           IQUITOS, YURIMAGUAS, PUCALLPA, SANTA ROSA, INTUTO,<br>
           SAN LORENZO, TROMPETEROS, PANTOJA, REQUENA<br>
           Y PUERTOS INTERMEDIOS
         </div>
-        <div class="empresa-info">
-          Jr. Fitzcarrald N° 513<br>
-          Celular: 955449875<br>
-          Email: altoimpactoviajes@gmail.com<br>
-          IQUITOS - MAYNAS - LORETO
-        </div>
-        
+        <div>${empresa.direccion}</div>
+        <div>${empresa.telefono}</div>
+        <div>${empresa.email}</div>
+        <div class="empresa-info">IQUITOS - MAYNAS - LORETO</div>        
         <div class="separador"></div>
         
         <div class="titulo">TICKET DE VIAJE</div>

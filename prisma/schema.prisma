@@ -99,6 +99,10 @@ model Cliente {
   updatedAt    DateTime @updatedAt
   ventas       Venta[]
 
+  // Índices para optimización de consultas
+  @@index([dni])
+  @@index([nombre, apellido])
+
   @@map("clientes")
 }
 
@@ -137,7 +141,28 @@ model Venta {
   puertoEmbarque  PuertoEmbarque @relation(fields: [puertoEmbarqueId], references: [id]) 
   anulacion Anulacion? // Relación con la posible anulación de la venta
 
+  // Índices para optimización de consultas
+  @@index([fechaVenta])
+  @@index([estado])
+  @@index([rutaId, embarcacionId, fechaViaje, horaViaje, estado])
+  @@index([clienteId])
+  @@index([numeroVenta])
+  @@index([userId])
+  @@index([fechaVenta, estado])
+  
+
   @@map("ventas")
+}
+// Modelo para llevar el contador diario de ventas
+model ContadorVentas {
+  id        String   @id @default(cuid())
+  fecha     String   @unique // Formato: YYMMDD (ejemplo: "241225" para 25 dic 2024)
+  contador  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fecha])
+  @@map("contador_ventas")
 }
 
 // Modelo para registrar anulaciones

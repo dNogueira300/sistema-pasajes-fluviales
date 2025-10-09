@@ -75,18 +75,18 @@ export default function GestionPuertos() {
   // Estados de UI
   const [showFiltros, setShowFiltros] = useState(false);
 
-  // Función para mostrar notificaciones estilo nueva-venta-form
+  // Función para mostrar notificaciones
   const mostrarNotificacion = (tipo: "success" | "error", texto: string) => {
     const notification = document.createElement("div");
     notification.className = `fixed top-4 right-4 ${
       tipo === "success"
-        ? "bg-green-50 border border-green-200 text-green-800"
-        : "bg-red-50 border border-red-200 text-red-800"
-    } px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50`;
+        ? "bg-green-900/90 border border-green-700 text-green-100"
+        : "bg-red-900/90 border border-red-700 text-red-100"
+    } px-6 py-4 rounded-xl shadow-xl flex items-center space-x-3 z-50 backdrop-blur-sm`;
 
     notification.innerHTML = `
       <svg class="h-5 w-5 ${
-        tipo === "success" ? "text-green-600" : "text-red-600"
+        tipo === "success" ? "text-green-400" : "text-red-400"
       }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         ${
           tipo === "success"
@@ -163,7 +163,7 @@ export default function GestionPuertos() {
     });
   };
 
-  // Manejar creación de puerto con tipos específicos
+  // Manejar creación de puerto
   const handleCrearPuerto = async (
     datos: CrearPuertoData
   ): Promise<boolean> => {
@@ -177,7 +177,7 @@ export default function GestionPuertos() {
     return false;
   };
 
-  // Manejar actualización de puerto con tipos específicos
+  // Manejar actualización de puerto
   const handleActualizarPuerto = async (
     id: string,
     datos: ActualizarPuertoData
@@ -250,22 +250,22 @@ export default function GestionPuertos() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6 max-w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-slate-100">
             Gestión de Puertos de Embarque
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-300">
             Administra los puertos de embarque disponibles
           </p>
         </div>
         <button
           onClick={() => setModalNuevo(true)}
-          className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-lg flex items-center space-x-3 font-medium shadow-md hover:shadow-xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-md"
+          className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl flex items-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-lg hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-800"
         >
-          <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-md transition-colors duration-200">
+          <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-lg transition-colors duration-200">
             <Plus className="h-4 w-4" />
           </div>
           <span>Nuevo Puerto</span>
@@ -273,92 +273,96 @@ export default function GestionPuertos() {
         </button>
       </div>
 
-      {/* Estadísticas con el mismo diseño de clientes */}
+      {/* Estadísticas con tema oscuro y glassmorphism */}
       {estadisticas && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Puertos - Azul suave */}
-          <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {/* Total Puertos */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+              <div className="bg-blue-600 p-3 rounded-xl shadow-lg">
+                <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-blue-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Total Puertos
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-blue-900">
+                <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.totalPuertos}
                 </p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-blue-400">
                   Nuevos: {estadisticas.puertosRecientes}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Puertos Activos - Verde suave */}
-          <div className="bg-green-50 border border-green-100 p-4 rounded-lg shadow-sm">
+          {/* Puertos Activos */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-green-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+              <div className="bg-green-600 p-3 rounded-xl shadow-lg">
+                <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-green-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Activos
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-green-900">
+                <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.puertosActivos}
                 </p>
-                <p className="text-xs text-green-600">Operativos</p>
+                <p className="text-xs text-green-400">Operativos</p>
               </div>
             </div>
           </div>
 
-          {/* Puertos Inactivos - Amarillo suave */}
-          <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-lg shadow-sm">
+          {/* Puertos Inactivos */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-orange-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-yellow-100 p-2 rounded-lg">
-                <EyeOff className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
+              <div className="bg-orange-600 p-3 rounded-xl shadow-lg">
+                <EyeOff className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-yellow-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Inactivos
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-yellow-900">
+                <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.puertosInactivos}
                 </p>
-                <p className="text-xs text-yellow-600">Suspendidos</p>
+                <p className="text-xs text-orange-400">Suspendidos</p>
               </div>
             </div>
           </div>
 
-          {/* Puertos con Ventas - Púrpura suave */}
-          <div className="bg-purple-50 border border-purple-100 p-4 rounded-lg shadow-sm">
+          {/* Puertos con Ventas */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-purple-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
+              <div className="bg-purple-600 p-3 rounded-xl shadow-lg">
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-purple-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Con Ventas
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-purple-900">
+                <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.puertosConVentas}
                 </p>
-                <p className="text-xs text-purple-600">En uso</p>
+                <p className="text-xs text-purple-400">En uso</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Filtros integrados con la tabla - igual que en clientes */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
+      {/* Filtros integrados con la tabla */}
+      <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50">
+        <div className="p-6 border-b border-slate-600/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-100 z-10" />
                 <input
                   type="text"
                   placeholder="Buscar por nombre, descripción o dirección..."
@@ -366,12 +370,12 @@ export default function GestionPuertos() {
                   onChange={(e) =>
                     handleFiltroChange("busqueda", e.target.value)
                   }
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500 w-80"
+                  className="pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 w-80 backdrop-blur-sm transition-all duration-200"
                 />
               </div>
               <button
                 onClick={() => setShowFiltros(!showFiltros)}
-                className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700"
+                className="flex items-center px-4 py-3 border border-slate-600/50 rounded-xl hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
               >
                 <Filter className="h-5 w-5 mr-2" />
                 Filtros
@@ -385,10 +389,10 @@ export default function GestionPuertos() {
           </div>
 
           {showFiltros && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="mt-6 pt-6 border-t border-slate-600/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Estado
                   </label>
                   <select
@@ -405,7 +409,7 @@ export default function GestionPuertos() {
                           : e.target.value === "true"
                       )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
                   >
                     <option value="">Todos los estados</option>
                     <option value="true">Activos</option>
@@ -414,7 +418,7 @@ export default function GestionPuertos() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Resultados por página
                   </label>
                   <select
@@ -422,7 +426,7 @@ export default function GestionPuertos() {
                     onChange={(e) =>
                       handleFiltroChange("limit", parseInt(e.target.value))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
                   >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
@@ -434,7 +438,7 @@ export default function GestionPuertos() {
                 <div className="flex items-end col-span-2">
                   <button
                     onClick={limpiarFiltros}
-                    className="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                    className="w-full px-6 py-3 bg-slate-600/50 text-slate-200 rounded-xl hover:bg-slate-500/50 transition-all duration-200 backdrop-blur-sm"
                   >
                     Limpiar
                   </button>
@@ -449,72 +453,75 @@ export default function GestionPuertos() {
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Cargando puertos...</span>
+              <span className="ml-3 text-slate-300">Cargando puertos...</span>
             </div>
           ) : puertos.length === 0 ? (
             <div className="text-center py-12">
-              <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <MapPin className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-200 mb-2">
                 No hay puertos registrados
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-400">
                 Los puertos aparecerán aquí una vez que los registres.
               </p>
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-600">
+              <thead className="bg-gradient-to-r from-slate-700 to-slate-600 border-b-2 border-slate-500">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Puerto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Descripción
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Dirección
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Ventas
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-slate-800/30 divide-y divide-slate-600">
                 {puertos.map((puerto) => (
-                  <tr key={puerto.id} className="hover:bg-gray-50">
+                  <tr
+                    key={puerto.id}
+                    className="hover:bg-slate-700/30 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-slate-100">
                           {puerto.nombre}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-400">
                           {new Date(puerto.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">
+                      <div className="text-sm text-slate-200 max-w-xs truncate">
                         {puerto.descripcion || "Sin descripción"}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">
+                      <div className="text-sm text-slate-200 max-w-xs truncate">
                         {puerto.direccion || "Sin dirección"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleCambiarEstado(puerto)}
-                        className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                        className={`inline-flex items-center px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 ${
                           puerto.activo
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                            ? "bg-green-900/40 text-green-300 border border-green-700/50 hover:bg-green-900/60"
+                            : "bg-slate-700/50 text-slate-300 border border-slate-600/50 hover:bg-slate-700/70"
                         }`}
                       >
                         {puerto.activo ? (
@@ -532,27 +539,27 @@ export default function GestionPuertos() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        className={`inline-flex px-3 py-2 text-xs font-semibold rounded-xl border transition-all duration-200 ${
                           puerto._count?.ventas && puerto._count.ventas > 0
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                            ? "bg-green-900/40 text-green-300 border-green-700/50"
+                            : "bg-slate-700/50 text-slate-300 border-slate-600/50"
                         }`}
                       >
                         {puerto._count?.ventas || 0} ventas
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-4">
+                      <div className="flex space-x-3">
                         <button
                           onClick={() => abrirModalEditar(puerto)}
-                          className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="text-blue-400 hover:text-blue-300 p-2 hover:bg-blue-900/30 rounded-xl transition-all duration-200"
                           title="Editar puerto"
                         >
                           <Edit className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => abrirModalEliminar(puerto)}
-                          className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-xl transition-all duration-200"
                           title="Eliminar puerto"
                         >
                           <Trash2 className="h-5 w-5" />
@@ -566,10 +573,10 @@ export default function GestionPuertos() {
           )}
         </div>
 
-        {/* Paginación - igual que en clientes */}
+        {/* Paginación */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+          <div className="px-6 py-5 border-t border-slate-600/50 flex items-center justify-between">
+            <div className="text-sm text-slate-300">
               Mostrando {(pagination.page - 1) * (filtros.limit || 10) + 1} a{" "}
               {Math.min(
                 pagination.page * (filtros.limit || 10),
@@ -577,21 +584,21 @@ export default function GestionPuertos() {
               )}{" "}
               de {pagination.total} resultados
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-3">
               <button
                 onClick={() => handleFiltroChange("page", pagination.page - 1)}
                 disabled={!pagination.hasPrev}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 border border-slate-600/50 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
               >
                 Anterior
               </button>
-              <span className="px-3 py-2 text-sm text-gray-700">
+              <span className="px-4 py-2 text-sm text-slate-300 flex items-center">
                 Página {pagination.page} de {pagination.totalPages}
               </span>
               <button
                 onClick={() => handleFiltroChange("page", pagination.page + 1)}
                 disabled={!pagination.hasNext}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 border border-slate-600/50 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
               >
                 Siguiente
               </button>
@@ -620,50 +627,50 @@ export default function GestionPuertos() {
 
       {/* Modal Confirmar Eliminar */}
       {modalConfirmarEliminar && puertoSeleccionado && (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl drop-shadow-xl border border-gray-200">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full shadow-2xl drop-shadow-2xl border border-slate-600/50">
+            <div className="flex items-center justify-between p-6 border-b border-slate-600/50">
+              <h2 className="text-xl font-semibold text-slate-100">
                 Confirmar Eliminación
               </h2>
               <button
                 onClick={() => setModalConfirmarEliminar(false)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-4">
-              <p className="text-gray-600 mb-6">
+            <div className="p-6">
+              <p className="text-slate-300 mb-6 text-base">
                 ¿Estás seguro de que deseas eliminar el puerto{" "}
-                <span className="font-semibold">
+                <span className="font-semibold text-slate-100">
                   {puertoSeleccionado.nombre}
                 </span>
                 ?
               </p>
               {puertoSeleccionado._count?.ventas &&
                 puertoSeleccionado._count.ventas > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 mb-6 backdrop-blur-sm">
                     <div className="flex items-center">
-                      <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-                      <p className="text-sm text-yellow-800">
+                      <AlertCircle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0" />
+                      <p className="text-sm text-orange-300">
                         Este puerto tiene {puertoSeleccionado._count.ventas}{" "}
                         ventas asociadas. No podrás eliminarlo.
                       </p>
                     </div>
                   </div>
                 )}
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setModalConfirmarEliminar(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleEliminarPuerto}
                   disabled={isEliminarDisabled()}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center space-x-2"
+                  className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 flex items-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   <span>Eliminar</span>
                 </button>

@@ -1,3 +1,6 @@
+// ============================================
+// middleware.ts - ACTUALIZADO
+// ============================================
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
@@ -11,9 +14,17 @@ export default withAuth(
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // Si hay token y está intentando acceder al login, redirigir al dashboard
+    // Si hay token y está intentando acceder al login, redirigir según rol
     if (token && pathname === "/login") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      const redirectPath =
+        token.role === "ADMINISTRADOR" ? "/dashboard" : "/dashboard/ventas";
+      return NextResponse.redirect(new URL(redirectPath, req.url));
+    }
+
+    // NUEVO: Proteger dashboard principal - solo administradores
+    if (pathname === "/dashboard" && token?.role !== "ADMINISTRADOR") {
+      console.log("⛔ Acceso denegado al dashboard: usuario no es admin");
+      return NextResponse.redirect(new URL("/dashboard/ventas", req.url));
     }
 
     // Verificar roles para rutas específicas de administrador
@@ -45,15 +56,5 @@ export default withAuth(
 
 // Configurar qué rutas deben pasar por el middleware
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico|public).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icon\\.png).*)"],
 };

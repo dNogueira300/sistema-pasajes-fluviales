@@ -32,6 +32,78 @@ export interface LoadingState {
   error?: string | null;
 }
 
+// Tipo de usuario extendido con información adicional
+export interface Usuario {
+  id: string;
+  email: string;
+  username: string;
+  nombre: string;
+  apellido: string;
+  role: UserRole;
+  activo: boolean;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  _count?: {
+    ventas: number;
+    anulaciones: number;
+  };
+}
+
+// Filtros para buscar usuarios
+export interface FiltrosUsuarios {
+  busqueda?: string;
+  role?: UserRole;
+  activo?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+// Datos para crear un usuario
+export interface CrearUsuarioData {
+  email: string;
+  username: string;
+  password: string;
+  nombre: string;
+  apellido: string;
+  role?: UserRole;
+  activo?: boolean;
+}
+
+// Datos para actualizar un usuario
+export interface ActualizarUsuarioData {
+  email?: string;
+  username?: string;
+  password?: string;
+  nombre?: string;
+  apellido?: string;
+  role?: UserRole;
+  activo?: boolean;
+}
+
+// Estadísticas de usuarios
+export interface EstadisticasUsuarios {
+  totalUsuarios: number;
+  usuariosActivos: number;
+  usuariosInactivos: number;
+  usuariosAdministradores: number;
+  usuariosVendedores: number;
+  usuariosConVentas: number;
+  usuariosRecientes: number;
+}
+
+// Respuesta de la API de usuarios
+export interface UsuariosResponse {
+  usuarios: Usuario[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 // Tipos para las rutas
 export interface Ruta {
   id: string;
@@ -42,6 +114,58 @@ export interface Ruta {
   activa: boolean;
   createdAt: Date;
   updatedAt: Date;
+  _count?: {
+    ventas: number;
+    embarcacionRutas: number;
+  };
+}
+
+// Filtros para buscar rutas
+export interface FiltrosRutas {
+  busqueda?: string;
+  activa?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+// Datos para crear una ruta
+export interface CrearRutaData {
+  nombre: string;
+  puertoOrigen: string;
+  puertoDestino: string;
+  precio: number;
+  activa?: boolean;
+}
+
+// Datos para actualizar una ruta
+export interface ActualizarRutaData {
+  nombre?: string;
+  puertoOrigen?: string;
+  puertoDestino?: string;
+  precio?: number;
+  activa?: boolean;
+}
+
+// Estadísticas de rutas
+export interface EstadisticasRutas {
+  totalRutas: number;
+  rutasActivas: number;
+  rutasInactivas: number;
+  rutasConVentas: number;
+  rutasRecientes: number;
+}
+
+// Respuesta de la API de rutas
+export interface RutasResponse {
+  rutas: Ruta[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 // Tipos para embarcaciones
@@ -55,6 +179,137 @@ export interface Embarcacion {
   tipo?: string;
   createdAt: Date;
   updatedAt: Date;
+  _count?: {
+    ventas: number;
+    embarcacionRutas: number;
+  };
+}
+
+// Filtros para buscar embarcaciones
+export interface FiltrosEmbarcaciones {
+  busqueda?: string;
+  estado?: EstadoEmbarcacion;
+  page?: number;
+  limit?: number;
+}
+
+// Datos para crear una embarcación
+export interface CrearEmbarcacionData {
+  nombre: string;
+  capacidad: number;
+  estado?: EstadoEmbarcacion;
+  tipo?: string;
+}
+
+// Datos para actualizar una embarcación
+export interface ActualizarEmbarcacionData {
+  nombre?: string;
+  capacidad?: number;
+  estado?: EstadoEmbarcacion;
+  tipo?: string;
+}
+
+// Estadísticas de embarcaciones
+export interface EstadisticasEmbarcaciones {
+  totalEmbarcaciones: number;
+  embarcacionesActivas: number;
+  embarcacionesMantenimiento: number;
+  embarcacionesInactivas: number;
+  embarcacionesConVentas: number;
+  capacidadTotal: number;
+  capacidadPromedio: number;
+}
+
+// Respuesta de la API de embarcaciones
+export interface EmbarcacionesResponse {
+  embarcaciones: Embarcacion[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+// Tipos para EmbarcacionRuta
+export interface EmbarcacionRuta {
+  id: string;
+  embarcacionId: string;
+  rutaId: string;
+  horasSalida: string[];
+  diasOperacion: string[];
+  activa: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  embarcacion?: Embarcacion;
+  ruta?: Ruta;
+}
+
+// Datos para crear una asignación embarcación-ruta
+export interface CrearEmbarcacionRutaData {
+  embarcacionId: string;
+  rutaId: string;
+  horasSalida: string[];
+  diasOperacion: string[];
+  activa?: boolean;
+}
+
+// Datos para actualizar una asignación embarcación-ruta
+export interface ActualizarEmbarcacionRutaData {
+  horasSalida?: string[];
+  diasOperacion?: string[];
+  activa?: boolean;
+}
+
+// Filtros para buscar asignaciones embarcación-ruta
+export interface FiltrosEmbarcacionRutas {
+  rutaId?: string;
+  embarcacionId?: string;
+  activa?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+// Respuesta de la API de embarcación-rutas
+export interface EmbarcacionRutasResponse {
+  embarcacionRutas: EmbarcacionRuta[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+// Embarcación con sus rutas asignadas
+export interface EmbarcacionConRutas extends Embarcacion {
+  embarcacionRutas: (EmbarcacionRuta & {
+    ruta: Ruta;
+  })[];
+}
+
+// Ruta con sus embarcaciones asignadas
+export interface RutaConEmbarcaciones extends Ruta {
+  embarcacionRutas: (EmbarcacionRuta & {
+    embarcacion: Embarcacion;
+  })[];
+}
+
+// Actualizar interface Ruta para incluir embarcaciones
+export interface CrearRutaConEmbarcaciones extends CrearRutaData {
+  embarcaciones?: CrearEmbarcacionRutaData[];
+}
+
+export interface ActualizarRutaConEmbarcaciones extends ActualizarRutaData {
+  embarcaciones?: {
+    crear?: CrearEmbarcacionRutaData[];
+    actualizar?: (ActualizarEmbarcacionRutaData & { id: string })[];
+    eliminar?: string[];
+  };
 }
 
 // Tipos para clientes
@@ -73,6 +328,19 @@ export interface Cliente {
     ventas: number;
   };
 }
+
+// Constantes para días de la semana
+export const DIAS_SEMANA = [
+  { value: "lunes", label: "Lunes" },
+  { value: "martes", label: "Martes" },
+  { value: "miercoles", label: "Miércoles" },
+  { value: "jueves", label: "Jueves" },
+  { value: "viernes", label: "Viernes" },
+  { value: "sabado", label: "Sábado" },
+  { value: "domingo", label: "Domingo" },
+] as const;
+
+export type DiaSemana = (typeof DIAS_SEMANA)[number]["value"];
 
 // Datos para crear un cliente
 export interface CrearClienteData {
@@ -177,6 +445,16 @@ export interface Venta {
       apellido: string;
     };
   };
+}
+
+// Tipos para estadísticas de ventas
+export interface EstadisticasVentas {
+  totalVentas: number;
+  ventasHoy: number;
+  ventasConfirmadas: number;
+  ventasAnuladas: number;
+  totalRecaudado: number;
+  ventasReembolsadas: number;
 }
 
 // Tipos para anulaciones

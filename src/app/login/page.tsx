@@ -1,14 +1,16 @@
+// ============================================
+// login/page.tsx - Con redirección por rol
+// ============================================
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { usePublicRoute } from "@/hooks/use-auth";
 import { Eye, EyeOff, Ship, User, Lock, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const { isLoading: authLoading } = usePublicRoute();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -17,6 +19,19 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Redirección basada en rol cuando ya está autenticado
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.role) {
+      const redirectPath =
+        session.user.role === "ADMINISTRADOR"
+          ? "/dashboard"
+          : "/dashboard/ventas";
+
+      console.log("🔄 Usuario autenticado, redirigiendo a:", redirectPath);
+      router.push(redirectPath);
+    }
+  }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +47,14 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError("Usuario o contraseña incorrectos");
+        setIsLoading(false);
       } else if (result?.ok) {
-        router.push("/dashboard");
-        router.refresh();
+        // Esperar a que la sesión se actualice
+        // La redirección se manejará en el useEffect cuando la sesión esté lista
+        console.log("✅ Login exitoso, esperando datos de sesión...");
       }
     } catch {
       setError("Error de conexión. Intenta nuevamente.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -49,53 +65,94 @@ export default function LoginPage() {
       ...prev,
       [name]: value,
     }));
-    // Limpiar error cuando el usuario empiece a escribir
     if (error) setError("");
   };
 
   // Mostrar loading mientras verifica la autenticación
-  if (authLoading) {
+  if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-slate-300">Verificando autenticación...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Contenedor principal */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="min-h-screen bg-slate-900 relative overflow-hidden flex items-center justify-center p-4">
+      {/* Fondo con gradientes animados */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-cyan-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
+
+      {/* Partículas de fondo */}
+      <div className="absolute inset-0">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute bg-white rounded-full opacity-10"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 4 + 1}px`,
+              height: `${Math.random() * 4 + 1}px`,
+              animation: `float ${Math.random() * 3 + 2}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 2}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Contenedor principal con glassmorphism */}
+        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-600/50 rounded-2xl shadow-2xl overflow-hidden relative">
+          {/* Efectos de brillo */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-purple-600/10"></div>
+          <div className="absolute top-0 left-0 w-40 h-40 bg-blue-600/20 rounded-full filter blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-600/20 rounded-full filter blur-3xl"></div>
+
           {/* Header con logo y título */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-8 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="bg-white rounded-full p-4">
-                <Ship className="h-12 w-12 text-blue-600" />
+          <div className="relative px-8 py-8 text-center border-b border-slate-600/30">
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="bg-blue-700 p-4 rounded-xl">
+                  <Ship className="h-25 w-25 text-white mx-auto drop-shadow-lg" />
+                </div>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
+
+            <h1 className="text-2xl font-bold text-slate-100 mb-2 relative z-10">
               Alto Impacto Travel
             </h1>
-            <p className="text-blue-100 text-sm">
+            <p className="text-slate-300 text-sm relative z-10">
               Sistema de Gestión de Pasajes Fluviales
             </p>
+            <div className="flex items-center justify-center mt-3 text-xs text-slate-400 relative z-10">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>Sistema activo</span>
+              </div>
+            </div>
           </div>
 
           {/* Formulario */}
-          <div className="px-8 py-8">
+          <div className="relative px-8 py-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Campo Email/Username */}
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-slate-300 mb-2"
                 >
                   Usuario o Email
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <User className="h-5 w-5 text-slate-200 group-focus-within:text-blue-400 transition-colors" />
                   </div>
                   <input
                     id="email"
@@ -104,7 +161,7 @@ export default function LoginPage() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-gray-900 placeholder-gray-500"
+                    className="block w-full pl-10 pr-3 py-3 bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 text-slate-100 placeholder-slate-400 hover:border-slate-500/70"
                     placeholder="Ingresa tu usuario o email"
                   />
                 </div>
@@ -114,13 +171,13 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-slate-300 mb-2"
                 >
                   Contraseña
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                    <Lock className="h-5 w-5 text-slate-200 group-focus-within:text-blue-400 transition-colors" />
                   </div>
                   <input
                     id="password"
@@ -129,18 +186,18 @@ export default function LoginPage() {
                     required
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-gray-900 placeholder-gray-500"
+                    className="block w-full pl-10 pr-12 py-3 bg-slate-700/50 backdrop-blur-sm border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 text-slate-100 placeholder-slate-400 hover:border-slate-500/70"
                     placeholder="Ingresa tu contraseña"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-slate-600/30 rounded-r-xl transition-colors"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-300" />
                     ) : (
-                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                      <Eye className="h-5 w-5 text-slate-400 hover:text-slate-300" />
                     )}
                   </button>
                 </div>
@@ -148,9 +205,9 @@ export default function LoginPage() {
 
               {/* Mensaje de Error */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
-                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                  <span className="text-sm text-red-700">{error}</span>
+                <div className="bg-red-900/50 backdrop-blur-sm border border-red-600/50 rounded-xl p-4 flex items-center space-x-3">
+                  <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                  <span className="text-sm text-red-300">{error}</span>
                 </div>
               )}
 
@@ -158,50 +215,84 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading || !formData.email || !formData.password}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="group w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 shadow-lg hover:shadow-2xl hover:shadow-blue-500/25 hover:-translate-y-0.5 active:translate-y-0 border border-blue-500/20 relative overflow-hidden"
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 group-hover:translate-x-full transition-transform duration-1000"></div>
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                     <span>Iniciando sesión...</span>
                   </>
                 ) : (
-                  <span>Iniciar Sesión</span>
+                  <span className="relative z-10">Iniciar Sesión</span>
                 )}
               </button>
             </form>
-
-            {/* Usuarios de prueba */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
-                👨‍💻 Usuarios de prueba:
-              </h3>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <strong>Administrador:</strong>
-                  <br />
-                  Email: admin@altoimpacto.com
-                  <br />
-                  Contraseña: admin123
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <strong>Vendedor:</strong>
-                  <br />
-                  Email: vendedor@altoimpacto.com
-                  <br />
-                  Contraseña: vendedor123
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-white text-sm">
-          <p>Jr. Fitzcarrald 513, Iquitos, Loreto</p>
-          <p className="mt-1">© 2025 Alto Impacto Travel - TDS_G01</p>
+        <div className="mt-8 text-center text-slate-400 text-sm relative z-10">
+          <div className="bg-slate-800/40 backdrop-blur-sm border border-slate-600/30 rounded-xl p-4">
+            <p className="flex items-center justify-center space-x-2">
+              <Ship className="h-4 w-4" />
+              <span>Jr. Fitzcarrald 513, Iquitos, Loreto</span>
+            </p>
+            <p className="mt-2 text-xs text-slate-500">
+              © 2025 Alto Impacto Travel - TDS_G01
+            </p>
+            <div className="flex items-center justify-center mt-2 space-x-4 text-xs">
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>v1.0.0</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>En línea</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes blob {
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
+        }
+
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+        }
+      `}</style>
     </div>
   );
 }

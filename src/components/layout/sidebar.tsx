@@ -1,3 +1,6 @@
+// ============================================
+// components/layout/sidebar.tsx - Dashboard oculto para vendedores
+// ============================================
 "use client";
 
 import Link from "next/link";
@@ -8,7 +11,6 @@ import {
   Home,
   Users,
   Route,
-  //Anchor,
   UserPlus,
   ShoppingCart,
   Settings,
@@ -31,6 +33,7 @@ const navigation: NavItem[] = [
     name: "Dashboard",
     href: "/dashboard",
     icon: Home,
+    roles: ["ADMINISTRADOR"], // Solo administradores pueden ver el dashboard
     description: "Resumen general del sistema",
   },
   {
@@ -45,7 +48,6 @@ const navigation: NavItem[] = [
     icon: Ban,
     description: "Gestionar anulaciones y reembolsos",
   },
-
   {
     name: "Clientes",
     href: "/dashboard/clientes",
@@ -111,74 +113,77 @@ export default function Sidebar({ isCollapsed = false }: SidebarProps) {
   return (
     <div
       className={cn(
-        "bg-gray-900 shadow-lg border-r border-gray-800 h-full flex flex-col transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
+        "bg-slate-900 border-r border-slate-800 h-full flex flex-col transition-all duration-300 relative",
+        isCollapsed ? "w-16" : "w-74"
       )}
     >
-      {/* Logo y título */}
-      <div className="flex items-center justify-center p-6 border-b border-gray-800">
-        <div className="flex items-center space-x-3">
-          <div className="bg-blue-600 rounded-lg p-2">
-            <Ship className="h-6 w-6 text-white" />
-          </div>
-          {!isCollapsed && (
-            <div className="flex-shrink-0">
-              <h1 className="text-lg font-bold text-white whitespace-nowrap">
-                Alto Impacto Travel
-              </h1>
+      {/* Logo y navegación en una sola columna fluida */}
+      <div className="flex flex-col h-full">
+        {/* Logo integrado sin separación */}
+        <div className="flex items-center justify-center py-6 px-4">
+          <div className="flex items-center space-x-3">
+            <div className="bg-blue-600 rounded-xl p-2.5">
+              <Ship className="h-6 w-6 text-white" />
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Navegación */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {filteredNavigation.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex items-center relative",
-                isCollapsed ? "justify-center" : "space-x-3",
-                "px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group",
-                isActive
-                  ? "bg-blue-900/50 text-blue-300 border border-blue-800"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-blue-200"
-              )}
-              title={isCollapsed ? item.description : undefined}
-            >
-              <Icon
-                className={cn(
-                  "flex-shrink-0 h-5 w-5",
-                  isActive
-                    ? "text-blue-400"
-                    : "text-gray-400 group-hover:text-blue-300"
-                )}
-              />
-              {!isCollapsed && <span className="truncate">{item.name}</span>}
-              {!isCollapsed && isActive && (
-                <div className="ml-auto">
-                  <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
-                </div>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Información adicional en la parte inferior */}
-      {!isCollapsed && (
-        <div className="p-4 border-t border-gray-800 bg-gray-800">
-          <div className="text-xs text-gray-400 text-center">
-            <p>Sistema v1.0.0</p>
-            <p>© 2025 Alto Impacto Travel</p>
+            {!isCollapsed && (
+              <div className="flex-shrink-0">
+                <h1 className="text-lg font-bold text-slate-100 whitespace-nowrap">
+                  Alto Impacto Travel
+                </h1>
+              </div>
+            )}
           </div>
         </div>
-      )}
+
+        {/* Navegación integrada sin separación */}
+        <nav className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto">
+          {filteredNavigation.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "flex items-center relative group",
+                  isCollapsed ? "justify-center" : "space-x-3",
+                  "px-3 py-3 rounded-xl text-2x1 font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-blue-600/20 text-blue-300 shadow-lg shadow-blue-600/10"
+                    : "text-slate-300 hover:bg-slate-800/50 hover:text-slate-100"
+                )}
+                title={isCollapsed ? item.description : undefined}
+              >
+                <Icon
+                  className={cn(
+                    "flex-shrink-0 h-5 w-5",
+                    isActive
+                      ? "text-blue-400"
+                      : "text-slate-400 group-hover:text-slate-200"
+                  )}
+                />
+                {!isCollapsed && <span className="truncate">{item.name}</span>}
+                {!isCollapsed && isActive && (
+                  <div className="ml-auto">
+                    <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  </div>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Información inferior sin separación visual */}
+        {!isCollapsed && (
+          <div className="px-4 pb-4">
+            <div className="text-xs text-slate-500 text-center space-y-1">
+              <p className="font-medium">Sistema v1.0.0</p>
+              <p>© 2025 Alto Impacto Travel</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -147,18 +147,18 @@ export default function ClientesPage() {
   // Estados de UI
   const [showFiltros, setShowFiltros] = useState(false);
 
-  // Función para mostrar notificaciones estilo nueva-venta-form
+  // Función para mostrar notificaciones con tema oscuro
   const mostrarNotificacion = (tipo: "success" | "error", texto: string) => {
     const notification = document.createElement("div");
     notification.className = `fixed top-4 right-4 ${
       tipo === "success"
-        ? "bg-green-50 border border-green-200 text-green-800"
-        : "bg-red-50 border border-red-200 text-red-800"
-    } px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50`;
+        ? "bg-green-900/90 border border-green-700 text-green-100"
+        : "bg-red-900/90 border border-red-700 text-red-100"
+    } px-6 py-4 rounded-xl shadow-xl flex items-center space-x-3 z-50 backdrop-blur-sm`;
 
     notification.innerHTML = `
       <svg class="h-5 w-5 ${
-        tipo === "success" ? "text-green-600" : "text-red-600"
+        tipo === "success" ? "text-green-400" : "text-red-400"
       }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         ${
           tipo === "success"
@@ -311,22 +311,22 @@ export default function ClientesPage() {
   }, [error]);
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6 max-w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-slate-100">
             Gestión de Clientes
           </h1>
-          <p className="text-gray-600">
+          <p className="text-slate-300">
             Administra la información de tus clientes
           </p>
         </div>
         <button
           onClick={() => setModalNuevo(true)}
-          className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-lg flex items-center space-x-3 font-medium shadow-md hover:shadow-xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-md"
+          className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl flex items-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-lg hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-800"
         >
-          <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-md transition-colors duration-200">
+          <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-lg transition-colors duration-200">
             <Plus className="h-4 w-4" />
           </div>
           <span>Nuevo Cliente</span>
@@ -334,80 +334,84 @@ export default function ClientesPage() {
         </button>
       </div>
 
-      {/* Estadísticas con colores de fondo suaves */}
+      {/* Estadísticas con tema oscuro y glassmorphism */}
       {estadisticas && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Clientes - Azul suave */}
-          <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {/* Total Clientes */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-blue-100 p-2 rounded-lg">
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+              <div className="bg-blue-600 p-3 rounded-xl shadow-lg">
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-blue-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Total Clientes
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-blue-900">
+                <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.totalClientes}
                 </p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-blue-400">
                   Nuevos: {estadisticas.clientesRecientes}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Clientes con Ventas - Verde suave */}
-          <div className="bg-green-50 border border-green-100 p-4 rounded-lg shadow-sm">
+          {/* Clientes con Ventas */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-green-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+              <div className="bg-green-600 p-3 rounded-xl shadow-lg">
+                <UserCheck className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-green-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Con Ventas
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-green-900">
+                <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.clientesConVentas}
                 </p>
-                <p className="text-xs text-green-600">Activos</p>
+                <p className="text-xs text-green-400">Activos</p>
               </div>
             </div>
           </div>
 
-          {/* Clientes sin Ventas - Amarillo suave */}
-          <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-lg shadow-sm">
+          {/* Clientes sin Ventas */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-orange-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-yellow-100 p-2 rounded-lg">
-                <UserX className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
+              <div className="bg-orange-600 p-3 rounded-xl shadow-lg">
+                <UserX className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-yellow-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Sin Ventas
                 </p>
-                <p className="text-lg sm:text-xl font-bold text-yellow-900">
+                <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.clientesSinVentas}
                 </p>
-                <p className="text-xs text-yellow-600">Potenciales</p>
+                <p className="text-xs text-orange-400">Potenciales</p>
               </div>
             </div>
           </div>
 
-          {/* Nacionalidad Principal - Púrpura suave */}
-          <div className="bg-purple-50 border border-purple-100 p-4 rounded-lg shadow-sm">
+          {/* Nacionalidad Principal */}
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-purple-500 hover:ring-offset-2 hover:ring-offset-slate-900">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent"></div>
             <div className="flex items-center">
-              <div className="bg-purple-100 p-2 rounded-lg">
-                <Globe className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
+              <div className="bg-purple-600 p-3 rounded-xl shadow-lg">
+                <Globe className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-purple-700 truncate">
+              <div className="ml-4 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
                   Nacionalidad Principal
                 </p>
-                <p className="text-sm font-bold text-purple-900 truncate">
+                <p className="text-sm font-bold text-slate-100 truncate">
                   {estadisticas.nacionalidadesMasComunes[0]?.nacionalidad ||
                     "N/A"}
                 </p>
-                <p className="text-xs text-purple-600">
+                <p className="text-xs text-purple-400">
                   {estadisticas.nacionalidadesMasComunes[0]?._count
                     ?.nacionalidad || 0}{" "}
                   clientes
@@ -418,13 +422,13 @@ export default function ClientesPage() {
         </div>
       )}
 
-      {/* Filtros unidos con la tabla */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
+      {/* Filtros integrados con la tabla */}
+      <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50">
+        <div className="p-6 border-b border-slate-600/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-100 z-10" />
                 <input
                   type="text"
                   placeholder="Buscar por DNI, nombre o apellido..."
@@ -432,12 +436,12 @@ export default function ClientesPage() {
                   onChange={(e) =>
                     handleFiltroChange("busqueda", e.target.value)
                   }
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500 w-80"
+                  className="pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 w-80 backdrop-blur-sm transition-all duration-200"
                 />
               </div>
               <button
                 onClick={() => setShowFiltros(!showFiltros)}
-                className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 bg-white text-gray-700"
+                className="flex items-center px-4 py-3 border border-slate-600/50 rounded-xl hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
               >
                 <Filter className="h-5 w-5 mr-2" />
                 Filtros
@@ -451,10 +455,10 @@ export default function ClientesPage() {
           </div>
 
           {showFiltros && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="mt-6 pt-6 border-t border-slate-600/50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Nacionalidad
                   </label>
                   <select
@@ -462,7 +466,7 @@ export default function ClientesPage() {
                     onChange={(e) =>
                       handleFiltroChange("nacionalidad", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
                   >
                     <option value="">Todas las nacionalidades</option>
                     {nacionalidadesCompletas.map((nacionalidad) => (
@@ -474,7 +478,7 @@ export default function ClientesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
                     Resultados por página
                   </label>
                   <select
@@ -482,7 +486,7 @@ export default function ClientesPage() {
                     onChange={(e) =>
                       handleFiltroChange("limit", parseInt(e.target.value))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+                    className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
                   >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
@@ -494,7 +498,7 @@ export default function ClientesPage() {
                 <div className="flex items-end col-span-2">
                   <button
                     onClick={limpiarFiltros}
-                    className="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                    className="w-full px-6 py-3 bg-slate-600/50 text-slate-200 rounded-xl hover:bg-slate-500/50 transition-all duration-200 backdrop-blur-sm"
                   >
                     Limpiar
                   </button>
@@ -509,85 +513,88 @@ export default function ClientesPage() {
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Cargando clientes...</span>
+              <span className="ml-3 text-slate-300">Cargando clientes...</span>
             </div>
           ) : clientes.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Users className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-slate-200 mb-2">
                 No hay clientes registrados
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-400">
                 Los clientes aparecerán aquí una vez que los registres.
               </p>
             </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-slate-600">
+              <thead className="bg-gradient-to-r from-slate-700 to-slate-600 border-b-2 border-slate-500">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     DNI
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Contacto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Nacionalidad
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Ventas
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-100 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-slate-800/30 divide-y divide-slate-600">
                 {clientes.map((cliente) => (
-                  <tr key={cliente.id} className="hover:bg-gray-50">
+                  <tr
+                    key={cliente.id}
+                    className="hover:bg-slate-700/30 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-slate-100">
                           {formatearNombreCompleto(cliente)}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-slate-400">
                           {new Date(cliente.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-200">
                       {cliente.dni}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-slate-200">
                         {cliente.telefono}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-slate-400">
                         {cliente.email}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
                       {cliente.nacionalidad}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        className={`inline-flex px-3 py-2 text-xs font-semibold rounded-xl border transition-all duration-200 ${
                           cliente._count?.ventas && cliente._count.ventas > 0
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                            ? "bg-green-900/40 text-green-300 border-green-700/50"
+                            : "bg-slate-700/50 text-slate-300 border-slate-600/50"
                         }`}
                       >
                         {cliente._count?.ventas || 0} ventas
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-4">
+                      <div className="flex space-x-3">
                         <button
                           onClick={() => abrirModalEditar(cliente)}
-                          className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="text-blue-400 hover:text-blue-300 p-2 hover:bg-blue-900/30 rounded-xl transition-all duration-200"
                           title="Editar cliente"
                         >
                           <Edit className="h-5 w-5" />
@@ -595,7 +602,7 @@ export default function ClientesPage() {
                         {user?.role === "ADMINISTRADOR" && (
                           <button
                             onClick={() => abrirModalEliminar(cliente)}
-                            className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-xl transition-all duration-200"
                             title="Eliminar cliente"
                           >
                             <Trash2 className="h-5 w-5" />
@@ -612,8 +619,8 @@ export default function ClientesPage() {
 
         {/* Paginación */}
         {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+          <div className="px-6 py-5 border-t border-slate-600/50 flex items-center justify-between">
+            <div className="text-sm text-slate-300">
               Mostrando {(pagination.page - 1) * (filtros.limit || 10) + 1} a{" "}
               {Math.min(
                 pagination.page * (filtros.limit || 10),
@@ -621,21 +628,21 @@ export default function ClientesPage() {
               )}{" "}
               de {pagination.total} resultados
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-3">
               <button
                 onClick={() => handleFiltroChange("page", pagination.page - 1)}
                 disabled={!pagination.hasPrev}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 border border-slate-600/50 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
               >
                 Anterior
               </button>
-              <span className="px-3 py-2 text-sm text-gray-700">
+              <span className="px-4 py-2 text-sm text-slate-300 flex items-center">
                 Página {pagination.page} de {pagination.totalPages}
               </span>
               <button
                 onClick={() => handleFiltroChange("page", pagination.page + 1)}
                 disabled={!pagination.hasNext}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-4 py-2 border border-slate-600/50 rounded-xl text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
               >
                 Siguiente
               </button>
@@ -664,43 +671,43 @@ export default function ClientesPage() {
 
       {/* Modal Confirmar Eliminar */}
       {modalConfirmarEliminar && clienteSeleccionado && (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full shadow-2xl drop-shadow-xl border border-gray-200">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full shadow-2xl drop-shadow-2xl border border-slate-600/50">
+            <div className="flex items-center justify-between p-6 border-b border-slate-600/50">
+              <h2 className="text-xl font-semibold text-slate-100">
                 Confirmar Eliminación
               </h2>
               <button
                 onClick={() => setModalConfirmarEliminar(false)}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-4">
-              <p className="text-gray-600 mb-6">
+            <div className="p-6">
+              <p className="text-slate-300 mb-6 text-base">
                 ¿Estás seguro de que deseas eliminar al cliente{" "}
-                <span className="font-semibold">
+                <span className="font-semibold text-slate-100">
                   {formatearNombreCompleto(clienteSeleccionado)}
                 </span>
                 ?
               </p>
               {clienteSeleccionado._count?.ventas &&
                 clienteSeleccionado._count.ventas > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 mb-6 backdrop-blur-sm">
                     <div className="flex items-center">
-                      <AlertCircle className="h-5 w-5 text-yellow-600 mr-2" />
-                      <p className="text-sm text-yellow-800">
+                      <AlertCircle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0" />
+                      <p className="text-sm text-orange-300">
                         Este cliente tiene {clienteSeleccionado._count.ventas}{" "}
                         ventas asociadas. No podrás eliminarlo.
                       </p>
                     </div>
                   </div>
                 )}
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setModalConfirmarEliminar(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-sm"
                 >
                   Cancelar
                 </button>
@@ -709,7 +716,7 @@ export default function ClientesPage() {
                   disabled={
                     loading || (clienteSeleccionado._count?.ventas || 0) > 0
                   }
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center space-x-2"
+                  className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 flex items-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   <span>Eliminar</span>

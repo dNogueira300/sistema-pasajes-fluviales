@@ -1,3 +1,4 @@
+// lib/auth.ts - Configuración con redirección por rol
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
@@ -7,20 +8,17 @@ import { UserRole } from "@/types";
 const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
-  // Configuración de sesión
   session: {
     strategy: "jwt",
-    maxAge: 1 * 60 * 60, // 1 hora (como especifica el requerimiento)
+    maxAge: 1 * 60 * 60, // 1 hora
   },
 
-  // Páginas personalizadas
   pages: {
     signIn: "/login",
     signOut: "/login",
     error: "/login",
   },
 
-  // Proveedores de autenticación
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -36,21 +34,19 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
-        // Validar que las credenciales existan
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Credenciales incompletas");
           return null;
         }
 
         try {
-          // Buscar el usuario en la base de datos
           const user = await prisma.user.findFirst({
             where: {
               OR: [
                 { email: credentials.email },
-                { username: credentials.email }, // Permitir login con username también
+                { username: credentials.email },
               ],
-              activo: true, // Solo usuarios activos pueden iniciar sesión
+              activo: true,
             },
           });
 
@@ -59,7 +55,6 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // Verificar la contraseña
           const isPasswordValid = await compare(
             credentials.password,
             user.password
@@ -70,9 +65,8 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          console.log("✅ Login exitoso:", user.email);
+          console.log("✅ Login exitoso:", user.email, "Rol:", user.role);
 
-          // Retornar los datos del usuario para la sesión
           return {
             id: user.id,
             email: user.email,
@@ -88,22 +82,17 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  // Callbacks para manejar JWT y sesión
   callbacks: {
-    // Callback del JWT - se ejecuta cada vez que se crea un token
     async jwt({ token, user }) {
       if (user) {
-        // Añadir datos personalizados al token
         token.role = user.role;
         token.username = user.username;
       }
       return token;
     },
 
-    // Callback de sesión - se ejecuta cada vez que se accede a la sesión
     async session({ session, token }) {
       if (token) {
-        // Añadir datos del token a la sesión
         session.user.id = token.sub!;
         session.user.role = token.role as UserRole;
         session.user.username = token.username as string;
@@ -111,24 +100,38 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    // Callback de redirect - controla redirecciones después del login
     async redirect({ url, baseUrl }) {
-      // Si la URL es relativa, usar la baseUrl
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      console.log("🔄 Redirect callback:", { url, baseUrl });
+
+      // Si es una URL relativa, combinar con baseUrl
+      if (url.startsWith("/")) {
+        const fullUrl = `${baseUrl}${url}`;
+        console.log("✅ Redirecting to relative URL:", fullUrl);
+        return fullUrl;
+      }
+
       // Si la URL pertenece al mismo origen, permitir
-      else if (new URL(url).origin === baseUrl) return url;
-      // Caso contrario, redirigir al dashboard
-      return `${baseUrl}/dashboard`;
+      if (url.startsWith(baseUrl)) {
+        console.log("✅ Same origin redirect:", url);
+        return url;
+      }
+
+      // Para login, no redirigir aquí (se maneja en el cliente)
+      if (url.includes("/api/auth/signin") || url.includes("/login")) {
+        console.log("⚠️ Login detected, default redirect");
+        return baseUrl;
+      }
+
+      // Para cualquier otra URL externa, redirigir a la base
+      console.log("⚠️ External URL redirect:", url);
+      return baseUrl;
     },
   },
 
-  // Configuraciones adicionales
   jwt: {
-    // Tiempo de vida del token (1 hora)
-    maxAge: 60 * 60, // 1 hora
+    maxAge: 60 * 60,
   },
 
-  // Configuración de cookies
   cookies: {
     sessionToken: {
       name: "next-auth.session-token",
@@ -141,7 +144,6 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-  // Eventos para logging
   events: {
     async signIn({ user }) {
       console.log(`✅ Usuario ${user.email} inició sesión`);
@@ -151,6 +153,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-  // Configuración de debug (solo en desarrollo)
   debug: process.env.NODE_ENV === "development",
 };

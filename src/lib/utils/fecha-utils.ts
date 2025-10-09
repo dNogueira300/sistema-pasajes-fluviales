@@ -1,25 +1,68 @@
+// Constante de zona horaria de Perú
+const TIMEZONE_PERU = "America/Lima";
+
 export function crearFechaViaje(fechaString: string): Date {
-  // Asegurar que la fecha se interprete como mediodia UTC
-  // para evitar problemas de zona horaria
-  return new Date(fechaString + "T12:00:00.000Z");
+  // Crear fecha a medianoche en zona horaria de Perú
+  const [year, month, day] = fechaString.split("-").map(Number);
+  // Crear Date directamente sin ajustar manualmente UTC
+  // El Date se guarda en UTC automáticamente, solo necesitamos el día correcto
+  return new Date(year, month - 1, day, 0, 0, 0, 0);
 }
 
 export function formatearFechaViaje(fecha: Date | string): string {
   const fechaObj = typeof fecha === "string" ? new Date(fecha) : fecha;
 
-  // Formatear siempre en zona horaria local sin especificar timezone
-  return fechaObj.toLocaleDateString("es-PE");
+  return fechaObj.toLocaleDateString("es-PE", {
+    timeZone: TIMEZONE_PERU,
+  });
 }
 
 export function formatearFechaViajeCompleta(fecha: Date | string): string {
   const fechaObj = typeof fecha === "string" ? new Date(fecha) : fecha;
 
   return fechaObj.toLocaleDateString("es-PE", {
+    timeZone: TIMEZONE_PERU,
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+}
+
+// Función helper para obtener fecha/hora actual en Perú
+export function obtenerFechaActualPeru(): Date {
+  // Retorna la fecha actual - JavaScript la maneja en UTC internamente
+  return new Date();
+}
+
+// Función para obtener el inicio del día en Perú
+export function obtenerInicioDiaPeru(fecha?: Date): Date {
+  const fechaBase = fecha || new Date();
+
+  // Convertir a string en zona horaria de Perú y parsearlo
+  const fechaEnPeru = new Date(
+    fechaBase.toLocaleString("en-US", { timeZone: TIMEZONE_PERU })
+  );
+
+  // Establecer a medianoche
+  fechaEnPeru.setHours(0, 0, 0, 0);
+
+  return fechaEnPeru;
+}
+
+// Función para obtener el fin del día en Perú
+export function obtenerFinDiaPeru(fecha?: Date): Date {
+  const fechaBase = fecha || new Date();
+
+  // Convertir a string en zona horaria de Perú y parsearlo
+  const fechaEnPeru = new Date(
+    fechaBase.toLocaleString("en-US", { timeZone: TIMEZONE_PERU })
+  );
+
+  // Establecer a 23:59:59.999
+  fechaEnPeru.setHours(23, 59, 59, 999);
+
+  return fechaEnPeru;
 }
 
 // Nueva función para manejar fechas desde la base de datos
@@ -33,8 +76,9 @@ export function validarFechaViaje(fechaString: string): {
   error?: string;
 } {
   const fecha = new Date(fechaString);
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
+
+  // Obtener "hoy" en zona horaria de Perú
+  const hoyPeru = obtenerInicioDiaPeru();
 
   if (isNaN(fecha.getTime())) {
     return { esValida: false, error: "Fecha inválida" };
@@ -43,7 +87,7 @@ export function validarFechaViaje(fechaString: string): {
   const fechaSinHora = new Date(fecha);
   fechaSinHora.setHours(0, 0, 0, 0);
 
-  if (fechaSinHora < hoy) {
+  if (fechaSinHora < hoyPeru) {
     return { esValida: false, error: "La fecha no puede ser anterior a hoy" };
   }
 
@@ -60,12 +104,14 @@ export function validarFechaViaje(fechaString: string): {
 
   return { esValida: true };
 }
-// CORRECCIÓN 8: Para reportes, usar formateo consistente
+
+// Para reportes, usar formateo consistente
 export function formatearFechaParaReporte(fecha: Date | string): string {
   const fechaObj = typeof fecha === "string" ? new Date(fecha) : fecha;
 
   // Formato para reportes: DD/MM/YYYY
   return fechaObj.toLocaleDateString("es-PE", {
+    timeZone: TIMEZONE_PERU,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -82,14 +128,18 @@ export function puedeAnularVentaPorFecha(venta: {
   horasRestantes: number;
   mensaje: string;
 } {
-  const ahora = new Date();
+  // Obtener hora actual en Perú
+  const ahoraPeru = new Date(
+    new Date().toLocaleString("en-US", { timeZone: TIMEZONE_PERU })
+  );
+
   const fechaViaje = new Date(venta.fechaViaje);
 
   // Extraer horas y minutos de horaViaje (formato "HH:MM")
   const [horas, minutos] = venta.horaViaje.split(":").map(Number);
   fechaViaje.setHours(horas, minutos, 0, 0);
 
-  const tiempoRestante = fechaViaje.getTime() - ahora.getTime();
+  const tiempoRestante = fechaViaje.getTime() - ahoraPeru.getTime();
   const horasRestantes = Math.ceil(tiempoRestante / (1000 * 60 * 60));
 
   if (tiempoRestante <= 0) {
@@ -110,4 +160,20 @@ export function puedeAnularVentaPorFecha(venta: {
         ? `Anulación urgente: ${horasRestantes} hora(s) restante(s)`
         : `Tiempo restante: ${horasRestantes} hora(s)`,
   };
+}
+
+// Función específica para formatear fechas de inputs date (YYYY-MM-DD)
+export function formatearFechaDesdeInput(fechaString: string): string {
+  if (!fechaString) return "";
+
+  // Separar el string y crear la fecha directamente sin conversión UTC
+  const [year, month, day] = fechaString.split("-").map(Number);
+  const fecha = new Date(year, month - 1, day);
+
+  return fecha.toLocaleDateString("es-PE", {
+    timeZone: "America/Lima",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }

@@ -6,8 +6,9 @@ import { PrismaClient } from "@prisma/client";
 import puppeteer from "puppeteer";
 import {
   MetodoPago,
-  generarHTMLComprobante, // Necesitarás exportar esta función desde comprobante-utils
+  generarHTMLComprobante,
 } from "@/lib/utils/comprobante-utils";
+import { getConfiguracionEmpresa } from "@/lib/actions/configuracion"; // 🔧 AGREGAR IMPORT
 
 const prisma = new PrismaClient();
 
@@ -106,8 +107,11 @@ export async function GET(
       },
     };
 
-    // Generar el HTML del comprobante (reutilizar función existente)
-    const html = generarHTMLComprobante(ventaFormateada);
+    // 🔧 FIX: Obtener configuración de empresa
+    const empresa = await getConfiguracionEmpresa();
+
+    // 🔧 FIX: Pasar empresa como segundo parámetro
+    const html = generarHTMLComprobante(ventaFormateada, empresa);
 
     // Usar puppeteer para generar imagen PNG
     const browser = await puppeteer.launch({

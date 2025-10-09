@@ -6,7 +6,7 @@ import SessionProviderWrapper from "@/components/providers/session-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sistema de Pasajes Fluviales - Alto Impacto Travel",
+  title: "Alto Impacto Travel",
   description:
     "Sistema web para gestión de ventas de pasajes fluviales en Iquitos, Loreto, Perú",
   keywords: "pasajes fluviales, iquitos, loreto, transporte, amazonas",

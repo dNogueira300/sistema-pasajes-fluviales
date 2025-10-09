@@ -2,6 +2,7 @@
 import puppeteer from "puppeteer";
 import { formatearFechaViaje } from "./fecha-utils";
 import { getLogoBase64 } from "@/lib/utils/logo-utils";
+import { getConfiguracionEmpresa } from "@/lib/actions/configuracion";
 
 export interface MetodoPago {
   tipo: string;
@@ -55,7 +56,10 @@ interface VentaComprobante {
 export async function generarComprobanteA4(
   venta: VentaComprobante
 ): Promise<Buffer> {
-  const html = generarHTMLComprobante(venta);
+  // Obtener configuración de la empresa
+  const empresa = await getConfiguracionEmpresa();
+
+  const html = generarHTMLComprobante(venta, empresa);
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -83,7 +87,18 @@ export async function generarComprobanteA4(
   }
 }
 
-export function generarHTMLComprobante(venta: VentaComprobante): string {
+export function generarHTMLComprobante(
+  venta: VentaComprobante,
+  empresa: {
+    nombre: string;
+    ruc: string;
+    direccion: string;
+    telefono: string;
+    email: string;
+    horario: string;
+    logoUrl: string;
+  }
+): string {
   const fechaEmision = new Date(venta.fechaVenta).toLocaleString("es-PE", {
     timeZone: "America/Lima",
     year: "numeric",
@@ -342,17 +357,19 @@ export function generarHTMLComprobante(venta: VentaComprobante): string {
         <div class="header">
           <div class="logo-container">
             <img src="${logoBase64}" 
-                 alt="Logo Alto Impacto Travel" 
+                 alt="Logo ${empresa.nombre}" 
                  class="logo" />
           </div>
           <div class="header-content">
-            <div class="empresa">Alto Impacto Travel</div>
+            <div class="empresa">${empresa.nombre}</div>
             <div class="empresa-subtitulo">VENTA DE PASAJES FLUVIALES</div>
             <div class="empresa-cobertura">IQUITOS, YURIMAGUAS, PUCALLPA, SANTA ROSA, INTUTO, SAN LORENZO, 
             TROMPETEROS, PANTOJA, REQUENA, Y PUERTOS INTERMEDIOS</div>
-            <div class="empresa-info">Dirección: Jr. Fitzcarrald N° 513</div>
-            <div class="empresa-info">Correo: altoimpactoviajes@gmail.com</div>
-            <div class="empresa-info">Celular: 955449875</div>
+            <div class="empresa-info">Dirección: ${empresa.direccion}</div>
+            <div class="empresa-info">Correo: ${empresa.email}</div>
+            <div class="empresa-info">Celular: ${
+              empresa.telefono
+            }</div>            
             <div class="empresa-info">IQUITOS - MAYNAS - LORETO</div>
           </div>
           <div style="width: 80px;"></div> <!-- Espacio para balance visual -->
@@ -528,8 +545,8 @@ export function generarHTMLComprobante(venta: VentaComprobante): string {
               <li>• Este ticket puede ser cambiado por Boleta de Venta o Factura.</li>
             </ul>
           </div>
-          <p>Para consultas: altoimpactoviajes@gmail.com | Celular: 955449875</p>
-          <p>ALTO IMPACTO TRAVEL | Jr. Fitzcarrald N° 513, IQUITOS - MAYNAS - LORETO</p>
+          <p>Para consultas: ${empresa.email} | Celular: ${empresa.telefono}</p>
+          <p>${empresa.nombre.toUpperCase()} | ${empresa.direccion}</p>
           <p>Fecha y hora de emisión: ${new Date().toLocaleString("es-PE", {
             timeZone: "America/Lima",
           })}</p>
