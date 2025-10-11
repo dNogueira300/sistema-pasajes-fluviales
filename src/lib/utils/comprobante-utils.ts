@@ -1,7 +1,6 @@
 // lib/utils/comprobante-utils.ts
-import puppeteer from "puppeteer";
+import puppeteer, { Browser, Page } from "puppeteer";
 import { formatearFechaViaje } from "./fecha-utils";
-import { getLogoBase64 } from "@/lib/utils/logo-utils";
 import { getConfiguracionEmpresa } from "@/lib/actions/configuracion";
 
 export interface MetodoPago {
@@ -53,40 +52,155 @@ interface VentaComprobante {
   };
 }
 
-export async function generarComprobanteA4(
-  venta: VentaComprobante
-): Promise<Buffer> {
-  // Obtener configuración de la empresa
-  const empresa = await getConfiguracionEmpresa();
+// ============================================
+// 🚀 OPTIMIZACIÓN: SINGLETON PATTERN
+// ============================================
+let browserInstance: Browser | null = null;
+let browserPromise: Promise<Browser> | null = null;
+let isClosing = false;
 
-  const html = generarHTMLComprobante(venta, empresa);
+async function getBrowser(): Promise<Browser> {
+  if (browserPromise) {
+    return browserPromise;
+  }
 
-  const browser = await puppeteer.launch({
+  if (browserInstance && browserInstance.connected && !isClosing) {
+    return browserInstance;
+  }
+
+  console.log("🚀 Creando nueva instancia de browser...");
+  browserPromise = puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-extensions",
+    ],
   });
 
   try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    browserInstance = await browserPromise;
+    browserPromise = null;
+
+    browserInstance.on("disconnected", () => {
+      console.log("🔴 Browser desconectado inesperadamente");
+      browserInstance = null;
+      browserPromise = null;
+      isClosing = false;
+    });
+
+    console.log("✅ Browser creado exitosamente");
+    return browserInstance;
+  } catch (error) {
+    console.error("❌ Error creando browser:", error);
+    browserPromise = null;
+    throw error;
+  }
+}
+
+// ============================================
+// 🚀 FUNCIÓN OPTIMIZADA CON MEJOR MANEJO DE ERRORES
+// ============================================
+export async function generarComprobanteA4(
+  venta: VentaComprobante
+): Promise<Buffer> {
+  const empresa = await getConfiguracionEmpresa();
+  const html = generarHTMLComprobante(venta, empresa);
+
+  let browser: Browser | null = null;
+  let page: Page | null = null;
+
+  try {
+    browser = await getBrowser();
+    page = await browser.newPage();
+
+    page.setDefaultTimeout(30000);
+    page.setDefaultNavigationTimeout(30000);
+
+    await page.setRequestInterception(true);
+    page.on("request", (request) => {
+      const resourceType = request.resourceType();
+      if (resourceType === "document" || request.url().startsWith("data:")) {
+        request.continue();
+      } else {
+        request.abort();
+      }
+    });
+
+    await page.setViewport({ width: 794, height: 1123 });
+
+    await page.setContent(html, {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
 
     const pdf = await page.pdf({
       format: "A4",
       printBackground: true,
+      preferCSSPageSize: false,
       margin: {
-        top: "1cm",
-        right: "1cm",
-        bottom: "1cm",
-        left: "1cm",
+        top: "10mm",
+        right: "10mm",
+        bottom: "10mm",
+        left: "10mm",
       },
     });
 
     return Buffer.from(pdf);
+  } catch (error) {
+    console.error("❌ Error generando PDF:", error);
+
+    if (browserInstance) {
+      try {
+        isClosing = true;
+        await browserInstance.close();
+        browserInstance = null;
+        browserPromise = null;
+      } catch (closeError) {
+        console.error("Error cerrando browser:", closeError);
+      } finally {
+        isClosing = false;
+      }
+    }
+
+    throw error;
   } finally {
-    await browser.close();
+    if (page && !page.isClosed()) {
+      try {
+        await page.close();
+      } catch (closeError) {
+        console.error("Error cerrando página:", closeError);
+      }
+    }
   }
 }
 
+// ============================================
+// CERRAR BROWSER MANUALMENTE
+// ============================================
+export async function closeBrowser(): Promise<void> {
+  if (browserInstance && !isClosing) {
+    try {
+      isClosing = true;
+      await browserInstance.close();
+      browserInstance = null;
+      browserPromise = null;
+      console.log("🔴 Browser cerrado manualmente");
+    } catch (error) {
+      console.error("Error cerrando browser:", error);
+    } finally {
+      isClosing = false;
+    }
+  }
+}
+
+// ============================================
+// GENERADOR DE HTML
+// ============================================
 export function generarHTMLComprobante(
   venta: VentaComprobante,
   empresa: {
@@ -101,14 +215,24 @@ export function generarHTMLComprobante(
 ): string {
   const fechaEmision = new Date(venta.fechaVenta).toLocaleString("es-PE", {
     timeZone: "America/Lima",
-    year: "numeric",
-    month: "2-digit",
     day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
   });
 
-  const logoBase64 = getLogoBase64();
+  const fechaImpresion = new Date().toLocaleString("es-PE", {
+    timeZone: "America/Lima",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
 
   const metodosPagoHTML =
     venta.tipoPago === "HIBRIDO" && venta.metodosPago
@@ -137,196 +261,249 @@ export function generarHTMLComprobante(
         }
         
         body {
-          font-family: 'Arial', sans-serif;
-          font-size: 10px;
-          line-height: 1.3;
-          color: #333;
+          font-family: Arial, sans-serif;
+          font-size: 11px;
+          line-height: 1.4;
+          color: #1f2937;
           background: #fff;
+          padding: 0;
+          margin: 0;
         }
         
         .comprobante {
           max-width: 21cm;
           margin: 0 auto;
-          padding: 15px;
+          padding: 0;
         }
         
+        /* ============================================
+          HEADER
+          ============================================ */
         .header {
-          text-align: center;
-          border-bottom: 2px solid #2563eb;
-          padding-bottom: 10px;
-          margin-bottom: 20px;
+          background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+          color: white;
+          padding: 20px 30px;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 20px;
         }
 
-        .header-content {
+        .header-left {
           flex: 1;
-          text-align: center;
         }
         
-        .logo-container {
-          width: 100px;
-          flex-shrink: 0;
+        .header-right {
           display: flex;
           align-items: center;
           justify-content: center;
+          width: 160px;
+          flex-shrink: 0;
         }
-        
-        .logo {
-          max-width: 100%;
-          height: auto;
-          display: block;
-        }
-        
+
         .empresa {
-          font-size: 24px;
+          font-size: 26px;
           font-weight: bold;
-          color: #1e40af;
-          margin-bottom: 5px;
+          margin-bottom: 6px;
           text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         
         .empresa-subtitulo {
-          font-size: 14px;
-          font-weight: bold;
-          color: #1e40af;
-          margin-bottom: 5px;
+          font-size: 12px;
+          font-weight: 600;
+          margin-bottom: 10px;
         }
         
         .empresa-cobertura {
-          font-size: 10px;
-          color: #333;
-          margin-bottom: 5px;
-          font-weight: 600;
+          font-size: 9px;
+          opacity: 0.95;
+          line-height: 1.5;
+          margin-bottom: 10px;
         }
         
         .empresa-info {
-          font-size: 10px;
-          color: #333;
-          margin-bottom: 3px;
+          font-size: 9px;
+          opacity: 0.9;
+          line-height: 1.5;
         }
-        
-        .comprobante-titulo {
-          font-size: 16px;
+
+        /* Recuadro comprobante - CENTRADO HORIZONTAL */
+        .comprobante-box {
+          background: white;
+          border: 2px solid #1e40af;
+          border-radius: 8px;
+          padding: 12px;
+          text-align: center;
+          width: 160px;
+        }
+
+        .comprobante-box-title {
+          font-size: 11px;
           font-weight: bold;
-          color: #1f2937;
-          margin: 10px 0;
+          color: #1e40af;
+          margin-bottom: 2px;
         }
-        
-        .numero-venta {
+
+        .comprobante-box-numero {
           font-size: 14px;
           font-weight: bold;
           color: #dc2626;
+          margin-top: 5px;
         }
         
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 15px;
-          margin-bottom: 15px;
+        /* ============================================
+           LÍNEA DIVISORIA
+           ============================================ */
+        .divider {
+          height: 2px;
+          background: #1e40af;
+          margin: 0;
         }
-        
-        .info-section {
-          background: #f8fafc;
-          padding: 10px;
-          border-radius: 6px;
-          border: 1px solid #e2e8f0;
+
+        /* ============================================
+           FECHA DE EMISIÓN
+           ============================================ */
+        .fecha-emision {
+          text-align: center;
+          font-size: 11px;
+          font-weight: bold;
+          color: #1f2937;
+          padding: 15px 0;
+          background: #f9fafb;
         }
-        
-        .info-section h3 {
-          font-size: 12px;
+
+        /* ============================================
+           SECCIONES
+           ============================================ */
+        .section {
+          padding: 0 30px;
+          margin-bottom: 20px;
+        }
+
+        .section-title {
+          font-size: 11px;
           font-weight: bold;
           color: #1e40af;
-          margin-bottom: 8px;
-          border-bottom: 1px solid #cbd5e1;
+          margin-bottom: 5px;
           padding-bottom: 3px;
+          border-bottom: 1px solid #d1d5db;
         }
-        
+
+        .section-content {
+          padding-top: 8px;
+        }
+
         .info-row {
           display: flex;
-          justify-content: space-between;
-          margin-bottom: 4px;
+          margin-bottom: 6px;
           font-size: 10px;
         }
-        
-        .label {
-          font-weight: 600;
-          color: #475569;
+
+        .info-label {
+          color: #6b7280;
+          margin-right: 5px;
+          min-width: fit-content;
         }
-        
-        .value {
+
+        .info-value {
           color: #1f2937;
-          text-align: right;
+          font-weight: 600;
         }
-        
-        .detalles-viaje {
+
+        /* ============================================
+           DOS COLUMNAS
+           ============================================ */
+        .two-columns {
           display: flex;
-          gap: 15px;
-          margin-bottom: 15px;
+          gap: 20px;
+          padding: 0 30px;
+          margin-bottom: 20px;
         }
-        
-        .detalles-columna {
+
+        .column {
           flex: 1;
-          background: #fff;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          padding: 10px;
+          border: 2px solid #1e40af;
+          border-radius: 8px;
+          overflow: hidden;
         }
-        
+
+        .column-header {
+          background: #1e40af;
+          color: white;
+          font-size: 11px;
+          font-weight: bold;
+          padding: 10px;
+          text-align: center;
+        }
+
+        .column-content {
+          padding: 15px;
+          background: white;
+        }
+
+        /* Resumen de pago - SIN FONDO AZUL */
         .resumen-pago {
-          background: #f0f9ff;
-          border: 1px solid #0ea5e9;
-          border-radius: 6px;
-          padding: 10px;
-          margin-bottom: 15px;
+          background: white;
         }
-        
+
         .pago-row {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 4px;
+          margin-bottom: 8px;
           font-size: 10px;
         }
-        
-        .pago-total {
-          border-top: 1px solid #0ea5e9;
-          padding-top: 5px;
-          margin-top: 5px;
-          font-size: 12px;
-          font-weight: bold;
+
+        .pago-separator {
+          border-top: 1px solid #1e40af;
+          margin: 12px 0;
         }
-        
-        .metodo-pago {
-          background: #e0f2fe;
-          padding: 3px 8px;
-          border-radius: 4px;
-          margin-bottom: 3px;
-          font-size: 10px;
-        }
-        
-        .observaciones {
-          background: #fefce8;
-          border: 1px solid #eab308;
+
+        .pago-total-box {
+          background: #dbeafe;
+          border: 2px solid #1e40af;
           border-radius: 6px;
           padding: 10px;
-          margin-bottom: 15px;
+          margin: 12px 0;
+        }
+
+        .pago-total {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          font-weight: bold;
+          color: #1e40af;
+        }
+
+        .metodos-pago-label {
           font-size: 10px;
-        }
-        
-        .footer {
-          border-top: 1px solid #d1d5db;
-          padding-top: 10px;
-          text-align: center;
-          font-size: 9px;
+          font-weight: 600;
           color: #6b7280;
+          margin-bottom: 8px;
+          margin-top: 10px;
         }
-        
+
+        .metodo-pago {
+          background: #e0f2fe;
+          padding: 6px 10px;
+          border-radius: 6px;
+          margin-bottom: 5px;
+          font-size: 9px;
+          display: inline-block;
+          margin-right: 8px;
+        }
+
+        /* Estado badge - CENTRADO HORIZONTAL */
+        .estado-container {
+          display: flex;
+          align-items: center;
+        }
+
         .estado {
           display: inline-block;
-          padding: 2px 8px;
+          padding: 4px 12px;
           border-radius: 12px;
-          font-size: 10px;
+          font-size: 9px;
           font-weight: bold;
           text-transform: uppercase;
         }
@@ -334,222 +511,271 @@ export function generarHTMLComprobante(
         .estado.confirmada {
           background: #d1fae5;
           color: #065f46;
+          border: 1px solid #059669;
         }
         
         .estado.anulada {
           background: #fee2e2;
           color: #991b1b;
+          border: 1px solid #dc2626;
+        }
+
+        /* ============================================
+           TÉRMINOS Y CONDICIONES
+           ============================================ */
+        .terminos {
+          background: #f9fafb;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 15px 30px;
+          margin: 0 30px 20px 30px;
+        }
+
+        .terminos-title {
+          font-size: 10px;
+          font-weight: bold;
+          color: #1e40af;
+          margin-bottom: 10px;
+        }
+
+        .terminos ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .terminos li {
+          font-size: 8px;
+          color: #6b7280;
+          margin-bottom: 5px;
+          padding-left: 15px;
+          position: relative;
+          line-height: 1.4;
+        }
+
+        .terminos li:before {
+          content: "•";
+          position: absolute;
+          left: 0;
+          color: #1e40af;
+          font-weight: bold;
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+          background: #1e40af;
+          color: white;
+          padding: 15px 30px;
+          text-align: center;
+        }
+
+        .footer-info {
+          font-size: 9px;
+          opacity: 0.95;
+          margin-bottom: 5px;
+          line-height: 1.5;
+        }
+
+        .footer-fecha {
+          font-size: 8px;
+          opacity: 0.85;
         }
         
         @media print {
-          body { margin: 0; }
-          .comprobante { box-shadow: none; }
-          @page {
-            size: A4;
-            margin: 1cm;
-          }
+          body { margin: 0; padding: 0; }
+          @page { size: A4; margin: 10mm; }
         }
       </style>
     </head>
     <body>
       <div class="comprobante">
-        <!-- Header -->
+        <!-- HEADER -->
         <div class="header">
-          <div class="logo-container">
-            <img src="${logoBase64}" 
-                 alt="Logo ${empresa.nombre}" 
-                 class="logo" />
-          </div>
-          <div class="header-content">
+          <div class="header-left">
             <div class="empresa">${empresa.nombre}</div>
             <div class="empresa-subtitulo">VENTA DE PASAJES FLUVIALES</div>
-            <div class="empresa-cobertura">IQUITOS, YURIMAGUAS, PUCALLPA, SANTA ROSA, INTUTO, SAN LORENZO, 
-            TROMPETEROS, PANTOJA, REQUENA, Y PUERTOS INTERMEDIOS</div>
-            <div class="empresa-info">Dirección: ${empresa.direccion}</div>
-            <div class="empresa-info">Correo: ${empresa.email}</div>
-            <div class="empresa-info">Celular: ${
-              empresa.telefono
-            }</div>            
-            <div class="empresa-info">IQUITOS - MAYNAS - LORETO</div>
+            <div class="empresa-cobertura">
+              IQUITOS, YURIMAGUAS, PUCALLPA, SANTA ROSA, INTUTO,<br>
+              SAN LORENZO, TROMPETEROS, PANTOJA, REQUENA Y PUERTOS INTERMEDIOS
+            </div>
+            <div class="empresa-info">
+              ${empresa.direccion} | ${empresa.email} | Cel: ${
+    empresa.telefono
+  }<br>
+              IQUITOS - MAYNAS - LORETO
+            </div>
           </div>
-          <div style="width: 80px;"></div> <!-- Espacio para balance visual -->
+          <div class="header-right">
+            <div class="comprobante-box">
+              <div class="comprobante-box-title">COMPROBANTE</div>
+              <div class="comprobante-box-title">DE VENTA</div>
+              <div class="comprobante-box-numero">N° ${venta.numeroVenta}</div>
+            </div>
+          </div>
         </div>
 
-        <div class="comprobante-titulo">COMPROBANTE DE VENTA N° ${
-          venta.numeroVenta
-        }</div>
+        <!-- LÍNEA DIVISORIA -->
+        <div class="divider"></div>
 
-        <!-- Información del cliente y venta -->
-        <div class="info-grid">
-          <div class="info-section">
-            <h3>Datos del Cliente</h3>
+        <!-- FECHA DE EMISIÓN -->
+        <div class="fecha-emision">
+          FECHA DE EMISIÓN: ${fechaEmision}
+        </div>
+
+        <!-- DATOS DEL CLIENTE -->
+        <div class="section">
+          <div class="section-title">DATOS DEL CLIENTE</div>
+          <div class="section-content">
             <div class="info-row">
-              <span class="label">Nombre:</span>
-              <span class="value">${venta.cliente.nombre} ${
+              <span class="info-label">Nombre:</span>
+              <span class="info-value">${venta.cliente.nombre} ${
     venta.cliente.apellido
   }</span>
             </div>
             <div class="info-row">
-              <span class="label">DNI:</span>
-              <span class="value">${venta.cliente.dni}</span>
+              <span class="info-label">DNI:</span>
+              <span class="info-value">${venta.cliente.dni}</span>
             </div>
             <div class="info-row">
-              <span class="label">Nacionalidad:</span>
-              <span class="value">${venta.cliente.nacionalidad}</span>
+              <span class="info-label">Nacionalidad:</span>
+              <span class="info-value">${venta.cliente.nacionalidad}</span>
             </div>
             ${
               venta.cliente.telefono
-                ? `
-            <div class="info-row">
-              <span class="label">Teléfono:</span>
-              <span class="value">${venta.cliente.telefono}</span>
-            </div>`
-                : ""
-            }
-            ${
-              venta.cliente.email
-                ? `
-            <div class="info-row">
-              <span class="label">Email:</span>
-              <span class="value">${venta.cliente.email}</span>
+                ? `<div class="info-row">
+              <span class="info-label">Teléfono:</span>
+              <span class="info-value">${venta.cliente.telefono}</span>
             </div>`
                 : ""
             }
           </div>
+        </div>
 
-          <div class="info-section">
-            <h3>Datos del Viaje</h3>
+        <!-- DATOS DEL VIAJE -->
+        <div class="section">
+          <div class="section-title">DATOS DEL VIAJE</div>
+          <div class="section-content">
             <div class="info-row">
-              <span class="label">Ruta:</span>
-              <span class="value">${venta.ruta.nombre}</span>
+              <span class="info-label">Ruta:</span>
+              <span class="info-value">${venta.ruta.nombre}</span>
             </div>
             <div class="info-row">
-              <span class="label">Embarcación:</span>
-              <span class="value">${venta.embarcacion.nombre}</span>
+              <span class="info-label">Embarcación:</span>
+              <span class="info-value">${venta.embarcacion.nombre}</span>
             </div>
             <div class="info-row">
-              <span class="label">Fecha:</span>
-              <span class="value">${formatearFechaViaje(
+              <span class="info-label">Fecha:</span>
+              <span class="info-value">${formatearFechaViaje(
                 venta.fechaViaje
               )}</span>
             </div>
             <div class="info-row">
-              <span class="label">Hora embarque:</span>
-              <span class="value">${venta.horaEmbarque}</span>
+              <span class="info-label">Hora de embarque:</span>
+              <span class="info-value">${venta.horaEmbarque}</span>
             </div>
             <div class="info-row">
-              <span class="label">Hora viaje:</span>
-              <span class="value">${venta.horaViaje}</span>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3>Datos de la Venta</h3>
-            <div class="info-row">
-              <span class="label">Fecha emisión:</span>
-              <span class="value">${fechaEmision}</span>
+              <span class="info-label">Hora de viaje:</span>
+              <span class="info-value">${venta.horaViaje}</span>
             </div>
             <div class="info-row">
-              <span class="label">Vendedor:</span>
-              <span class="value">${venta.vendedor.nombre} ${
-    venta.vendedor.apellido
-  }</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Cantidad:</span>
-              <span class="value">${venta.cantidadPasajes} pasaje(s)</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Estado:</span>
-              <span class="value">
-                <span class="estado ${venta.estado.toLowerCase()}">${
-    venta.estado
-  }</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Detalles de pago -->
-        <div class="detalles-viaje">
-          <div class="detalles-columna">
-            <div class="info-row">
-              <span class="label">Puerto de embarque:</span>
-              <span class="value">${venta.puertoEmbarque.nombre}</span>
+              <span class="info-label">Puerto de embarque:</span>
+              <span class="info-value">${venta.puertoEmbarque.nombre}</span>
             </div>
             ${
               venta.puertoEmbarque.direccion
-                ? `
-            <div class="info-row">
-              <span class="label">Dirección:</span>
-              <span class="value">${venta.puertoEmbarque.direccion}</span>
-            </div>`
-                : ""
-            }
-            ${
-              venta.puertoEmbarque.descripcion
-                ? `
-            <div class="info-row">
-              <span class="label">Notas:</span>
-              <span class="value">${venta.puertoEmbarque.descripcion}</span>
+                ? `<div class="info-row">
+              <span class="info-label">Dirección del puerto:</span>
+              <span class="info-value">${venta.puertoEmbarque.direccion}</span>
             </div>`
                 : ""
             }
           </div>
+        </div>
 
-          <div class="detalles-columna">
-            <div class="resumen-pago">
+        <!-- DOS COLUMNAS: DATOS DE LA VENTA Y RESUMEN DE PAGO -->
+        <div class="two-columns">
+          <!-- DATOS DE LA VENTA -->
+          <div class="column">
+            <div class="column-header">DATOS DE LA VENTA</div>
+            <div class="column-content">
+              <div class="info-row">
+                <span class="info-label">Cantidad:</span>
+                <span class="info-value">${
+                  venta.cantidadPasajes
+                } pasaje(s)</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Vendedor:</span>
+                <span class="info-value">${venta.vendedor.nombre} ${
+    venta.vendedor.apellido
+  }</span>
+              </div>
+              <div class="info-row estado-container">
+                <span class="info-label">Estado:</span>
+                <span class="info-value">
+                  <span class="estado ${venta.estado.toLowerCase()}">${
+    venta.estado
+  }</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RESUMEN DE PAGO -->
+          <div class="column">
+            <div class="column-header">RESUMEN DE PAGO</div>
+            <div class="column-content resumen-pago">
               <div class="pago-row">
-                <span>Precio unitario:</span>
-                <span>S/ ${venta.precioUnitario.toFixed(2)}</span>
+                <span>Precio unitario</span>
+                <span>S/. ${venta.precioUnitario.toFixed(2)}</span>
               </div>
               <div class="pago-row">
                 <span>Subtotal:</span>
-                <span>S/ ${venta.subtotal.toFixed(2)}</span>
+                <span>S/. ${venta.subtotal.toFixed(2)}</span>
               </div>
               <div class="pago-row">
                 <span>Impuestos:</span>
-                <span>S/ ${venta.impuestos.toFixed(2)}</span>
+                <span>S/. ${venta.impuestos.toFixed(2)}</span>
               </div>
-              <div class="pago-row pago-total">
-                <span>TOTAL PAGADO:</span>
-                <span>S/ ${venta.total.toFixed(2)}</span>
+              
+              <div class="pago-separator"></div>
+              
+              <div class="pago-total-box">
+                <div class="pago-total">
+                  <span>TOTAL PAGADO</span>
+                  <span>S/. ${venta.total.toFixed(2)}</span>
+                </div>
               </div>
-              <div class="metodos-pago">
-                <strong>Método(s) de pago:</strong>
-                ${metodosPagoHTML}
-              </div>
+
+              <div class="metodos-pago-label">Método(s) de pago:</div>
+              ${metodosPagoHTML}
             </div>
           </div>
         </div>
 
-        ${
-          venta.observaciones
-            ? `
-        <div class="observaciones">
-          <strong>Observaciones:</strong>
-          <p>${venta.observaciones}</p>
+        <!-- TÉRMINOS Y CONDICIONES -->
+        <div class="terminos">
+          <div class="terminos-title">TÉRMINOS Y CONDICIONES:</div>
+          <ul>
+            <li>No se aceptan devoluciones una vez realizada la venta y separado el cupo.</li>
+            <li>Si la embarcación partió y Ud. no abordó, perderá su derecho a viajar y el valor del pasaje.</li>
+            <li>Equipaje permitido: 15Kg por pasajero.</li>
+            <li>Este ticket puede ser cambiado por Boleta de Venta o Factura.</li>
+          </ul>
         </div>
-        `
-            : ""
-        }
 
-        <!-- Footer -->
+        <!-- FOOTER -->
         <div class="footer">
-          <div style="margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9;">
-            <p style="font-weight: bold; margin-bottom: 5px;">TÉRMINOS Y CONDICIONES:</p>
-            <ul style="list-style-type: none; padding-left: 0;">
-              <li>• La empresa no aceptará devoluciones una vez realizada la venta y separado el cupo.</li>
-              <li>• En caso que la embarcación haya partido y Ud. no abordó, perderá su derecho a viajar y el valor de su pasaje.</li>
-              <li>• Equipaje permitido: 15Kg por pasajero.</li>
-              <li>• Este ticket puede ser cambiado por Boleta de Venta o Factura.</li>
-            </ul>
+          <div class="footer-info">
+            ${empresa.nombre.toUpperCase()} | ${empresa.direccion} | ${
+    empresa.telefono
+  } | ${empresa.email}
           </div>
-          <p>Para consultas: ${empresa.email} | Celular: ${empresa.telefono}</p>
-          <p>${empresa.nombre.toUpperCase()} | ${empresa.direccion}</p>
-          <p>Fecha y hora de emisión: ${new Date().toLocaleString("es-PE", {
-            timeZone: "America/Lima",
-          })}</p>
+          <div class="footer-fecha">
+            Impreso: ${fechaImpresion} | IQUITOS - MAYNAS - LORETO
+          </div>
         </div>
       </div>
     </body>

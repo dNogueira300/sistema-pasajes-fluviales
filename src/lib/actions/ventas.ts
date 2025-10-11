@@ -1,3 +1,4 @@
+// src/lib/actions/ventas.ts
 import { PrismaClient } from "@prisma/client";
 import { EstadoVenta } from "@/types";
 

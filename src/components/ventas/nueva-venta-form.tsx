@@ -1093,6 +1093,54 @@ export default function NuevaVentaForm({
 
                     {formData.metodosPago.map((metodo, index) => (
                       <div key={index} className="flex gap-4 items-start">
+                        {/* SELECT para el tipo de método */}
+                        <div className="flex-1">
+                          <select
+                            value={metodo.tipo}
+                            onChange={(e) => {
+                              const newMetodosPago = [...formData.metodosPago];
+                              newMetodosPago[index].tipo = e.target.value;
+                              setFormData((prev) => ({
+                                ...prev,
+                                metodosPago: newMetodosPago,
+                              }));
+                            }}
+                            className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                          >
+                            <option
+                              value="EFECTIVO"
+                              className="bg-slate-800 text-slate-100"
+                            >
+                              Efectivo
+                            </option>
+                            <option
+                              value="TARJETA"
+                              className="bg-slate-800 text-slate-100"
+                            >
+                              Tarjeta
+                            </option>
+                            <option
+                              value="TRANSFERENCIA"
+                              className="bg-slate-800 text-slate-100"
+                            >
+                              Transferencia
+                            </option>
+                            <option
+                              value="YAPE"
+                              className="bg-slate-800 text-slate-100"
+                            >
+                              Yape
+                            </option>
+                            <option
+                              value="PLIN"
+                              className="bg-slate-800 text-slate-100"
+                            >
+                              Plin
+                            </option>
+                          </select>
+                        </div>
+
+                        {/* INPUT para el monto */}
                         <div className="flex-1">
                           <input
                             type="number"
@@ -1108,10 +1156,12 @@ export default function NuevaVentaForm({
                             }}
                             step="0.01"
                             min="0"
-                            placeholder="Monto"
+                            placeholder="Monto (S/)"
                             className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
                           />
                         </div>
+
+                        {/* Botón eliminar */}
                         <button
                           type="button"
                           onClick={() => {
@@ -1135,12 +1185,68 @@ export default function NuevaVentaForm({
                       </div>
                     ))}
 
+                    {/* Resumen de pago híbrido */}
                     {formData.metodosPago.length > 0 && (
-                      <div className="text-sm text-slate-400">
-                        Total pagado: S/{" "}
-                        {formData.metodosPago
-                          .reduce((sum, metodo) => sum + metodo.monto, 0)
-                          .toFixed(2)}
+                      <div className="mt-4 p-4 bg-slate-700/30 border border-slate-600/50 rounded-xl">
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">
+                              Total de la venta:
+                            </span>
+                            <span className="font-medium text-slate-200">
+                              S/ {calcularTotales().totalVenta.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">
+                              Total pagado:
+                            </span>
+                            <span className="font-medium text-slate-200">
+                              S/ {calcularTotales().totalPagado.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="border-t border-slate-600/50 pt-2">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">
+                                {calcularTotales().faltaPagar > 0
+                                  ? "Falta pagar:"
+                                  : "Diferencia:"}
+                              </span>
+                              <span
+                                className={`font-bold ${
+                                  Math.abs(calcularTotales().faltaPagar) < 0.01
+                                    ? "text-green-400"
+                                    : calcularTotales().faltaPagar > 0
+                                    ? "text-red-400"
+                                    : "text-yellow-400"
+                                }`}
+                              >
+                                S/{" "}
+                                {Math.abs(calcularTotales().faltaPagar).toFixed(
+                                  2
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Mensaje de validación */}
+                        {Math.abs(calcularTotales().faltaPagar) < 0.01 ? (
+                          <div className="mt-3 flex items-center text-green-400 text-sm">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            El pago está completo
+                          </div>
+                        ) : calcularTotales().faltaPagar > 0 ? (
+                          <div className="mt-3 flex items-center text-red-400 text-sm">
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            Falta completar el pago
+                          </div>
+                        ) : (
+                          <div className="mt-3 flex items-center text-yellow-400 text-sm">
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            El total pagado excede el monto de la venta
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

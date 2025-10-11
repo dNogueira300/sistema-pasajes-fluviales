@@ -6,6 +6,7 @@ import { useRequireAuth } from "@/hooks/use-auth";
 import NuevaVentaForm from "@/components/ventas/nueva-venta-form";
 import { formatearFechaViaje } from "@/lib/utils/fecha-utils";
 import ModalAnularVenta from "@/components/anulaciones/modal-anular-venta";
+import { generarComprobanteImagen } from "@/lib/utils/canvas-image-generator";
 import { Venta, AnulacionResponse } from "@/types";
 import {
   Plus,
@@ -286,7 +287,7 @@ export default function VentasPage() {
     }
   };
 
-  // Función actualizada para descargar imagen
+  // Función para descargar comprobante como imagen PNG
   const descargarComprobanteImagen = async (venta: Venta) => {
     const nombreCliente = `${venta.cliente.nombre} ${venta.cliente.apellido}`;
     const nombreArchivo = `${nombreCliente} - ${venta.numeroVenta}.png`;
@@ -299,46 +300,38 @@ export default function VentasPage() {
     );
 
     try {
-      const response = await fetch(
-        `/api/ventas/${venta.id}/comprobante-imagen`
+      // ✅ Generar imagen directamente usando Canvas (INSTANTÁNEO)
+      console.time("Image Generation");
+      const blob = await generarComprobanteImagen(venta);
+      console.timeEnd("Image Generation");
+
+      const url = URL.createObjectURL(blob);
+
+      // Crear enlace de descarga
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+
+      // Limpiar
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Remover notificación de descarga y mostrar éxito
+      removerNotificacion(notificacionDescarga);
+      mostrarNotificacion(
+        "exito",
+        "Imagen descargada correctamente",
+        nombreArchivo
       );
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-
-        // Crear enlace de descarga
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = nombreArchivo;
-        document.body.appendChild(a);
-        a.click();
-
-        // Limpiar
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        // Remover notificación de descarga y mostrar éxito
-        removerNotificacion(notificacionDescarga);
-        mostrarNotificacion(
-          "exito",
-          "Imagen descargada correctamente",
-          nombreArchivo
-        );
-      } else {
-        removerNotificacion(notificacionDescarga);
-        mostrarNotificacion(
-          "error",
-          "Error al generar imagen",
-          "Por favor, intenta nuevamente"
-        );
-      }
     } catch (error) {
-      console.error("Error descargando imagen del comprobante:", error);
+      console.error("Error generando imagen del comprobante:", error);
       removerNotificacion(notificacionDescarga);
       mostrarNotificacion(
         "error",
-        "Error de conexión",
-        "No se pudo descargar la imagen"
+        "Error al generar imagen",
+        "Por favor, intenta nuevamente"
       );
     }
   };

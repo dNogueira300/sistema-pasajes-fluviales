@@ -1,6 +1,5 @@
 // lib/utils/ticket-utils.ts
 import { formatearFechaViaje } from "./fecha-utils";
-import { getLogoBWBase64 } from "@/lib/utils/logo-utils";
 import { getConfiguracionEmpresa } from "@/lib/actions/configuracion";
 
 interface MetodoPago {
@@ -76,8 +75,6 @@ export async function generarTicketTermico(
           )
           .join("\n")
       : venta.metodoPago;
-
-  const logoBase64 = getLogoBWBase64();
 
   return `
     <!DOCTYPE html>
@@ -274,9 +271,6 @@ export async function generarTicketTermico(
     <body>
       <div class="ticket">
         <!-- Header -->
-        <div class="logo-container">
-          <img src="${logoBase64}" alt="Logo Alto Impacto Travel" class="logo" />
-        </div>
         <div class="empresa">${empresa.nombre}</div>
         <div class="empresa-subtitulo">VENTA DE PASAJES FLUVIALES</div>
         <div class="empresa-info">

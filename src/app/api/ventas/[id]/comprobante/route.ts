@@ -1,4 +1,4 @@
-// app/api/ventas/[id]/comprobante/route.ts
+// src/app/api/ventas/[id]/comprobante/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -53,6 +53,24 @@ export async function GET(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
+    // ✅ FIX: Manejar metodosPago correctamente
+    let metodosPagoArray: MetodoPago[] | undefined;
+
+    if (venta.metodosPago) {
+      // Si metodosPago ya es un objeto, usarlo directamente
+      if (typeof venta.metodosPago === "object") {
+        metodosPagoArray = venta.metodosPago as unknown as MetodoPago[];
+      } else if (typeof venta.metodosPago === "string") {
+        // Si es string, parsearlo
+        try {
+          metodosPagoArray = JSON.parse(venta.metodosPago);
+        } catch (error) {
+          console.error("Error parseando metodosPago:", error);
+          metodosPagoArray = undefined;
+        }
+      }
+    }
+
     // Formatear los datos de la venta para el comprobante
     const ventaFormateada = {
       id: venta.id,
@@ -73,9 +91,7 @@ export async function GET(
         | "PLIN"
         | "HIBRIDO",
       metodoPago: venta.metodoPago,
-      metodosPago: venta.metodosPago
-        ? (JSON.parse(venta.metodosPago.toString()) as MetodoPago[])
-        : undefined,
+      metodosPago: metodosPagoArray,
       estado: venta.estado as "CONFIRMADA" | "ANULADA",
       observaciones: venta.observaciones || undefined,
       cliente: {
@@ -105,8 +121,10 @@ export async function GET(
       },
     };
 
-    // Generar el PDF del comprobante A4
+    // ✅ Generar PDF con Puppeteer optimizado
+    console.time("PDF Generation");
     const pdfBuffer = await generarComprobanteA4(ventaFormateada);
+    console.timeEnd("PDF Generation");
 
     // Convertir el Buffer a Uint8Array para Next.js Response
     const uint8Array = new Uint8Array(pdfBuffer);
@@ -120,7 +138,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error generando comprobante A4:", error);
+    console.error("Error generando comprobante:", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }
