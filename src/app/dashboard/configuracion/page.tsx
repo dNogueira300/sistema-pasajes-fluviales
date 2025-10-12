@@ -8,16 +8,15 @@ import { useRequireAuth } from "@/hooks/use-auth";
 import {
   Save,
   Building2,
-  CreditCard,
+  //CreditCard,
   Database,
   Phone,
   Mail,
   MapPin,
   Clock,
   FileText,
-  Upload,
   CheckCircle,
-  XCircle,
+  //XCircle,
   AlertCircle,
 } from "lucide-react";
 
@@ -292,27 +291,11 @@ export default function ConfiguracionPage() {
                   />
                 </div>
               </div>
-
-              {/* Logo (placeholder) */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Logo de la Empresa
-                </label>
-                <div className="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center bg-slate-700/30">
-                  <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">
-                    Función de carga de logo - Próximamente
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Formato recomendado: PNG o JPG, máximo 2MB
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Métodos de Pago */}
-          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-6">
+          {/* <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-6">
             <div className="flex items-center mb-6">
               <div className="bg-green-600 p-2 rounded-lg mr-3">
                 <CreditCard className="h-5 w-5 text-white" />
@@ -370,7 +353,7 @@ export default function ConfiguracionPage() {
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Backup Automático */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-6">
