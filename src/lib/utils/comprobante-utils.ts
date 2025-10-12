@@ -569,6 +569,11 @@ export function generarHTMLComprobante(
           color: white;
           padding: 15px 30px;
           text-align: center;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
         }
 
         .footer-info {
@@ -586,6 +591,14 @@ export function generarHTMLComprobante(
         @media print {
           body { margin: 0; padding: 0; }
           @page { size: A4; margin: 10mm; }
+          .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            margin: 0;
+          }
         }
       </style>
     </head>
