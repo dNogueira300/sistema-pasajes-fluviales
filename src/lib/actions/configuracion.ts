@@ -1,4 +1,4 @@
-// lib/actions/configuracion.ts - VERSIÓN OPTIMIZADA
+// lib/actions/configuracion.ts
 
 import { prisma } from "@/lib/prisma";
 
