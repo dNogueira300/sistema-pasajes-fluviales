@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const fechaParam = searchParams.get("fecha");
 
-    const fecha = fechaParam ? new Date(fechaParam) : new Date();
+    // ✅ FIX: Pasar string directamente, no Date
+    const fecha = fechaParam || new Date().toISOString().split("T")[0];
 
     const reporte = await generarReporteDiario(fecha);
 
