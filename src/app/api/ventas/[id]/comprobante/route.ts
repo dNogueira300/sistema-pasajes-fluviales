@@ -2,13 +2,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import {
   MetodoPago,
   generarComprobanteA4,
-} from "@/lib/utils/comprobante-utils";
-
-const prisma = new PrismaClient();
+} from "@/lib/utils/comprobante-utils"; //
 
 export async function GET(
   request: NextRequest,
@@ -23,7 +21,6 @@ export async function GET(
     const params = await context.params;
     const ventaId = decodeURIComponent(params.id);
 
-    // Obtener la venta con todas las relaciones necesarias
     const venta = await prisma.venta.findUnique({
       where: { id: ventaId },
       include: {
@@ -35,7 +32,6 @@ export async function GET(
           select: {
             nombre: true,
             apellido: true,
-            email: true,
           },
         },
       },
@@ -48,30 +44,23 @@ export async function GET(
       );
     }
 
-    // Verificar que el usuario puede ver esta venta
     if (session.user.role === "VENDEDOR" && venta.userId !== session.user.id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
-    // ✅ FIX: Manejar metodosPago correctamente
     let metodosPagoArray: MetodoPago[] | undefined;
-
     if (venta.metodosPago) {
-      // Si metodosPago ya es un objeto, usarlo directamente
       if (typeof venta.metodosPago === "object") {
         metodosPagoArray = venta.metodosPago as unknown as MetodoPago[];
       } else if (typeof venta.metodosPago === "string") {
-        // Si es string, parsearlo
         try {
           metodosPagoArray = JSON.parse(venta.metodosPago);
         } catch (error) {
           console.error("Error parseando metodosPago:", error);
-          metodosPagoArray = undefined;
         }
       }
     }
 
-    // Formatear los datos de la venta para el comprobante
     const ventaFormateada = {
       id: venta.id,
       numeroVenta: venta.numeroVenta,
@@ -121,12 +110,9 @@ export async function GET(
       },
     };
 
-    // ✅ Generar PDF con Puppeteer optimizado
-    console.time("PDF Generation");
+    // ⚡ Generar PDF con jsPDF (compatible con Vercel)
     const pdfBuffer = await generarComprobanteA4(ventaFormateada);
-    console.timeEnd("PDF Generation");
 
-    // Convertir el Buffer a Uint8Array para Next.js Response
     const uint8Array = new Uint8Array(pdfBuffer);
 
     return new NextResponse(uint8Array, {
@@ -143,7 +129,5 @@ export async function GET(
       { error: "Error interno del servidor" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

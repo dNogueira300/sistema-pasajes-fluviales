@@ -58,15 +58,12 @@ export async function generarComprobanteImagen(
   const darkText = "#1f2937";
   const lightBorder = "#d1d5db";
   const lightBg = "#f9fafb";
-  const blueLight = "#dbeafe";
 
   let yPos = 0;
 
   // ============================================
   // HEADER CON GRADIENTE AZUL
   // ============================================
-
-  // Crear gradiente azul
   const gradient = ctx.createLinearGradient(0, 0, 794, 0);
   gradient.addColorStop(0, primaryColor);
   gradient.addColorStop(1, primaryLight);
@@ -77,25 +74,17 @@ export async function generarComprobanteImagen(
   ctx.fillStyle = "#FFFFFF";
   ctx.textAlign = "left";
 
-  // Nombre empresa
   ctx.font = "bold 26px Arial";
   ctx.fillText("ALTO IMPACTO TRAVEL", 30, 40);
 
-  // Subtítulo
   ctx.font = "bold 12px Arial";
   ctx.fillText("VENTA DE PASAJES FLUVIALES", 30, 60);
 
-  // Cobertura
   ctx.font = "9px Arial";
   ctx.globalAlpha = 0.95;
   ctx.fillText("IQUITOS, YURIMAGUAS, PUCALLPA, SANTA ROSA, INTUTO,", 30, 78);
-  ctx.fillText(
-    "SAN LORENZO, TROMPETEROS, PANTOJA, REQUENA Y PUERTOS INTERMEDIOS",
-    30,
-    90
-  );
+  ctx.fillText("SAN LORENZO, TROMPETEROS, PANTOJA, REQUENA", 30, 90);
 
-  // Info empresa
   ctx.globalAlpha = 0.9;
   ctx.fillText(
     "Jr. Fitzcarrald 513 | altoimpactotravel@gmail.com | Cel: 960 527 195",
@@ -103,50 +92,38 @@ export async function generarComprobanteImagen(
     108
   );
   ctx.fillText("IQUITOS - MAYNAS - LORETO", 30, 120);
-
   ctx.globalAlpha = 1.0;
 
   // Lado derecho - Recuadro de comprobante
-  const boxX = 614; // 794 - 160 - 20 (margen)
+  const boxX = 614;
   const boxY = 40;
   const boxWidth = 160;
   const boxHeight = 85;
 
-  // Fondo blanco del recuadro
   ctx.fillStyle = "#FFFFFF";
   roundRect(ctx, boxX, boxY, boxWidth, boxHeight, 8);
   ctx.fill();
 
-  // Borde del recuadro
   ctx.strokeStyle = primaryColor;
   ctx.lineWidth = 2;
   roundRect(ctx, boxX, boxY, boxWidth, boxHeight, 8);
   ctx.stroke();
 
-  // Texto dentro del recuadro
   ctx.fillStyle = primaryColor;
   ctx.font = "bold 11px Arial";
   ctx.textAlign = "center";
   ctx.fillText("COMPROBANTE", boxX + boxWidth / 2, boxY + 25);
   ctx.fillText("DE VENTA", boxX + boxWidth / 2, boxY + 40);
 
-  // Número de venta
   ctx.fillStyle = redColor;
   ctx.font = "bold 14px Arial";
   ctx.fillText(`N° ${venta.numeroVenta}`, boxX + boxWidth / 2, boxY + 65);
 
-  yPos = 150;
+  // ============================================
+  // FECHA DE EMISIÓN (PEGADA AL HEADER)
+  // ============================================
+  yPos = 150; // Pegado al header
 
-  // ============================================
-  // LÍNEA DIVISORIA
-  // ============================================
-  ctx.fillStyle = primaryColor;
-  ctx.fillRect(0, yPos, 794, 2);
-  yPos += 2;
-
-  // ============================================
-  // FECHA DE EMISIÓN
-  // ============================================
   ctx.fillStyle = lightBg;
   ctx.fillRect(0, yPos, 794, 40);
 
@@ -165,21 +142,17 @@ export async function generarComprobanteImagen(
   ctx.textAlign = "center";
   ctx.fillText(`FECHA DE EMISIÓN: ${fechaEmision}`, 397, yPos + 25);
 
-  yPos += 40;
+  yPos += 55;
 
   // ============================================
   // DATOS DEL CLIENTE
   // ============================================
-  yPos += 20;
   ctx.textAlign = "left";
-
-  // Título sección
   ctx.font = "bold 11px Arial";
   ctx.fillStyle = primaryColor;
   ctx.fillText("DATOS DEL CLIENTE", 30, yPos);
   yPos += 3;
 
-  // Línea debajo del título
   ctx.strokeStyle = lightBorder;
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -188,7 +161,6 @@ export async function generarComprobanteImagen(
   ctx.stroke();
   yPos += 15;
 
-  // Datos del cliente
   ctx.font = "10px Arial";
   drawInfoRow(
     ctx,
@@ -256,7 +228,7 @@ export async function generarComprobanteImagen(
 
   drawInfoRow(
     ctx,
-    "Fecha:",
+    "Fecha de viaje:",
     formatearFechaViaje(venta.fechaViaje),
     30,
     yPos,
@@ -312,244 +284,162 @@ export async function generarComprobanteImagen(
   }
 
   // ============================================
-  // DOS COLUMNAS: DATOS DE LA VENTA Y RESUMEN DE PAGO
+  // RESUMEN DE PAGO (CON ALTURA DINÁMICA)
   // ============================================
   yPos += 15;
 
-  const colWidth = 362; // (794 - 60 - 20) / 2
-  const col1X = 30;
-  const col2X = 402;
-  const colHeight = 230; // Aumentado de 200 a 230 para dar más espacio
-  const colStartY = yPos;
+  // Calcular altura dinámica
+  let alturaResumen = 180; // Altura base
+  const metodosPago = venta.metodosPago;
+  if (venta.tipoPago === "HIBRIDO" && metodosPago && metodosPago.length > 0) {
+    alturaResumen += metodosPago.length * 25;
+  }
 
-  // COLUMNA 1: DATOS DE LA VENTA
+  const resumenStartY = yPos;
+
+  // Borde del recuadro
+  ctx.strokeStyle = primaryColor;
+  ctx.lineWidth = 2;
+  roundRect(ctx, 30, yPos, 734, alturaResumen, 8);
+  ctx.stroke();
+
   // Header azul
   ctx.fillStyle = primaryColor;
-  roundRectTop(ctx, col1X, colStartY, colWidth, 30, 8);
+  roundRectTop(ctx, 30, yPos, 734, 30, 8);
   ctx.fill();
 
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 11px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("DATOS DE LA VENTA", col1X + colWidth / 2, colStartY + 20);
+  ctx.fillText("RESUMEN DE PAGO", 397, yPos + 20);
 
-  // Borde de la columna
-  ctx.strokeStyle = primaryColor;
-  ctx.lineWidth = 2;
-  roundRect(ctx, col1X, colStartY, colWidth, colHeight, 8);
-  ctx.stroke();
-
-  // Contenido columna 1
+  yPos += 45;
   ctx.textAlign = "left";
   ctx.font = "10px Arial";
-  let col1Y = colStartY + 50;
 
-  drawInfoRow(
-    ctx,
-    "Cantidad:",
-    `${venta.cantidadPasajes} pasaje(s)`,
-    col1X + 15,
-    col1Y,
-    grayText,
-    darkText
-  );
-  col1Y += 20;
-
-  drawInfoRow(
-    ctx,
-    "Vendedor:",
-    `${venta.vendedor.nombre} ${venta.vendedor.apellido}`,
-    col1X + 15,
-    col1Y,
-    grayText,
-    darkText
-  );
-  col1Y += 20;
-
-  // Estado con badge
-  ctx.fillStyle = grayText;
-  ctx.fillText("Estado:", col1X + 15, col1Y);
-
-  const estadoBgColor = venta.estado === "CONFIRMADA" ? "#d1fae5" : "#fee2e2";
-  const estadoTextColor = venta.estado === "CONFIRMADA" ? "#065f46" : "#991b1b";
-  const estadoBorderColor =
-    venta.estado === "CONFIRMADA" ? "#059669" : redColor;
-
-  // Badge del estado
-  const badgeX = col1X + 15 + ctx.measureText("Estado:").width + 5;
-  const badgeY = col1Y - 12;
-  const badgeWidth = 90;
-  const badgeHeight = 18;
-
-  ctx.fillStyle = estadoBgColor;
-  roundRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, 12);
-  ctx.fill();
-
-  ctx.strokeStyle = estadoBorderColor;
-  ctx.lineWidth = 1;
-  roundRect(ctx, badgeX, badgeY, badgeWidth, badgeHeight, 12);
-  ctx.stroke();
-
-  ctx.fillStyle = estadoTextColor;
-  ctx.font = "bold 9px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(venta.estado, badgeX + badgeWidth / 2, badgeY + 13);
-
-  // COLUMNA 2: RESUMEN DE PAGO
-  // Header azul
-  ctx.fillStyle = primaryColor;
-  roundRectTop(ctx, col2X, colStartY, colWidth, 30, 8);
-  ctx.fill();
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 11px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("RESUMEN DE PAGO", col2X + colWidth / 2, colStartY + 20);
-
-  // Borde de la columna
-  ctx.strokeStyle = primaryColor;
-  ctx.lineWidth = 2;
-  roundRect(ctx, col2X, colStartY, colWidth, colHeight, 8);
-  ctx.stroke();
-
-  // Contenido columna 2 (fondo blanco)
-  ctx.textAlign = "left";
-  ctx.font = "10px Arial";
-  let col2Y = colStartY + 50;
+  // Cantidad
+  ctx.fillStyle = darkText;
+  ctx.fillText("Cantidad:", 45, yPos);
+  ctx.textAlign = "right";
+  ctx.fillText(`${venta.cantidadPasajes} pasaje(s)`, 749, yPos);
+  yPos += 18;
 
   // Precio unitario
-  ctx.fillStyle = darkText;
-  ctx.fillText("Precio unitario", col2X + 15, col2Y);
+  ctx.textAlign = "left";
+  ctx.fillText("Precio unitario:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(
-    `S/. ${venta.precioUnitario!.toFixed(2)}`,
-    col2X + colWidth - 15,
-    col2Y
-  );
-  col2Y += 18;
+  ctx.fillText(`S/. ${venta.precioUnitario!.toFixed(2)}`, 749, yPos);
+  yPos += 18;
 
   // Subtotal
   ctx.textAlign = "left";
-  ctx.fillText("Subtotal:", col2X + 15, col2Y);
+  ctx.fillText("Subtotal:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(
-    `S/. ${venta.subtotal!.toFixed(2)}`,
-    col2X + colWidth - 15,
-    col2Y
-  );
-  col2Y += 18;
+  ctx.fillText(`S/. ${venta.subtotal!.toFixed(2)}`, 749, yPos);
+  yPos += 18;
 
   // Impuestos
   ctx.textAlign = "left";
-  ctx.fillText("Impuestos:", col2X + 15, col2Y);
+  ctx.fillText("Impuestos:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(
-    `S/. ${venta.impuestos!.toFixed(2)}`,
-    col2X + colWidth - 15,
-    col2Y
-  );
-  col2Y += 15;
+  ctx.fillText(`S/. ${venta.impuestos!.toFixed(2)}`, 749, yPos);
+  yPos += 15;
 
   // Separador
   ctx.strokeStyle = primaryColor;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(col2X + 15, col2Y);
-  ctx.lineTo(col2X + colWidth - 15, col2Y);
+  ctx.moveTo(45, yPos);
+  ctx.lineTo(749, yPos);
   ctx.stroke();
-  col2Y += 15;
+  yPos += 15;
 
-  // Caja del total
-  const totalBoxX = col2X + 15;
-  const totalBoxY = col2Y - 5;
-  const totalBoxWidth = colWidth - 30;
-  const totalBoxHeight = 30;
-
-  ctx.fillStyle = blueLight;
-  roundRect(ctx, totalBoxX, totalBoxY, totalBoxWidth, totalBoxHeight, 6);
-  ctx.fill();
-
-  ctx.strokeStyle = primaryColor;
-  ctx.lineWidth = 2;
-  roundRect(ctx, totalBoxX, totalBoxY, totalBoxWidth, totalBoxHeight, 6);
-  ctx.stroke();
-
+  // Total
   ctx.fillStyle = primaryColor;
   ctx.font = "bold 12px Arial";
   ctx.textAlign = "left";
-  ctx.fillText("TOTAL PAGADO", totalBoxX + 10, totalBoxY + 20);
+  ctx.fillText("TOTAL PAGADO:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(
-    `S/. ${venta.total.toFixed(2)}`,
-    totalBoxX + totalBoxWidth - 10,
-    totalBoxY + 20
-  );
+  ctx.fillText(`S/. ${venta.total.toFixed(2)}`, 749, yPos);
+  yPos += 18;
 
-  col2Y += 40;
-
-  // Métodos de pago
+  // Métodos de pago (DENTRO del recuadro)
   ctx.textAlign = "left";
-  ctx.fillStyle = grayText;
+  ctx.fillStyle = darkText;
   ctx.font = "bold 10px Arial";
-  ctx.fillText("Método(s) de pago:", col2X + 15, col2Y);
-  col2Y += 15;
+  ctx.fillText("Método(s) de pago:", 45, yPos);
+  yPos += 15;
 
-  // Mostrar métodos de pago
-  const metodosPago = venta.metodosPago;
-
+  ctx.font = "9px Arial";
   if (venta.tipoPago === "HIBRIDO" && metodosPago && metodosPago.length > 0) {
     metodosPago.forEach((metodo) => {
-      const metodoBadgeX = col2X + 15;
-      const metodoBadgeY = col2Y - 12;
-      const metodoBadgeWidth = 110;
-      const metodoBadgeHeight = 20;
-
-      ctx.fillStyle = "#e0f2fe";
-      roundRect(
-        ctx,
-        metodoBadgeX,
-        metodoBadgeY,
-        metodoBadgeWidth,
-        metodoBadgeHeight,
-        6
-      );
-      ctx.fill();
-
-      ctx.fillStyle = darkText;
-      ctx.font = "9px Arial";
-      ctx.textAlign = "left";
       ctx.fillText(
-        `${metodo.tipo}: S/ ${metodo.monto.toFixed(2)}`,
-        metodoBadgeX + 10,
-        metodoBadgeY + 14
+        `• ${metodo.tipo}: S/. ${metodo.monto.toFixed(2)}`,
+        50,
+        yPos
       );
-
-      col2Y += 25;
+      yPos += 15;
     });
   } else {
-    const metodoBadgeX = col2X + 15;
-    const metodoBadgeY = col2Y - 12;
-    const metodoBadgeWidth = 100;
-    const metodoBadgeHeight = 20;
-
-    ctx.fillStyle = "#e0f2fe";
-    roundRect(
-      ctx,
-      metodoBadgeX,
-      metodoBadgeY,
-      metodoBadgeWidth,
-      metodoBadgeHeight,
-      6
-    );
-    ctx.fill();
-
-    ctx.fillStyle = darkText;
-    ctx.font = "9px Arial";
-    ctx.textAlign = "left";
-    ctx.fillText(venta.metodoPago, metodoBadgeX + 10, metodoBadgeY + 14);
+    ctx.fillText(`• ${venta.metodoPago}`, 50, yPos);
+    yPos += 15;
   }
 
-  yPos = colStartY + colHeight + 20;
+  yPos = resumenStartY + alturaResumen + 15;
+
+  // ============================================
+  // INFORMACIÓN DE LA VENTA (Vendedor y Estado)
+  // ============================================
+  const infoHeight = 68;
+
+  ctx.strokeStyle = primaryColor;
+  ctx.lineWidth = 2;
+  roundRect(ctx, 30, yPos, 734, infoHeight, 8);
+  ctx.stroke();
+
+  // Header azul
+  ctx.fillStyle = primaryColor;
+  roundRectTop(ctx, 30, yPos, 734, 30, 8);
+  ctx.fill();
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 11px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("INFORMACIÓN DE LA VENTA", 397, yPos + 20);
+
+  yPos += 45;
+  ctx.textAlign = "left";
+  ctx.font = "10px Arial";
+  ctx.fillStyle = darkText;
+
+  // Vendedor
+  ctx.fillText("Vendedor:", 45, yPos);
+  ctx.textAlign = "right";
+  ctx.fillText(
+    `${venta.vendedor.nombre} ${venta.vendedor.apellido}`,
+    749,
+    yPos
+  );
+  yPos += 18;
+
+  // Estado (texto simple con color)
+  ctx.textAlign = "left";
+  ctx.fillText("Estado:", 45, yPos);
+
+  // Color según estado
+  if (venta.estado === "CONFIRMADA") {
+    ctx.fillStyle = "#065f46"; // Verde
+  } else if (venta.estado === "ANULADA") {
+    ctx.fillStyle = "#991b1b"; // Rojo
+  } else if (venta.estado === "REEMBOLSADA") {
+    ctx.fillStyle = "#c2410c"; // Naranja
+  }
+
+  ctx.textAlign = "right";
+  ctx.font = "bold 10px Arial";
+  ctx.fillText(venta.estado, 749, yPos);
+
+  yPos += 25;
 
   // ============================================
   // TÉRMINOS Y CONDICIONES
@@ -559,7 +449,6 @@ export async function generarComprobanteImagen(
   const terminosBoxWidth = 734;
   const terminosBoxHeight = 100;
 
-  // Fondo gris claro
   ctx.fillStyle = lightBg;
   roundRect(
     ctx,
@@ -571,7 +460,6 @@ export async function generarComprobanteImagen(
   );
   ctx.fill();
 
-  // Borde
   ctx.strokeStyle = "#e5e7eb";
   ctx.lineWidth = 1;
   roundRect(
@@ -584,13 +472,11 @@ export async function generarComprobanteImagen(
   );
   ctx.stroke();
 
-  // Título
   ctx.fillStyle = primaryColor;
   ctx.font = "bold 10px Arial";
   ctx.textAlign = "left";
   ctx.fillText("TÉRMINOS Y CONDICIONES:", terminosBoxX + 15, terminosBoxY + 20);
 
-  // Lista de términos
   ctx.fillStyle = grayText;
   ctx.font = "8px Arial";
   let terminosY = terminosBoxY + 35;
@@ -606,8 +492,6 @@ export async function generarComprobanteImagen(
     ctx.fillText(termino, terminosBoxX + 15, terminosY);
     terminosY += 14;
   });
-
-  yPos = terminosBoxY + terminosBoxHeight + 20;
 
   // ============================================
   // FOOTER
