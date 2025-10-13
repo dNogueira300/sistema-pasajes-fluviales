@@ -1,3 +1,4 @@
+// src/types/next-auth.d.ts
 import { DefaultSession, DefaultUser } from "next-auth";
 
 // Definir el tipo de roles como union type

@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
-    maxAge: 1 * 60 * 60, // 1 hora
+    maxAge: 3600, // 1 hora en segundos
   },
 
   pages: {
@@ -23,15 +23,8 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "credentials",
       credentials: {
-        email: {
-          label: "Email o Usuario",
-          type: "text",
-          placeholder: "usuario@ejemplo.com o username",
-        },
-        password: {
-          label: "Contraseña",
-          type: "password",
-        },
+        email: { label: "Email o Usuario", type: "text" },
+        password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -43,10 +36,18 @@ export const authOptions: NextAuthOptions = {
           const user = await prisma.user.findFirst({
             where: {
               OR: [
-                { email: credentials.email },
-                { username: credentials.email },
+                { email: credentials.email, activo: true },
+                { username: credentials.email, activo: true },
               ],
-              activo: true,
+            },
+            select: {
+              id: true,
+              email: true,
+              username: true,
+              nombre: true,
+              apellido: true,
+              password: true,
+              role: true,
             },
           });
 
@@ -101,35 +102,14 @@ export const authOptions: NextAuthOptions = {
     },
 
     async redirect({ url, baseUrl }) {
-      console.log("🔄 Redirect callback:", { url, baseUrl });
-
-      // Si es una URL relativa, combinar con baseUrl
-      if (url.startsWith("/")) {
-        const fullUrl = `${baseUrl}${url}`;
-        console.log("✅ Redirecting to relative URL:", fullUrl);
-        return fullUrl;
-      }
-
-      // Si la URL pertenece al mismo origen, permitir
-      if (url.startsWith(baseUrl)) {
-        console.log("✅ Same origin redirect:", url);
-        return url;
-      }
-
-      // Para login, no redirigir aquí (se maneja en el cliente)
-      if (url.includes("/api/auth/signin") || url.includes("/login")) {
-        console.log("⚠️ Login detected, default redirect");
-        return baseUrl;
-      }
-
-      // Para cualquier otra URL externa, redirigir a la base
-      console.log("⚠️ External URL redirect:", url);
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith(baseUrl)) return url;
       return baseUrl;
     },
   },
 
   jwt: {
-    maxAge: 60 * 60,
+    maxAge: 3600, // 1 hora en segundos
   },
 
   cookies: {

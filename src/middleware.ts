@@ -1,5 +1,5 @@
 // ============================================
-// middleware.ts - ACTUALIZADO
+// middleware.ts
 // ============================================
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";

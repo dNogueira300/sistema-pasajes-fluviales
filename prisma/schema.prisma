@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,6 +24,13 @@ model User {
   ventas    Venta[]
   anulaciones Anulacion[] // Relación con las anulaciones realizadas por el usuario
 
+  // ÍNDICES OPTIMIZADOS PARA LOGIN
+  @@index([email])
+  @@index([username])
+  @@index([activo])
+  @@index([email, activo])
+  @@index([username, activo])
+
 
   @@map("usuarios")
 }
@@ -37,6 +45,9 @@ model PuertoEmbarque {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   ventas      Venta[]
+
+  @@index([activo])
+  @@index([orden])
 
   @@map("puertos_embarque")
 }
@@ -53,6 +64,9 @@ model Ruta {
   embarcacionRutas EmbarcacionRuta[]
   ventas           Venta[]
 
+  @@index([activa])
+  @@index([puertoOrigen, puertoDestino])
+
   @@map("rutas")
 }
 
@@ -67,6 +81,7 @@ model Embarcacion {
   embarcacionRutas EmbarcacionRuta[]
   ventas           Venta[]
 
+  @@index([estado])
   @@map("embarcaciones")
 }
 
@@ -102,6 +117,7 @@ model Cliente {
   // Índices para optimización de consultas
   @@index([dni])
   @@index([nombre, apellido])
+  @@index([apellido])
 
   @@map("clientes")
 }
@@ -149,6 +165,9 @@ model Venta {
   @@index([numeroVenta])
   @@index([userId])
   @@index([fechaVenta, estado])
+  @@index([userId, fechaVenta])
+  @@index([rutaId])
+  @@index([embarcacionId])
   
 
   @@map("ventas")
@@ -195,6 +214,7 @@ model Configuracion {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([clave])
   @@map("configuraciones")
 }
 
