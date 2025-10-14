@@ -9,8 +9,15 @@ export default withAuth(
     const token = req.nextauth.token;
     const pathname = req.nextUrl.pathname;
 
+    console.log("🔍 Middleware:", {
+      pathname,
+      hasToken: !!token,
+      role: token?.role,
+    });
+
     // Si no hay token y está intentando acceder a rutas protegidas
     if (!token && pathname.startsWith("/dashboard")) {
+      console.log("⛔ Sin token, redirigiendo a login");
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
@@ -18,21 +25,22 @@ export default withAuth(
     if (token && pathname === "/login") {
       const redirectPath =
         token.role === "ADMINISTRADOR" ? "/dashboard" : "/dashboard/ventas";
+      console.log("✅ Con token en login, redirigiendo a:", redirectPath);
       return NextResponse.redirect(new URL(redirectPath, req.url));
     }
 
-    // NUEVO: Proteger dashboard principal - solo administradores
+    // Proteger dashboard principal - solo administradores
     if (pathname === "/dashboard" && token?.role !== "ADMINISTRADOR") {
       console.log("⛔ Acceso denegado al dashboard: usuario no es admin");
       return NextResponse.redirect(new URL("/dashboard/ventas", req.url));
     }
 
-    // Verificar roles para rutas específicas de administrador
-    if (pathname.startsWith("/admin")) {
-      if (token?.role !== "ADMINISTRADOR") {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
-    }
+    // // Verificar roles para rutas específicas de administrador
+    // if (pathname.startsWith("/admin")) {
+    //   if (token?.role !== "ADMINISTRADOR") {
+    //     return NextResponse.redirect(new URL("/dashboard", req.url));
+    //   }
+    // }
 
     // Permitir el acceso
     return NextResponse.next();

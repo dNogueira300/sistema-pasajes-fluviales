@@ -3,14 +3,12 @@
 // ============================================
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Ship, User, Lock, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { status } = useSession();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -21,18 +19,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   // Redirección basada en rol cuando ya está autenticado
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.role) {
-      const redirectPath =
-        session.user.role === "ADMINISTRADOR"
-          ? "/dashboard"
-          : "/dashboard/ventas";
+  // useEffect(() => {
+  //   if (status === "authenticated" && session?.user?.role) {
+  //     const redirectPath =
+  //       session.user.role === "ADMINISTRADOR"
+  //         ? "/dashboard"
+  //         : "/dashboard/ventas";
 
-      console.log("🔄 Usuario autenticado, redirigiendo a:", redirectPath);
-      //router.push(redirectPath);
-      window.location.href = redirectPath;
-    }
-  }, [status, session, router]);
+  //     console.log("🔄 Usuario autenticado, redirigiendo a:", redirectPath);
+  //     //router.push(redirectPath);
+  //     window.location.href = redirectPath;
+  //   }
+  // }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,21 +38,28 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      console.log("🔐 Intentando login...");
+
       const result = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
         redirect: false,
       });
 
+      console.log("📋 Resultado login:", result);
+
       if (result?.error) {
+        console.log("❌ Error de login:", result.error);
         setError("Usuario o contraseña incorrectos");
         setIsLoading(false);
       } else if (result?.ok) {
         // Esperar a que la sesión se actualice
         // La redirección se manejará en el useEffect cuando la sesión esté lista
         console.log("✅ Login exitoso, esperando datos de sesión...");
+        window.location.reload();
       }
-    } catch {
+    } catch (error) {
+      console.error("❌ Error en login:", error);
       setError("Error de conexión. Intenta nuevamente.");
       setIsLoading(false);
     }
@@ -69,13 +74,25 @@ export default function LoginPage() {
     if (error) setError("");
   };
 
-  // Mostrar loading mientras verifica la autenticación
+  // ⚡ FIX: Mostrar loading mientras verifica
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
           <p className="text-slate-300">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ⚡ FIX: Si está autenticado, mostrar loading (el middleware lo redirigirá)
+  if (status === "authenticated") {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-slate-300">Redirigiendo...</p>
         </div>
       </div>
     );
