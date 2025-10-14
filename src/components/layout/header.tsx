@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { Menu, User, LogOut, Settings, ChevronDown } from "lucide-react";
 
@@ -13,7 +14,9 @@ interface HeaderProps {
 
 export default function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
   const { user } = useRequireAuth();
+  const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const handleSignOut = async () => {
     await signOut({
@@ -22,90 +25,276 @@ export default function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
     });
   };
 
+  const handleConfiguracion = () => {
+    setShowUserMenu(false);
+    router.push("/dashboard/configuracion");
+  };
+
+  const handleMiPerfil = () => {
+    setShowUserMenu(false);
+    setShowProfileModal(true);
+  };
+
   return (
-    <header className="bg-slate-900 border-b border-slate-800 h-20 flex items-center justify-between px-6 relative z-10">
-      {/* Toggle sidebar con más espacio */}
-      <div className="flex items-center">
-        <button
-          onClick={onToggleSidebar}
-          className="p-3.5 rounded-xl hover:bg-slate-800/50 transition-all duration-200"
-          title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
-        >
-          <Menu className="h-6 w-6 text-slate-300" />
-        </button>
-      </div>
-
-      {/* Perfil de usuario con más espacio */}
-      <div className="flex items-center">
-        <div className="relative">
+    <>
+      <header className="bg-slate-900 border-b border-slate-800 h-20 flex items-center justify-between px-6 relative z-10">
+        {/* Toggle sidebar con más espacio */}
+        <div className="flex items-center">
           <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center space-x-4 p-3 rounded-xl hover:bg-slate-800/50 transition-all duration-200"
+            onClick={onToggleSidebar}
+            className="p-3.5 rounded-xl hover:bg-slate-800/50 transition-all duration-200"
+            title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
           >
-            <div className="bg-blue-600 rounded-xl p-2.5">
-              <User className="h-5 w-5 text-white" />
-            </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-base font-semibold text-slate-200">
-                {user?.name}
-              </p>
-              <p className="text-sm text-slate-400">
-                {user?.role === "ADMINISTRADOR" ? "Administrador" : "Vendedor"}
-              </p>
-            </div>
-            <ChevronDown className="h-5 w-5 text-slate-400 hidden sm:block" />
+            <Menu className="h-6 w-6 text-slate-300" />
           </button>
+        </div>
 
-          {/* Dropdown del usuario con diseño más amplio */}
-          {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-72 bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/50 z-50">
-              {/* Información del usuario */}
-              <div className="p-5 border-b border-slate-700/50">
-                <p className="text-base font-semibold text-slate-100">
+        {/* Perfil de usuario con más espacio */}
+        <div className="flex items-center">
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center space-x-4 p-3 rounded-xl hover:bg-slate-800/50 transition-all duration-200"
+            >
+              <div className="bg-blue-600 rounded-xl p-2.5">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-left hidden sm:block">
+                <p className="text-base font-semibold text-slate-200">
                   {user?.name}
                 </p>
-                <p className="text-sm text-slate-400 mt-1">{user?.email}</p>
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-sm text-slate-400">
                   {user?.role === "ADMINISTRADOR"
-                    ? "Administrador del Sistema"
+                    ? "Administrador"
                     : "Vendedor"}
                 </p>
               </div>
+              <ChevronDown className="h-5 w-5 text-slate-400 hidden sm:block" />
+            </button>
 
-              {/* Opciones del menú */}
-              <div className="py-2">
-                <button className="flex items-center space-x-4 w-full px-5 py-3.5 text-base text-slate-300 hover:bg-slate-700/30 transition-all duration-200 rounded-lg mx-2">
-                  <User className="h-5 w-5" />
-                  <span className="font-medium">Mi Perfil</span>
-                </button>
-                <button className="flex items-center space-x-4 w-full px-5 py-3.5 text-base text-slate-300 hover:bg-slate-700/30 transition-all duration-200 rounded-lg mx-2">
-                  <Settings className="h-5 w-5" />
-                  <span className="font-medium">Configuración</span>
-                </button>
+            {/* Dropdown del usuario con diseño más amplio */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-72 bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/50 z-50">
+                {/* Información del usuario */}
+                <div className="p-5 border-b border-slate-700/50">
+                  <p className="text-base font-semibold text-slate-100">
+                    {user?.name}
+                  </p>
+                  <p className="text-sm text-slate-400 mt-1">{user?.email}</p>
+                  <p className="text-sm text-slate-500 mt-2">
+                    {user?.role === "ADMINISTRADOR"
+                      ? "Administrador del Sistema"
+                      : "Vendedor"}
+                  </p>
+                </div>
+
+                {/* Opciones del menú */}
+                <div className="py-2">
+                  <button
+                    onClick={handleMiPerfil}
+                    className="flex items-center space-x-4 w-full px-5 py-3.5 text-base text-slate-300 hover:bg-slate-700/30 transition-all duration-200 rounded-lg mx-2"
+                  >
+                    <User className="h-5 w-5" />
+                    <span className="font-medium">Mi Perfil</span>
+                  </button>
+
+                  {/* Solo mostrar Configuración si es ADMINISTRADOR */}
+                  {user?.role === "ADMINISTRADOR" && (
+                    <button
+                      onClick={handleConfiguracion}
+                      className="flex items-center space-x-4 w-full px-5 py-3.5 text-base text-slate-300 hover:bg-slate-700/30 transition-all duration-200 rounded-lg mx-2"
+                    >
+                      <Settings className="h-5 w-5" />
+                      <span className="font-medium">Configuración</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Cerrar sesión */}
+                <div className="border-t border-slate-700/50 py-2">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-4 w-full px-5 py-3.5 text-base text-red-400 hover:bg-red-900/20 transition-all duration-200 rounded-lg mx-2"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span className="font-semibold">Cerrar Sesión</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Overlay para cerrar dropdown */}
+        {showUserMenu && (
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowUserMenu(false)}
+          />
+        )}
+      </header>
+
+      {/* Modal de Perfil */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-2xl w-full shadow-2xl drop-shadow-2xl border border-slate-600/50">
+            <div className="flex items-center justify-between p-6 border-b border-slate-600/50">
+              <h2 className="text-xl font-semibold text-slate-100">
+                Mi Perfil
+              </h2>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* Información Personal */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+                    Información Personal
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">
+                        Nombre Completo
+                      </label>
+                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
+                        {user?.name}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">
+                        Usuario
+                      </label>
+                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
+                        {user?.username}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información de Contacto */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+                    Información de Contacto
+                  </h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      Correo Electrónico
+                    </label>
+                    <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
+                      {user?.email}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información del Sistema */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+                    Información del Sistema
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">
+                        Rol
+                      </label>
+                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${
+                            user?.role === "ADMINISTRADOR"
+                              ? "bg-purple-900/30 text-purple-300 border border-purple-700/50"
+                              : "bg-blue-900/30 text-blue-300 border border-blue-700/50"
+                          }`}
+                        >
+                          {user?.role === "ADMINISTRADOR"
+                            ? "Administrador"
+                            : "Vendedor"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-400 mb-2">
+                        ID de Usuario
+                      </label>
+                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200 font-mono text-xs">
+                        {user?.id}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Nota informativa */}
+                <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
+                  <div className="flex items-start space-x-3">
+                    <svg
+                      className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div>
+                      <h4 className="text-sm font-medium text-blue-300 mb-1">
+                        Información
+                      </h4>
+                      {user?.role === "ADMINISTRADOR" ? (
+                        <p className="text-xs text-blue-200">
+                          Diríjase al módulo de{" "}
+                          <span className="font-semibold">
+                            Gestión de Usuarios
+                          </span>{" "}
+                          si desea modificar su perfil.
+                        </p>
+                      ) : (
+                        <p className="text-xs text-blue-200">
+                          Para modificar tu información de perfil, contacta con
+                          el administrador del sistema.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Cerrar sesión */}
-              <div className="border-t border-slate-700/50 py-2">
+              <div className="flex justify-end mt-6">
                 <button
-                  onClick={handleSignOut}
-                  className="flex items-center space-x-4 w-full px-5 py-3.5 text-base text-red-400 hover:bg-red-900/20 transition-all duration-200 rounded-lg mx-2"
+                  onClick={() => setShowProfileModal(false)}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-medium transition-all duration-200"
                 >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-semibold">Cerrar Sesión</span>
+                  Cerrar
                 </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
-
-      {/* Overlay para cerrar dropdown */}
-      {showUserMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowUserMenu(false)}
-        />
       )}
-    </header>
+    </>
   );
 }
