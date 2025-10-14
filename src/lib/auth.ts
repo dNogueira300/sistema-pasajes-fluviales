@@ -67,6 +67,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           console.log("✅ Login exitoso:", user.email, "Rol:", user.role);
+          console.log("✅ Usuario", user.email, "inició sesión");
 
           return {
             id: user.id,
@@ -101,20 +102,23 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (url.startsWith(baseUrl)) return url;
-      return baseUrl;
-    },
+    // async redirect({ url, baseUrl }) {
+    //   if (url.startsWith("/")) return `${baseUrl}${url}`;
+    //   if (url.startsWith(baseUrl)) return url;
+    //   return baseUrl;
+    // },
   },
 
   jwt: {
     maxAge: 3600, // 1 hora en segundos
   },
 
+  // Configuración de la cookie para producción
   cookies: {
     sessionToken: {
-      name: "next-auth.session-token",
+      name: `${
+        process.env.NODE_ENV === "production" ? "__Secure-" : ""
+      }next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -124,14 +128,8 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-  events: {
-    async signIn({ user }) {
-      console.log(`✅ Usuario ${user.email} inició sesión`);
-    },
-    async signOut() {
-      console.log(`👋 Usuario cerró sesión`);
-    },
-  },
+  // useSecureCookies en producción
+  useSecureCookies: process.env.NODE_ENV === "production",
 
-  debug: process.env.NODE_ENV === "development",
+  debug: false,
 };

@@ -24,29 +24,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      console.log("🔐 Intentando login...");
-
-      const result = await signIn("credentials", {
+      // ⚡ SOLUCIÓN: Usar redirect: true y callbackUrl
+      await signIn("credentials", {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        redirect: true, // ← Cambiar a true
+        callbackUrl: "/dashboard", // ← Dejar que NextAuth maneje todo
       });
-
-      console.log("📋 Resultado login:", result);
-
-      if (result?.error) {
-        console.log("❌ Error de login:", result.error);
-        setError("Usuario o contraseña incorrectos");
-        setIsLoading(false);
-      } else if (result?.ok) {
-        // Esperar a que la sesión se actualice
-        // La redirección se manejará en el useEffect cuando la sesión esté lista
-        console.log("✅ Login exitoso, esperando datos de sesión...");
-        // Esperar un momento para que la sesión se actualice
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 500);
-      }
     } catch (error) {
       console.error("❌ Error en login:", error);
       setError("Error de conexión. Intenta nuevamente.");
