@@ -29,7 +29,8 @@ export default function LoginPage() {
           : "/dashboard/ventas";
 
       console.log("🔄 Usuario autenticado, redirigiendo a:", redirectPath);
-      router.push(redirectPath);
+      //router.push(redirectPath);
+      window.location.href = redirectPath;
     }
   }, [status, session, router]);
 
