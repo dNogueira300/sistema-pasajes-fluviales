@@ -18,20 +18,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirección basada en rol cuando ya está autenticado
-  // useEffect(() => {
-  //   if (status === "authenticated" && session?.user?.role) {
-  //     const redirectPath =
-  //       session.user.role === "ADMINISTRADOR"
-  //         ? "/dashboard"
-  //         : "/dashboard/ventas";
-
-  //     console.log("🔄 Usuario autenticado, redirigiendo a:", redirectPath);
-  //     //router.push(redirectPath);
-  //     window.location.href = redirectPath;
-  //   }
-  // }, [status, session, router]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -56,7 +42,7 @@ export default function LoginPage() {
         // Esperar a que la sesión se actualice
         // La redirección se manejará en el useEffect cuando la sesión esté lista
         console.log("✅ Login exitoso, esperando datos de sesión...");
-        window.location.reload();
+        window.location.href = "/dashboard";
       }
     } catch (error) {
       console.error("❌ Error en login:", error);
@@ -74,7 +60,7 @@ export default function LoginPage() {
     if (error) setError("");
   };
 
-  // ⚡ FIX: Mostrar loading mientras verifica
+  // Mostrar loading mientras verifica
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -86,8 +72,12 @@ export default function LoginPage() {
     );
   }
 
-  // ⚡ FIX: Si está autenticado, mostrar loading (el middleware lo redirigirá)
+  // Si está autenticado, redirigir con window.location
   if (status === "authenticated") {
+    // Redirigir inmediatamente
+    if (typeof window !== "undefined") {
+      window.location.href = "/dashboard";
+    }
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
