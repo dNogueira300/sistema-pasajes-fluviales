@@ -10,23 +10,25 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
   };
 
   return (
     <div className="h-screen flex bg-slate-900 overflow-hidden">
-      {/* Sidebar sin separaciones visuales */}
-      <aside className="flex-shrink-0 z-20">
-        <Sidebar isCollapsed={isCollapsed} />
-      </aside>
+      {/* Sidebar con comportamiento drawer en móvil */}
+      <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 
       {/* Contenido principal fluido */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header integrado sin separación */}
-        <Header isCollapsed={isCollapsed} onToggleSidebar={toggleSidebar} />
+        <Header isSidebarOpen={isSidebarOpen} onToggleSidebar={toggleSidebar} />
 
         {/* Contenido principal con fondo continuo */}
         <main className="flex-1 overflow-auto">{children}</main>

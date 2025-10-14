@@ -8,11 +8,14 @@ import { useRequireAuth } from "@/hooks/use-auth";
 import { Menu, User, LogOut, Settings, ChevronDown } from "lucide-react";
 
 interface HeaderProps {
-  isCollapsed: boolean;
+  isSidebarOpen: boolean;
   onToggleSidebar: () => void;
 }
 
-export default function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
+export default function Header({
+  isSidebarOpen,
+  onToggleSidebar,
+}: HeaderProps) {
   const { user } = useRequireAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -43,7 +46,7 @@ export default function Header({ isCollapsed, onToggleSidebar }: HeaderProps) {
           <button
             onClick={onToggleSidebar}
             className="p-3.5 rounded-xl hover:bg-slate-800/50 transition-all duration-200"
-            title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
+            title={isSidebarOpen ? "Expandir menú" : "Colapsar menú"}
           >
             <Menu className="h-6 w-6 text-slate-300" />
           </button>
