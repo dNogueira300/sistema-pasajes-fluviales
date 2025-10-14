@@ -42,7 +42,10 @@ export default function LoginPage() {
         // Esperar a que la sesión se actualice
         // La redirección se manejará en el useEffect cuando la sesión esté lista
         console.log("✅ Login exitoso, esperando datos de sesión...");
-        window.location.href = "/dashboard";
+        // Esperar un momento para que la sesión se actualice
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 500);
       }
     } catch (error) {
       console.error("❌ Error en login:", error);
@@ -67,22 +70,6 @@ export default function LoginPage() {
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
           <p className="text-slate-300">Verificando autenticación...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Si está autenticado, redirigir con window.location
-  if (status === "authenticated") {
-    // Redirigir inmediatamente
-    if (typeof window !== "undefined") {
-      window.location.href = "/dashboard";
-    }
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
-          <p className="text-slate-300">Redirigiendo...</p>
         </div>
       </div>
     );
