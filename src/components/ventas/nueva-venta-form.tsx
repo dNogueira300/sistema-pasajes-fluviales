@@ -177,6 +177,11 @@ export default function NuevaVentaForm({
       return;
     }
 
+    if (formData.cliente.dni.length > 10) {
+      setError("El Doc. Identidad no puede tener más de 10 dígitos");
+      return;
+    }
+
     setBuscandoCliente(true);
     setError("");
 
@@ -584,19 +589,29 @@ export default function NuevaVentaForm({
                   Doc. Identidad *
                 </label>
                 <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={formData.cliente.dni}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        cliente: { ...prev.cliente, dni: e.target.value },
-                      }))
-                    }
-                    className="flex-1 px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
-                    placeholder="12345678"
-                    maxLength={8}
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={formData.cliente.dni}
+                      onChange={(e) => {
+                        // Permitir solo números y máximo 10 caracteres
+                        const soloNumeros = e.target.value.replace(/\D/g, "");
+                        const dniLimitado = soloNumeros.slice(0, 10);
+                        setFormData((prev) => ({
+                          ...prev,
+                          cliente: { ...prev.cliente, dni: dniLimitado },
+                        }));
+                      }}
+                      className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                      placeholder="12345678"
+                      maxLength={10}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                    />
+                    <div className="mt-1 text-xs text-slate-400">
+                      {formData.cliente.dni.length}/10 caracteres (solo números)
+                    </div>
+                  </div>
                   <button
                     onClick={buscarCliente}
                     disabled={

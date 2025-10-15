@@ -116,6 +116,12 @@ export default function NuevoClienteForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validar que el DNI tenga al menos 1 carácter
+    if (!formulario.dni.trim()) {
+      alert("El documento de identidad es obligatorio");
+      return;
+    }
+
     // Preparar datos con teléfono completo
     const datosCliente = {
       ...formulario,
@@ -147,6 +153,14 @@ export default function NuevoClienteForm({
     }));
   };
 
+  // Función específica para manejar el cambio en el campo DNI
+  const handleDniChange = (value: string) => {
+    // Permitir solo números y máximo 10 caracteres
+    const soloNumeros = value.replace(/\D/g, "");
+    const dniLimitado = soloNumeros.slice(0, 10);
+    handleInputChange("dni", dniLimitado);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -174,10 +188,16 @@ export default function NuevoClienteForm({
                 type="text"
                 required
                 value={formulario.dni}
-                onChange={(e) => handleInputChange("dni", e.target.value)}
+                onChange={(e) => handleDniChange(e.target.value)}
                 className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
                 placeholder="12345678"
+                maxLength={10}
+                inputMode="numeric"
+                pattern="[0-9]*"
               />
+              <div className="mt-1 text-xs text-slate-400">
+                {formulario.dni.length}/10 caracteres (solo números)
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
