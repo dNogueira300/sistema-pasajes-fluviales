@@ -130,7 +130,7 @@ export default function AnulacionesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Total Anulaciones - Rojo */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-red-500 hover:ring-offset-2 hover:ring-offset-slate-900">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent"></div>
             <div className="flex items-center">
               <div className="bg-red-600 p-3 rounded-xl shadow-lg">
                 <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
@@ -172,7 +172,7 @@ export default function AnulacionesPage() {
 
           {/* Asientos Liberados - Azul */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-slate-900">
-           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent"></div>
             <div className="flex items-center">
               <div className="bg-blue-600 p-3 rounded-xl shadow-lg">
                 <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
@@ -215,8 +215,9 @@ export default function AnulacionesPage() {
       {/* Filtros integrados con la tabla */}
       <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50">
         <div className="p-6 border-b border-slate-600/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-stretch gap-4">
+            {/* Campo de búsqueda - ocupa todo el ancho en móvil */}
+            <div className="flex-1 w-full">
               <div className="relative">
                 <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-100 z-10" />
                 <input
@@ -226,17 +227,20 @@ export default function AnulacionesPage() {
                   onChange={(e) =>
                     handleFiltroChange("busqueda", e.target.value)
                   }
-                  className="pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 w-80 backdrop-blur-sm transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
                 />
               </div>
+            </div>
+            {/* Botón para mostrar/ocultar filtros adicionales */}
+            <div className="w-full sm:w-auto">
               <button
                 onClick={() => setShowFiltros(!showFiltros)}
-                className="flex items-center px-4 py-3 border border-slate-600/50 rounded-xl hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
+                className="flex items-center justify-center px-4 py-3 border border-slate-600/50 rounded-xl hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200 sm:w-auto w-full"
               >
-                <Filter className="h-5 w-5 mr-2" />
-                Filtros
+                <Filter className="h-5 w-5 mr-2 flex-shrink-0" />
+                <span>Filtros</span>
                 <ChevronDown
-                  className={`h-4 w-4 ml-2 transform transition-transform ${
+                  className={`h-4 w-4 ml-2 flex-shrink-0 transform transition-transform ${
                     showFiltros ? "rotate-180" : ""
                   }`}
                 />

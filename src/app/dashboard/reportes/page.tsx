@@ -266,36 +266,44 @@ export default function PaginaReportes() {
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6 max-w-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        {/* Título y descripción */}
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-slate-100">
             Reportes y Análisis
           </h1>
-          <p className="text-slate-300">
+          <p className="text-slate-300 mt-1">
             Genera reportes detallados y visualiza estadísticas de ventas
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          {reporte && (
-            <>
-              <button
-                onClick={handleExportarPDF}
-                disabled={estado.generando}
-                className="flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors disabled:opacity-50"
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                PDF
-              </button>
-              <button
-                onClick={handleExportarExcel}
-                disabled={estado.generando}
-                className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors disabled:opacity-50"
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Excel
-              </button>
-            </>
-          )}
+
+        {/* Botones de acción - responsive */}
+        <div className="flex flex-col sm:flex-row items-stretch gap-3">
+          {/* Botones de exportación */}
+          <div className="flex flex-col xs:flex-row gap-3">
+            {reporte && (
+              <>
+                <button
+                  onClick={handleExportarPDF}
+                  disabled={estado.generando}
+                  className="flex-1 xs:flex-none flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors disabled:opacity-50"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  PDF
+                </button>
+                <button
+                  onClick={handleExportarExcel}
+                  disabled={estado.generando}
+                  className="flex-1 xs:flex-none flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors disabled:opacity-50"
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Excel
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Botón principal de generar reporte */}
           <button
             onClick={() => {
               setReporteCargadoAutomaticamente(false);
@@ -304,7 +312,7 @@ export default function PaginaReportes() {
             disabled={
               estado.generando || !filtros.fechaInicio || !filtros.fechaFin
             }
-            className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl flex items-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 sm:flex-none group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 sm:px-6 py-3 rounded-xl flex items-center justify-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {estado.generando ? (
               <>
@@ -316,7 +324,7 @@ export default function PaginaReportes() {
                 <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-lg transition-colors duration-200">
                   <BarChart className="h-4 w-4" />
                 </div>
-                <span>Actualizar Reporte</span>
+                <span className="whitespace-nowrap">Actualizar Reporte</span>
               </>
             )}
           </button>
@@ -354,47 +362,58 @@ export default function PaginaReportes() {
         <>
           {/* Navegación de vistas */}
           <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex space-x-1 bg-slate-700/50 rounded-xl p-1">
-                <button
-                  onClick={() => setVistaActiva("resumen")}
-                  className={`px-4 py-2 rounded-lg transition-all ${
-                    vistaActiva === "resumen"
-                      ? "bg-blue-600 text-white shadow-lg"
-                      : "text-slate-300 hover:text-white hover:bg-slate-600/50"
-                  }`}
-                >
-                  <FileText className="h-4 w-4 mr-2 inline" />
-                  Resumen
-                </button>
-                <button
-                  onClick={() => setVistaActiva("graficos")}
-                  className={`px-4 py-2 rounded-lg transition-all ${
-                    vistaActiva === "graficos"
-                      ? "bg-blue-600 text-white shadow-lg"
-                      : "text-slate-300 hover:text-white hover:bg-slate-600/50"
-                  }`}
-                >
-                  <BarChart className="h-4 w-4 mr-2 inline" />
-                  Gráficos
-                </button>
-                <button
-                  onClick={() => setVistaActiva("detalles")}
-                  className={`px-4 py-2 rounded-lg transition-all ${
-                    vistaActiva === "detalles"
-                      ? "bg-blue-600 text-white shadow-lg"
-                      : "text-slate-300 hover:text-white hover:bg-slate-600/50"
-                  }`}
-                >
-                  <Eye className="h-4 w-4 mr-2 inline" />
-                  Detalles
-                </button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              {/* Navegación de vistas - responsive */}
+              <div className="flex justify-center sm:justify-start">
+                <div className="flex space-x-1 bg-slate-700/50 rounded-xl p-1">
+                  <button
+                    onClick={() => setVistaActiva("resumen")}
+                    className={`px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center ${
+                      vistaActiva === "resumen"
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "text-slate-300 hover:text-white hover:bg-slate-600/50"
+                    }`}
+                  >
+                    <FileText className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="whitespace-nowrap">Resumen</span>
+                  </button>
+                  <button
+                    onClick={() => setVistaActiva("graficos")}
+                    className={`px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center ${
+                      vistaActiva === "graficos"
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "text-slate-300 hover:text-white hover:bg-slate-600/50"
+                    }`}
+                  >
+                    <BarChart className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="whitespace-nowrap">Gráficos</span>
+                  </button>
+                  <button
+                    onClick={() => setVistaActiva("detalles")}
+                    className={`px-3 sm:px-4 py-2 rounded-lg transition-all flex items-center ${
+                      vistaActiva === "detalles"
+                        ? "bg-blue-600 text-white shadow-lg"
+                        : "text-slate-300 hover:text-white hover:bg-slate-600/50"
+                    }`}
+                  >
+                    <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                    <span className="whitespace-nowrap">Detalles</span>
+                  </button>
+                </div>
               </div>
-              <div className="text-sm text-slate-400">
-                Generado:{" "}
-                {format(new Date(reporte.fechaGeneracion), "dd/MM/yyyy HH:mm", {
-                  locale: es,
-                })}
+
+              {/* Fecha de generación - responsive */}
+              <div className="text-center sm:text-right">
+                <div className="text-sm text-slate-400 whitespace-nowrap">
+                  Generado:{" "}
+                  {format(
+                    new Date(reporte.fechaGeneracion),
+                    "dd/MM/yyyy HH:mm",
+                    {
+                      locale: es,
+                    }
+                  )}
+                </div>
               </div>
             </div>
 

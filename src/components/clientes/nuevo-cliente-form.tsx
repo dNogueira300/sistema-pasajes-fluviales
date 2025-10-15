@@ -168,7 +168,7 @@ export default function NuevoClienteForm({
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                DNI *
+                Doc. Identidad *
               </label>
               <input
                 type="text"

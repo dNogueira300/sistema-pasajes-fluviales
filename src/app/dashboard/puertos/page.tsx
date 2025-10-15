@@ -252,25 +252,30 @@ export default function GestionPuertos() {
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6 max-w-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        {/* Título y descripción */}
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-slate-100">
             Gestión de Puertos de Embarque
           </h1>
-          <p className="text-slate-300">
+          <p className="text-slate-300 mt-1">
             Administra los puertos de embarque disponibles
           </p>
         </div>
-        <button
-          onClick={() => setModalNuevo(true)}
-          className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl flex items-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-lg hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-800"
-        >
-          <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-lg transition-colors duration-200">
-            <Plus className="h-4 w-4" />
-          </div>
-          <span>Nuevo Puerto</span>
-          <div className="hidden sm:block w-2 h-2 bg-blue-300 rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-200"></div>
-        </button>
+
+        {/* Botón Nuevo Puerto - responsive */}
+        <div className="w-full lg:w-auto">
+          <button
+            onClick={() => setModalNuevo(true)}
+            className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 sm:px-6 py-3 rounded-xl flex items-center justify-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full lg:w-auto touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-lg hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-800"
+          >
+            <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-lg transition-colors duration-200">
+              <Plus className="h-4 w-4" />
+            </div>
+            <span className="whitespace-nowrap">Nuevo Puerto</span>
+            <div className="hidden sm:block w-2 h-2 bg-blue-300 rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-200"></div>
+          </button>
+        </div>
       </div>
 
       {/* Estadísticas con tema oscuro y glassmorphism */}
@@ -299,7 +304,7 @@ export default function GestionPuertos() {
 
           {/* Puertos Activos */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-green-500 hover:ring-offset-2 hover:ring-offset-slate-900">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-green-600/10 to-transparent"></div>
             <div className="flex items-center">
               <div className="bg-green-600 p-3 rounded-xl shadow-lg">
                 <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
@@ -337,7 +342,7 @@ export default function GestionPuertos() {
 
           {/* Puertos con Ventas */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-purple-500 hover:ring-offset-2 hover:ring-offset-slate-900">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent"></div>
             <div className="flex items-center">
               <div className="bg-purple-600 p-3 rounded-xl shadow-lg">
                 <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
@@ -359,32 +364,39 @@ export default function GestionPuertos() {
       {/* Filtros integrados con la tabla */}
       <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50">
         <div className="p-6 border-b border-slate-600/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-100 z-10" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre, descripción o dirección..."
-                  value={filtros.busqueda || ""}
-                  onChange={(e) =>
-                    handleFiltroChange("busqueda", e.target.value)
-                  }
-                  className="pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 w-80 backdrop-blur-sm transition-all duration-200"
-                />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch gap-4 flex-1">
+              {/* Campo de búsqueda - se adapta en móvil */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-100 z-10" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, descripción o dirección..."
+                    value={filtros.busqueda || ""}
+                    onChange={(e) =>
+                      handleFiltroChange("busqueda", e.target.value)
+                    }
+                    className="w-full sm:w-80 pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  />
+                </div>
               </div>
-              <button
-                onClick={() => setShowFiltros(!showFiltros)}
-                className="flex items-center px-4 py-3 border border-slate-600/50 rounded-xl hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200"
-              >
-                <Filter className="h-5 w-5 mr-2" />
-                Filtros
-                <ChevronDown
-                  className={`h-4 w-4 ml-2 transform transition-transform ${
-                    showFiltros ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+
+              {/* Botón de filtros - se adapta en móvil */}
+              <div className="w-full sm:w-auto">
+                <button
+                  onClick={() => setShowFiltros(!showFiltros)}
+                  className="w-full sm:w-auto flex items-center justify-center px-4 py-3 border border-slate-600/50 rounded-xl hover:bg-slate-700/50 bg-slate-700/30 text-slate-200 backdrop-blur-sm transition-all duration-200 whitespace-nowrap"
+                >
+                  <Filter className="h-5 w-5 mr-2" />
+                  Filtros
+                  <ChevronDown
+                    className={`h-4 w-4 ml-2 transform transition-transform ${
+                      showFiltros ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
 

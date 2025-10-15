@@ -173,7 +173,7 @@ export default function NuevaVentaForm({
 
   const buscarCliente = async () => {
     if (formData.cliente.dni.length < 8) {
-      setError("El DNI debe tener al menos 8 dígitos");
+      setError("El Doc. Identidad debe tener al menos 8 dígitos");
       return;
     }
 
@@ -581,7 +581,7 @@ export default function NuevaVentaForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  DNI *
+                  Doc. Identidad *
                 </label>
                 <div className="flex space-x-2">
                   <input
@@ -1463,7 +1463,7 @@ export default function NuevaVentaForm({
                   </h4>
                   <div className="space-y-2 text-sm text-slate-200">
                     <p>
-                      <span className="text-slate-400">DNI:</span>{" "}
+                      <span className="text-slate-400">Doc. Identidad:</span>{" "}
                       {formData.cliente.dni}
                     </p>
                     <p>
