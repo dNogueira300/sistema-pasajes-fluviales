@@ -1,11 +1,10 @@
 //src\components\ventas\nueva-venta-form
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { formatearFechaDesdeInput } from "@/lib/utils/fecha-utils";
 import {
-  Search,
   User,
   MapPin,
   CreditCard,
@@ -92,24 +91,23 @@ export default function NuevaVentaForm({
   const [puertosEmbarque, setPuertosEmbarque] = useState<PuertoEmbarque[]>([]);
   const [disponibilidad, setDisponibilidad] =
     useState<DisponibilidadInfo | null>(null);
-  const [buscandoCliente, setBuscandoCliente] = useState(false);
   const [codigoPais, setCodigoPais] = useState("+51");
   const [diasOperativos, setDiasOperativos] = useState<string[]>([]);
+  const [buscandoAutoCliente, setBuscandoAutoCliente] = useState(false);
+  const [dniValido, setDniValido] = useState(false);
 
-  const codigosPaises = [
-    { codigo: "+51", pais: "Perú", bandera: "🇵🇪" },
-    { codigo: "+55", pais: "Brasil", bandera: "🇧🇷" },
-    { codigo: "+57", pais: "Colombia", bandera: "🇨🇴" },
-    { codigo: "+593", pais: "Ecuador", bandera: "🇪🇨" },
-    { codigo: "+591", pais: "Bolivia", bandera: "🇧🇴" },
-    { codigo: "+1", pais: "Estados Unidos", bandera: "🇺🇸" },
-    { codigo: "+34", pais: "España", bandera: "🇪🇸" },
-  ];
-
-  const formatearTelefonoCompleto = () => {
-    if (!formData.cliente.telefono) return "";
-    return `${codigoPais}${formData.cliente.telefono}`;
-  };
+  const codigosPaises = useMemo(
+    () => [
+      { codigo: "+51", pais: "Perú", bandera: "🇵🇪" },
+      { codigo: "+55", pais: "Brasil", bandera: "🇧🇷" },
+      { codigo: "+57", pais: "Colombia", bandera: "🇨🇴" },
+      { codigo: "+593", pais: "Ecuador", bandera: "🇪🇨" },
+      { codigo: "+591", pais: "Bolivia", bandera: "🇧🇴" },
+      { codigo: "+1", pais: "Estados Unidos", bandera: "🇺🇸" },
+      { codigo: "+34", pais: "España", bandera: "🇪🇸" },
+    ],
+    []
+  );
 
   const [formData, setFormData] = useState<FormData>({
     cliente: {
@@ -132,6 +130,88 @@ export default function NuevaVentaForm({
     metodosPago: [],
     observaciones: "",
   });
+
+  // Función para buscar automáticamente al ingresar DNI
+  const buscarClienteAutomatico = useCallback(
+    async (dni: string) => {
+      if (dni.length !== 8) return;
+
+      setBuscandoAutoCliente(true);
+      setError("");
+
+      try {
+        const response = await fetch(`/api/clientes/buscar?dni=${dni}`);
+        if (response.ok) {
+          const cliente = await response.json();
+          if (cliente) {
+            let telefono = cliente.telefono || "";
+            let codigo = "+51";
+
+            if (telefono) {
+              const codigoEncontrado = codigosPaises.find((item) =>
+                telefono.startsWith(item.codigo)
+              );
+
+              if (codigoEncontrado) {
+                codigo = codigoEncontrado.codigo;
+                telefono = telefono.substring(codigoEncontrado.codigo.length);
+              }
+            }
+
+            setCodigoPais(codigo);
+            setFormData((prev) => ({
+              ...prev,
+              cliente: {
+                ...cliente,
+                telefono: telefono,
+                email: cliente.email || "",
+              },
+            }));
+            setDniValido(true);
+          } else {
+            setFormData((prev) => ({
+              ...prev,
+              cliente: {
+                ...prev.cliente,
+                dni: dni,
+                nombre: "",
+                apellido: "",
+                telefono: "",
+                email: "",
+                nacionalidad: "Peruana",
+              },
+            }));
+            setDniValido(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error buscando cliente:", error);
+        setError("Error de conexión al buscar cliente");
+      } finally {
+        setBuscandoAutoCliente(false);
+      }
+    },
+    [codigosPaises]
+  );
+
+  // Efecto para disparar la búsqueda automática al cambiar el DNI
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (formData.cliente.dni.length === 8) {
+        buscarClienteAutomatico(formData.cliente.dni);
+      } else {
+        setDniValido(false);
+        setBuscandoAutoCliente(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.cliente.dni, buscarClienteAutomatico]);
+
+  const formatearTelefonoCompleto = () => {
+    if (!formData.cliente.telefono) return "";
+    return `${codigoPais}${formData.cliente.telefono}`;
+  };
 
   const calcularTotales = (metodosP: MetodoPago[] = formData.metodosPago) => {
     const totalVenta =
@@ -168,59 +248,6 @@ export default function NuevaVentaForm({
       }
     } catch (error) {
       console.error("Error cargando puertos de embarque:", error);
-    }
-  };
-
-  const buscarCliente = async () => {
-    if (formData.cliente.dni.length < 8) {
-      setError("El Doc. Identidad debe tener al menos 8 dígitos");
-      return;
-    }
-
-    if (formData.cliente.dni.length > 10) {
-      setError("El Doc. Identidad no puede tener más de 10 dígitos");
-      return;
-    }
-
-    setBuscandoCliente(true);
-    setError("");
-
-    try {
-      const response = await fetch(
-        `/api/clientes/buscar?dni=${formData.cliente.dni}`
-      );
-      if (response.ok) {
-        const cliente = await response.json();
-        if (cliente) {
-          let telefono = cliente.telefono || "";
-          let codigo = "+51";
-
-          if (telefono) {
-            const codigoEncontrado = codigosPaises.find((item) =>
-              telefono.startsWith(item.codigo)
-            );
-
-            if (codigoEncontrado) {
-              codigo = codigoEncontrado.codigo;
-              telefono = telefono.substring(codigoEncontrado.codigo.length);
-            }
-          }
-
-          setCodigoPais(codigo);
-          setFormData((prev) => ({
-            ...prev,
-            cliente: {
-              ...cliente,
-              telefono: telefono,
-              email: cliente.email || "",
-            },
-          }));
-        }
-      }
-    } catch (error) {
-      console.error("Error buscando cliente:", error);
-    } finally {
-      setBuscandoCliente(false);
     }
   };
 
@@ -588,43 +615,68 @@ export default function NuevaVentaForm({
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Doc. Identidad *
                 </label>
-                <div className="flex space-x-2">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={formData.cliente.dni}
-                      onChange={(e) => {
-                        // Permitir solo números y máximo 10 caracteres
-                        const soloNumeros = e.target.value.replace(/\D/g, "");
-                        const dniLimitado = soloNumeros.slice(0, 10);
-                        setFormData((prev) => ({
-                          ...prev,
-                          cliente: { ...prev.cliente, dni: dniLimitado },
-                        }));
-                      }}
-                      className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
-                      placeholder="12345678"
-                      maxLength={10}
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                    />
-                    <div className="mt-1 text-xs text-slate-400">
-                      {formData.cliente.dni.length}/10 caracteres (solo números)
-                    </div>
-                  </div>
-                  <button
-                    onClick={buscarCliente}
-                    disabled={
-                      buscandoCliente || formData.cliente.dni.length < 8
-                    }
-                    className="px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    {buscandoCliente ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.cliente.dni}
+                    onChange={(e) => {
+                      const soloNumeros = e.target.value.replace(/\D/g, "");
+                      const dniLimitado = soloNumeros.slice(0, 10);
+                      setFormData((prev) => ({
+                        ...prev,
+                        cliente: { ...prev.cliente, dni: dniLimitado },
+                      }));
+                    }}
+                    className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800 ${
+                      formData.cliente.dni.length === 8
+                        ? dniValido
+                          ? "border-green-500/50"
+                          : buscandoAutoCliente
+                          ? "border-blue-500/50"
+                          : "border-yellow-500/50"
+                        : "border-slate-600/50"
+                    }`}
+                    placeholder="12345678"
+                    maxLength={10}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
+
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {buscandoAutoCliente && (
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
                     )}
-                  </button>
+                    {!buscandoAutoCliente &&
+                      formData.cliente.dni.length === 8 &&
+                      dniValido && (
+                        <CheckCircle className="h-4 w-4 text-green-400" />
+                      )}
+                    {!buscandoAutoCliente &&
+                      formData.cliente.dni.length === 8 &&
+                      !dniValido && (
+                        <AlertCircle className="h-4 w-4 text-yellow-400" />
+                      )}
+                  </div>
+                </div>
+
+                <div className="mt-2 flex justify-between items-center text-xs">
+                  <span className="text-slate-400">
+                    {formData.cliente.dni.length}/10 caracteres
+                  </span>
+
+                  {buscandoAutoCliente && (
+                    <span className="text-blue-400">Buscando...</span>
+                  )}
+                  {!buscandoAutoCliente &&
+                    formData.cliente.dni.length === 8 &&
+                    dniValido && (
+                      <span className="text-green-400">Cliente encontrado</span>
+                    )}
+                  {!buscandoAutoCliente &&
+                    formData.cliente.dni.length === 8 &&
+                    !dniValido && (
+                      <span className="text-yellow-400">Cliente nuevo</span>
+                    )}
                 </div>
               </div>
 
@@ -784,7 +836,8 @@ export default function NuevaVentaForm({
                 disabled={
                   !formData.cliente.dni ||
                   !formData.cliente.nombre ||
-                  !formData.cliente.apellido
+                  !formData.cliente.apellido ||
+                  buscandoAutoCliente
                 }
                 className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
@@ -935,12 +988,44 @@ export default function NuevaVentaForm({
                   </label>
                   <select
                     value={formData.horaViaje}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const nuevaHoraViaje = e.target.value;
                       setFormData((prev) => ({
                         ...prev,
-                        horaViaje: e.target.value,
-                      }))
-                    }
+                        horaViaje: nuevaHoraViaje,
+                      }));
+
+                      // Validar contra la hora de embarque existente
+                      if (formData.horaEmbarque && nuevaHoraViaje) {
+                        if (formData.horaEmbarque >= nuevaHoraViaje) {
+                          setError(
+                            "La hora de embarque debe ser ANTES de la hora de viaje"
+                          );
+                        } else {
+                          // Limpiar error si la validación es correcta
+                          setError((prevError) => {
+                            if (
+                              prevError &&
+                              prevError.includes("Hora de embarque")
+                            ) {
+                              return "";
+                            }
+                            return prevError;
+                          });
+                        }
+                      } else {
+                        // Limpiar error de hora si no hay hora de embarque para comparar
+                        setError((prevError) => {
+                          if (
+                            prevError &&
+                            prevError.includes("Hora de embarque")
+                          ) {
+                            return "";
+                          }
+                          return prevError;
+                        });
+                      }
+                    }}
                     className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
                     required
                   >
@@ -965,15 +1050,63 @@ export default function NuevaVentaForm({
                 <input
                   type="time"
                   value={formData.horaEmbarque}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const nuevaHoraEmbarque = e.target.value;
                     setFormData((prev) => ({
                       ...prev,
-                      horaEmbarque: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
+                      horaEmbarque: nuevaHoraEmbarque,
+                    }));
+
+                    // Validar que la hora de embarque no sea después ni igual a la hora de viaje
+                    if (formData.horaViaje && nuevaHoraEmbarque) {
+                      if (nuevaHoraEmbarque >= formData.horaViaje) {
+                        setError(
+                          "La hora de embarque debe ser ANTES de la hora de viaje"
+                        );
+                      } else {
+                        // Limpiar error si la validación es correcta
+                        setError((prevError) => {
+                          if (
+                            prevError &&
+                            prevError.includes("Hora de embarque")
+                          ) {
+                            return "";
+                          }
+                          return prevError;
+                        });
+                      }
+                    } else {
+                      // Limpiar error si no hay hora de viaje para comparar
+                      setError((prevError) => {
+                        if (
+                          prevError &&
+                          prevError.includes("Hora de embarque")
+                        ) {
+                          return "";
+                        }
+                        return prevError;
+                      });
+                    }
+                  }}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 ${
+                    error && error.includes("Hora de embarque")
+                      ? "border-red-500/50"
+                      : "border-slate-600/50"
+                  }`}
                   required
                 />
+                {/* Mensaje de ayuda - Solo mostrar si hay hora de viaje y NO hay error */}
+                {formData.horaViaje &&
+                  !(error && error.includes("Hora de embarque")) && (
+                    <div className="mt-1 text-xs text-slate-400">
+                      La hora de embarque debe ser antes de las{" "}
+                      {formData.horaViaje}
+                    </div>
+                  )}
+                {/* Mensaje de error específico para horarios */}
+                {error && error.includes("Hora de embarque") && (
+                  <div className="mt-1 text-xs text-red-400">{error}</div>
+                )}
               </div>
 
               <div>
