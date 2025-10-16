@@ -11,6 +11,9 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
+  Search,
+  ChevronDown,
+  X,
 } from "lucide-react";
 
 interface Cliente {
@@ -96,6 +99,9 @@ export default function NuevaVentaForm({
   const [buscandoAutoCliente, setBuscandoAutoCliente] = useState(false);
   const [dniValido, setDniValido] = useState(false);
   const [errorHorarios, setErrorHorarios] = useState("");
+  const [rutasFiltradas, setRutasFiltradas] = useState<Ruta[]>([]);
+  const [busquedaRuta, setBusquedaRuta] = useState("");
+  const [mostrarListaRutas, setMostrarListaRutas] = useState(false);
 
   const codigosPaises = useMemo(
     () => [
@@ -194,6 +200,60 @@ export default function NuevaVentaForm({
     },
     [codigosPaises]
   );
+
+  // Efecto para filtrar rutas basado en la búsqueda
+  useEffect(() => {
+    if (busquedaRuta.trim() === "") {
+      setRutasFiltradas(rutas);
+    } else {
+      const filtradas = rutas.filter((ruta) =>
+        ruta.nombre.toLowerCase().includes(busquedaRuta.toLowerCase())
+      );
+      setRutasFiltradas(filtradas);
+    }
+  }, [busquedaRuta, rutas]);
+
+  // Función para seleccionar una ruta
+  const seleccionarRuta = (ruta: Ruta) => {
+    setFormData((prev) => ({
+      ...prev,
+      rutaId: ruta.id,
+      embarcacionId: "",
+    }));
+    setBusquedaRuta(ruta.nombre);
+    setMostrarListaRutas(false);
+    setDisponibilidad(null);
+  };
+
+  // Función para limpiar la selección
+  const limpiarSeleccionRuta = () => {
+    setFormData((prev) => ({
+      ...prev,
+      rutaId: "",
+      embarcacionId: "",
+    }));
+    setBusquedaRuta("");
+    setMostrarListaRutas(true);
+    setDisponibilidad(null);
+  };
+
+  // Efecto para cargar rutas filtradas inicialmente
+  useEffect(() => {
+    setRutasFiltradas(rutas);
+  }, [rutas]);
+
+  // Efecto para cerrar la lista al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".ruta-search-container")) {
+        setMostrarListaRutas(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Efecto para disparar la búsqueda automática al cambiar el DNI
   useEffect(() => {
@@ -566,6 +626,31 @@ export default function NuevaVentaForm({
     }
   }, [formData.rutaId, formData.embarcacionId, formData.fechaViaje, rutas]);
 
+  // Función para calcular diferencia en horas entre dos horarios
+  const calcularDiferenciaHoras = (
+    horaInicio: string,
+    horaFin: string
+  ): number => {
+    if (!horaInicio || !horaFin) return 0;
+
+    const [horasInicio, minutosInicio] = horaInicio.split(":").map(Number);
+    const [horasFin, minutosFin] = horaFin.split(":").map(Number);
+
+    const fechaInicio = new Date();
+    fechaInicio.setHours(horasInicio, minutosInicio, 0, 0);
+
+    const fechaFin = new Date();
+    fechaFin.setHours(horasFin, minutosFin, 0, 0);
+
+    // Si la hora de fin es menor, asumimos que es del día siguiente
+    if (fechaFin < fechaInicio) {
+      fechaFin.setDate(fechaFin.getDate() + 1);
+    }
+
+    const diferencia = fechaFin.getTime() - fechaInicio.getTime();
+    return diferencia / (1000 * 60 * 60); // Convertir a horas
+  };
+
   // Manejar estado de error de hora de embarque
   useEffect(() => {
     // Validar horarios cuando ambos campos estén llenos
@@ -575,8 +660,25 @@ export default function NuevaVentaForm({
           setError("La hora de embarque debe ser ANTES de la hora de viaje");
         }
       } else {
-        if (error && error.includes("Hora de embarque")) {
-          setError("");
+        // Validar diferencia mínima de 1 hora
+        const diferenciaHoras = calcularDiferenciaHoras(
+          formData.horaEmbarque,
+          formData.horaViaje
+        );
+
+        if (diferenciaHoras < 1) {
+          setError(
+            "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje"
+          );
+        } else {
+          // Solo limpiar error si era un error de horarios
+          if (
+            error &&
+            (error.includes("Hora de embarque") ||
+              error.includes("al menos 1 hora"))
+          ) {
+            setError("");
+          }
         }
       }
     }
@@ -586,15 +688,6 @@ export default function NuevaVentaForm({
   useEffect(() => {
     setErrorHorarios("");
   }, [formData.rutaId, formData.embarcacionId]);
-
-  // Validar conflicto entre hora de viaje y hora de embarque
-  // const tieneConflictoHorarios = useMemo(() => {
-  //   return (
-  //     formData.horaViaje &&
-  //     formData.horaEmbarque &&
-  //     formData.horaEmbarque >= formData.horaViaje
-  //   );
-  // }, [formData.horaViaje, formData.horaEmbarque]);
 
   return (
     <div className="max-w-4xl mx-auto bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-600/50">
@@ -887,35 +980,121 @@ export default function NuevaVentaForm({
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
+              {/* Reemplaza todo el bloque del select de Ruta por esto: */}
+              <div className="md:col-span-2 ruta-search-container">
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Ruta *
                 </label>
-                <select
-                  value={formData.rutaId}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      rutaId: e.target.value,
-                      embarcacionId: "",
-                    }));
-                    setDisponibilidad(null);
-                  }}
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
-                  required
-                >
-                  <option value="">Seleccionar ruta...</option>
-                  {rutas.map((ruta) => (
-                    <option
-                      key={ruta.id}
-                      value={ruta.id}
-                      className="bg-slate-800 text-slate-100"
-                    >
-                      {ruta.nombre} - S/{" "}
-                      {parseFloat(ruta.precio.toString()).toFixed(2)}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  {/* Input de búsqueda */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={busquedaRuta}
+                      onChange={(e) => {
+                        setBusquedaRuta(e.target.value);
+                        setMostrarListaRutas(true);
+                        if (!e.target.value) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            rutaId: "",
+                            embarcacionId: "",
+                          }));
+                        }
+                      }}
+                      onFocus={() => setMostrarListaRutas(true)}
+                      placeholder="Buscar ruta por nombre..."
+                      className="w-full pl-10 pr-10 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                    />
+
+                    {/* Botón para limpiar/desplegar */}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                      {formData.rutaId && (
+                        <button
+                          type="button"
+                          onClick={limpiarSeleccionRuta}
+                          className="p-1 hover:bg-slate-600/50 rounded-lg transition-colors"
+                        >
+                          <X className="h-3 w-3 text-slate-400" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setMostrarListaRutas(!mostrarListaRutas)}
+                        className="p-1 hover:bg-slate-600/50 rounded-lg transition-colors"
+                      >
+                        <ChevronDown
+                          className={`h-4 w-4 text-slate-400 transition-transform ${
+                            mostrarListaRutas ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lista desplegable de rutas */}
+                  {mostrarListaRutas && rutasFiltradas.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-slate-800 border border-slate-600/50 rounded-xl shadow-2xl backdrop-blur-md">
+                      {rutasFiltradas.map((ruta) => (
+                        <div
+                          key={ruta.id}
+                          onClick={() => seleccionarRuta(ruta)}
+                          className={`px-4 py-3 cursor-pointer transition-all duration-200 border-b border-slate-700/50 last:border-b-0 ${
+                            formData.rutaId === ruta.id
+                              ? "bg-blue-600/20 text-blue-300"
+                              : "hover:bg-slate-700/50 text-slate-200"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">{ruta.nombre}</span>
+                            <span className="text-sm bg-blue-600/30 text-blue-300 px-2 py-1 rounded-lg">
+                              S/ {parseFloat(ruta.precio.toString()).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-400 mt-1">
+                            {ruta.puertoOrigen} → {ruta.puertoDestino}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Mensaje cuando no hay resultados */}
+                  {mostrarListaRutas &&
+                    busquedaRuta &&
+                    rutasFiltradas.length === 0 && (
+                      <div className="absolute z-50 w-full mt-1 p-4 bg-slate-800 border border-slate-600/50 rounded-xl shadow-2xl backdrop-blur-md">
+                        <div className="text-center text-slate-400">
+                          <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No se encontraron rutas con {busquedaRuta}</p>
+                        </div>
+                      </div>
+                    )}
+                </div>
+
+                {/* Información de la ruta seleccionada */}
+                {formData.rutaId && rutaSeleccionada && (
+                  <div className="mt-2 p-3 bg-blue-900/20 border border-blue-600/30 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm text-blue-300 font-medium">
+                          {rutaSeleccionada.nombre}
+                        </span>
+                        <div className="text-xs text-blue-400 mt-1">
+                          {rutaSeleccionada.puertoOrigen} →{" "}
+                          {rutaSeleccionada.puertoDestino}
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-blue-300">
+                        S/{" "}
+                        {parseFloat(rutaSeleccionada.precio.toString()).toFixed(
+                          2
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {rutaSeleccionada && (
@@ -1033,7 +1212,19 @@ export default function NuevaVentaForm({
                             "La hora de embarque debe ser ANTES de la hora de viaje"
                           );
                         } else {
-                          setErrorHorarios(""); // Limpiar error si es válido
+                          // Validar diferencia mínima de 1 hora
+                          const diferenciaHoras = calcularDiferenciaHoras(
+                            formData.horaEmbarque,
+                            nuevaHoraViaje
+                          );
+
+                          if (diferenciaHoras < 1) {
+                            setErrorHorarios(
+                              "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje"
+                            );
+                          } else {
+                            setErrorHorarios(""); // Limpiar error si es válido
+                          }
                         }
                       } else {
                         setErrorHorarios(""); // Limpiar error si falta algún campo
@@ -1077,7 +1268,19 @@ export default function NuevaVentaForm({
                           "La hora de embarque debe ser ANTES de la hora de viaje"
                         );
                       } else {
-                        setErrorHorarios(""); // Limpiar error si es válido
+                        // Validar diferencia mínima de 1 hora
+                        const diferenciaHoras = calcularDiferenciaHoras(
+                          nuevaHoraEmbarque,
+                          formData.horaViaje
+                        );
+
+                        if (diferenciaHoras < 1) {
+                          setErrorHorarios(
+                            "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje"
+                          );
+                        } else {
+                          setErrorHorarios(""); // Limpiar error si es válido
+                        }
                       }
                     } else {
                       setErrorHorarios(""); // Limpiar error si falta algún campo
@@ -1091,7 +1294,7 @@ export default function NuevaVentaForm({
                 {/* Mensaje de ayuda - Solo mostrar si hay hora de viaje y NO hay error */}
                 {formData.horaViaje && !errorHorarios && (
                   <div className="mt-1 text-xs text-slate-400">
-                    La hora de embarque debe ser antes de las{" "}
+                    La hora de embarque debe ser al menos 1 hora antes de:{" "}
                     {formData.horaViaje}
                   </div>
                 )}
@@ -1752,15 +1955,6 @@ export default function NuevaVentaForm({
                 </div>
               </div>
             </div>
-
-            {/* {error && (
-              <div className="bg-red-900/30 border border-red-600/50 rounded-xl p-4 backdrop-blur-md">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3" />
-                  <span className="text-sm text-red-200">{error}</span>
-                </div>
-              </div>
-            )} */}
 
             <div className="flex justify-between">
               <button
