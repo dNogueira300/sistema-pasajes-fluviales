@@ -505,7 +505,7 @@ export default function VentasPage() {
 
       {/* Estadísticas con tema oscuro y glassmorphism */}
       {estadisticas && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 lg:gap-6">
           {/* Total Ventas */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-slate-900 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-transparent"></div>
@@ -573,24 +573,6 @@ export default function VentasPage() {
                 </p>
                 <p className="text-lg sm:text-2xl font-bold text-slate-100">
                   {estadisticas.ventasAnuladas}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Ventas Reembolsadas */}
-          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-orange-500 hover:ring-offset-2 hover:ring-offset-slate-900 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 to-transparent"></div>
-            <div className="flex items-center">
-              <div className="bg-orange-600 p-3 rounded-xl shadow-lg">
-                <CreditCard className="h-6 w-6 text-white flex-shrink-0" />
-              </div>
-              <div className="ml-4 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
-                  Reembolsadas
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-slate-100">
-                  {estadisticas.ventasReembolsadas}
                 </p>
               </div>
             </div>
@@ -1075,10 +1057,15 @@ export default function VentasPage() {
       {/* Modal Nueva Venta */}
       {showNuevaVenta && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
-            <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl drop-shadow-2xl border border-slate-600/50 flex flex-col">
+            {" "}
+            {/* Cambios aquí: overflow-hidden y flex flex-col */}
+            {/* Header sticky */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md z-10">
+              {" "}
+              {/* Agregar z-10 */}
               <h2 className="text-xl font-semibold text-slate-100">
-                Nueva Venta
+                Nueva Venta - Alto Impacto Travel
               </h2>
               <button
                 onClick={() => setShowNuevaVenta(false)}
@@ -1087,14 +1074,19 @@ export default function VentasPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6">
-              <NuevaVentaForm
-                onSuccess={() => {
-                  setShowNuevaVenta(false);
-                  cargarVentas();
-                  cargarEstadisticas();
-                }}
-              />
+            {/* Contenido con scroll */}
+            <div className="flex-1 overflow-y-auto">
+              {" "}
+              {/* Este div hace scroll */}
+              <div className="p-6">
+                <NuevaVentaForm
+                  onSuccess={() => {
+                    setShowNuevaVenta(false);
+                    cargarVentas();
+                    cargarEstadisticas();
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -1103,8 +1095,9 @@ export default function VentasPage() {
       {/* Modal Detalles de Venta */}
       {showDetalles && selectedVenta && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
-            <div className="flex items-center justify-between p-6 border-b border-slate-600/50">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl drop-shadow-2xl border border-slate-600/50 flex flex-col">
+            {/* Header fijo */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl flex-shrink-0">
               <h2 className="text-xl font-semibold text-slate-100">
                 Detalles de Venta - {selectedVenta.numeroVenta}
               </h2>
@@ -1115,254 +1108,262 @@ export default function VentasPage() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-6">
-              {/* Información del cliente */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                  <User className="h-5 w-5 mr-2" />
-                  Cliente
-                </h3>
-                <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Nombre:</span>
-                    <span className="font-medium text-slate-100 text-right">
-                      {selectedVenta.cliente.nombre}{" "}
-                      {selectedVenta.cliente.apellido}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Doc. Identidad:</span>
-                    <span className="font-medium text-slate-100">
-                      {selectedVenta.cliente.dni}
-                    </span>
-                  </div>
-                  {selectedVenta.cliente.telefono && (
+
+            {/* Contenido scrolleable */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-6">
+                {/* Información del cliente */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                    <User className="h-5 w-5 mr-2" />
+                    Cliente
+                  </h3>
+                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
                     <div className="flex justify-between">
-                      <span className="text-slate-300">Teléfono:</span>
-                      <span className="font-medium text-slate-100">
-                        {selectedVenta.cliente.telefono}
+                      <span className="text-slate-300">Nombre:</span>
+                      <span className="font-medium text-slate-100 text-right">
+                        {selectedVenta.cliente.nombre}{" "}
+                        {selectedVenta.cliente.apellido}
                       </span>
                     </div>
-                  )}
-                  {selectedVenta.cliente.email && (
                     <div className="flex justify-between">
-                      <span className="text-slate-300">Email:</span>
+                      <span className="text-slate-300">Doc. Identidad:</span>
                       <span className="font-medium text-slate-100">
-                        {selectedVenta.cliente.email}
+                        {selectedVenta.cliente.dni}
                       </span>
                     </div>
-                  )}
+                    {selectedVenta.cliente.telefono && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-300">Teléfono:</span>
+                        <span className="font-medium text-slate-100">
+                          {selectedVenta.cliente.telefono}
+                        </span>
+                      </div>
+                    )}
+                    {selectedVenta.cliente.email && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-300">Email:</span>
+                        <span className="font-medium text-slate-100">
+                          {selectedVenta.cliente.email}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Información del viaje */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  Viaje
-                </h3>
-                <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Ruta:</span>
-                    <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                      {selectedVenta.ruta.nombre}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Embarcación:</span>
-                    <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                      {selectedVenta.embarcacion.nombre}
-                    </span>
-                  </div>
+                {/* Información del viaje */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                    <MapPin className="h-5 w-5 mr-2" />
+                    Viaje
+                  </h3>
+                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Ruta:</span>
+                      <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                        {selectedVenta.ruta.nombre}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Embarcación:</span>
+                      <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                        {selectedVenta.embarcacion.nombre}
+                      </span>
+                    </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Puerto de Embarque:</span>
-                    <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                      {selectedVenta.puertoEmbarque.nombre}
-                    </span>
-                  </div>
-                  {selectedVenta.puertoEmbarque.direccion && (
                     <div className="flex justify-between">
                       <span className="text-slate-300">
-                        Dirección del Puerto:
+                        Puerto de Embarque:
                       </span>
                       <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                        {selectedVenta.puertoEmbarque.direccion}
+                        {selectedVenta.puertoEmbarque.nombre}
                       </span>
                     </div>
+                    {selectedVenta.puertoEmbarque.direccion && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-300">
+                          Dirección del Puerto:
+                        </span>
+                        <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                          {selectedVenta.puertoEmbarque.direccion}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Fecha de viaje:</span>
+                      <span className="font-medium text-slate-100">
+                        {formatearFechaViaje(selectedVenta.fechaViaje)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">
+                        Cantidad de pasajes:
+                      </span>
+                      <span className="font-medium text-slate-100">
+                        {selectedVenta.cantidadPasajes}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información de pago */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Pago
+                  </h3>
+                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Método de pago:</span>
+                      <span className="font-medium text-slate-100">
+                        {selectedVenta.metodoPago}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Total:</span>
+                      <span className="font-bold text-xl text-slate-100">
+                        S/ {selectedVenta.total.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Estado:</span>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-xl text-sm font-medium border ${getEstadoColor(
+                          selectedVenta.estado
+                        )}`}
+                      >
+                        {selectedVenta.estado}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Información adicional */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                    <Clock className="h-5 w-5 mr-2" />
+                    Información Adicional
+                  </h3>
+                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Fecha de venta:</span>
+                      <span className="font-medium text-slate-100">
+                        {new Date(selectedVenta.fechaVenta).toLocaleString(
+                          "es-PE"
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-300">Vendedor:</span>
+                      <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                        {selectedVenta.vendedor.nombre}{" "}
+                        {selectedVenta.vendedor.apellido}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex justify-end space-x-4 pt-4 border-t border-slate-600/50">
+                  <div className="relative">
+                    <button
+                      className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg transition-all duration-200"
+                      onClick={() => {
+                        const dropdownMenu =
+                          document.getElementById("print-dropdown");
+                        if (dropdownMenu) {
+                          dropdownMenu.classList.toggle("hidden");
+                        }
+                      }}
+                    >
+                      <Printer className="h-4 w-4" />
+                      <span>Opciones</span>
+                    </button>
+
+                    {/* Menú desplegable de opciones completo */}
+                    <div
+                      id="print-dropdown"
+                      className="absolute right-0 mt-2 hidden bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl overflow-hidden z-50 w-48 backdrop-blur-sm"
+                    >
+                      {/* Opciones de impresión */}
+                      <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
+                        Imprimir
+                      </div>
+                      <button
+                        onClick={() => {
+                          imprimirTicket(selectedVenta.id);
+                          document
+                            .getElementById("print-dropdown")
+                            ?.classList.add("hidden");
+                        }}
+                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Ticket 80mm
+                      </button>
+                      <button
+                        onClick={() => {
+                          imprimirComprobanteA4(selectedVenta.id);
+                          document
+                            .getElementById("print-dropdown")
+                            ?.classList.add("hidden");
+                        }}
+                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Comprobante A4
+                      </button>
+
+                      {/* Separador */}
+                      <div className="border-t border-slate-600/50"></div>
+
+                      {/* Opciones de descarga */}
+                      <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
+                        Descargar
+                      </div>
+                      <button
+                        onClick={() => {
+                          descargarComprobanteA4(selectedVenta);
+                          document
+                            .getElementById("print-dropdown")
+                            ?.classList.add("hidden");
+                        }}
+                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                      >
+                        <Download className="h-4 w-4 mr-2 text-blue-400" />
+                        Descargar PDF
+                      </button>
+                      <button
+                        onClick={() => {
+                          descargarComprobanteImagen(selectedVenta);
+                          document
+                            .getElementById("print-dropdown")
+                            ?.classList.add("hidden");
+                        }}
+                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                      >
+                        <Download className="h-4 w-4 mr-2 text-green-400" />
+                        Descargar Imagen
+                      </button>
+                    </div>
+                  </div>
+
+                  {selectedVenta.estado === "CONFIRMADA" && (
+                    <button
+                      onClick={() => {
+                        // Cerrar el modal de detalles primero
+                        setShowDetalles(false);
+                        // Abrir el modal de anulación
+                        handleAnularVenta(selectedVenta);
+                      }}
+                      className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-lg transition-all duration-200"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Anular</span>
+                    </button>
                   )}
-
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Fecha de viaje:</span>
-                    <span className="font-medium text-slate-100">
-                      {formatearFechaViaje(selectedVenta.fechaViaje)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Cantidad de pasajes:</span>
-                    <span className="font-medium text-slate-100">
-                      {selectedVenta.cantidadPasajes}
-                    </span>
-                  </div>
                 </div>
-              </div>
-
-              {/* Información de pago */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                  <CreditCard className="h-5 w-5 mr-2" />
-                  Pago
-                </h3>
-                <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Método de pago:</span>
-                    <span className="font-medium text-slate-100">
-                      {selectedVenta.metodoPago}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Total:</span>
-                    <span className="font-bold text-xl text-slate-100">
-                      S/ {selectedVenta.total.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Estado:</span>
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-xl text-sm font-medium border ${getEstadoColor(
-                        selectedVenta.estado
-                      )}`}
-                    >
-                      {selectedVenta.estado}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Información adicional */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                  <Clock className="h-5 w-5 mr-2" />
-                  Información Adicional
-                </h3>
-                <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Fecha de venta:</span>
-                    <span className="font-medium text-slate-100">
-                      {new Date(selectedVenta.fechaVenta).toLocaleString(
-                        "es-PE"
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-300">Vendedor:</span>
-                    <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                      {selectedVenta.vendedor.nombre}{" "}
-                      {selectedVenta.vendedor.apellido}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botones de acción */}
-              <div className="flex justify-end space-x-4 pt-4 border-t border-slate-600/50">
-                <div className="relative">
-                  <button
-                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg transition-all duration-200"
-                    onClick={() => {
-                      const dropdownMenu =
-                        document.getElementById("print-dropdown");
-                      if (dropdownMenu) {
-                        dropdownMenu.classList.toggle("hidden");
-                      }
-                    }}
-                  >
-                    <Printer className="h-4 w-4" />
-                    <span>Opciones</span>
-                  </button>
-
-                  {/* Menú desplegable de opciones completo */}
-                  <div
-                    id="print-dropdown"
-                    className="absolute right-0 mt-2 hidden bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl overflow-hidden z-50 w-48 backdrop-blur-sm"
-                  >
-                    {/* Opciones de impresión */}
-                    <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
-                      Imprimir
-                    </div>
-                    <button
-                      onClick={() => {
-                        imprimirTicket(selectedVenta.id);
-                        document
-                          .getElementById("print-dropdown")
-                          ?.classList.add("hidden");
-                      }}
-                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                    >
-                      <Printer className="h-4 w-4 mr-2" />
-                      Ticket 80mm
-                    </button>
-                    <button
-                      onClick={() => {
-                        imprimirComprobanteA4(selectedVenta.id);
-                        document
-                          .getElementById("print-dropdown")
-                          ?.classList.add("hidden");
-                      }}
-                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                    >
-                      <Printer className="h-4 w-4 mr-2" />
-                      Comprobante A4
-                    </button>
-
-                    {/* Separador */}
-                    <div className="border-t border-slate-600/50"></div>
-
-                    {/* Opciones de descarga */}
-                    <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
-                      Descargar
-                    </div>
-                    <button
-                      onClick={() => {
-                        descargarComprobanteA4(selectedVenta);
-                        document
-                          .getElementById("print-dropdown")
-                          ?.classList.add("hidden");
-                      }}
-                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                    >
-                      <Download className="h-4 w-4 mr-2 text-blue-400" />
-                      Descargar PDF
-                    </button>
-                    <button
-                      onClick={() => {
-                        descargarComprobanteImagen(selectedVenta);
-                        document
-                          .getElementById("print-dropdown")
-                          ?.classList.add("hidden");
-                      }}
-                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                    >
-                      <Download className="h-4 w-4 mr-2 text-green-400" />
-                      Descargar Imagen
-                    </button>
-                  </div>
-                </div>
-
-                {selectedVenta.estado === "CONFIRMADA" && (
-                  <button
-                    onClick={() => {
-                      // Cerrar el modal de detalles primero
-                      setShowDetalles(false);
-                      // Abrir el modal de anulación
-                      handleAnularVenta(selectedVenta);
-                    }}
-                    className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-lg transition-all duration-200"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>Anular</span>
-                  </button>
-                )}
               </div>
             </div>
           </div>

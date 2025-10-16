@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSession } from "next-auth/react";
+//import { useSession } from "next-auth/react";
 import { useAnulaciones } from "@/hooks/use-anulaciones";
 import { TipoAnulacion, Anulacion, Venta } from "@/types";
 import {
@@ -22,6 +22,7 @@ import {
   Calendar,
   Shield,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 
 interface AnulacionResult {
@@ -45,7 +46,7 @@ export default function ModalAnularVenta({
   venta,
   onSuccess,
 }: ModalAnularVentaProps) {
-  const { data: session } = useSession();
+  //const { data: session } = useSession();
   const { anularVenta, motivosComunes, loading, error, setError } =
     useAnulaciones();
 
@@ -197,7 +198,7 @@ export default function ModalAnularVenta({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl sticky top-0">
+        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl sticky top-0 z-20">
           <div className="flex items-center space-x-3">
             <div
               className={`p-2 rounded-lg ${
@@ -486,44 +487,21 @@ export default function ModalAnularVenta({
                   </div>
                 )}
 
-                {/* Tipo de anulación */}
+                {/* Tipo de anulación y Motivo - en la misma fila */}
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2" />
-                    Tipo de anulación
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <label className="flex items-center p-4 border-2 border-slate-600/50 rounded-xl cursor-pointer hover:bg-slate-700/30 transition-all duration-200 backdrop-blur-sm">
-                      <input
-                        type="radio"
-                        name="tipoAnulacion"
-                        value="ANULACION"
-                        checked={formData.tipoAnulacion === "ANULACION"}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            tipoAnulacion: e.target.value as TipoAnulacion,
-                          }))
-                        }
-                        className="mr-3 text-blue-600 bg-slate-700 border-slate-600"
-                      />
-                      <div>
-                        <div className="font-medium text-slate-100">
-                          Anulación
-                        </div>
-                        <div className="text-sm text-slate-400">
-                          Sin reembolso de dinero
-                        </div>
-                      </div>
-                    </label>
-
-                    {session?.user.role === "ADMINISTRADOR" && (
-                      <label className="flex items-center p-4 border-2 border-slate-600/50 rounded-xl cursor-pointer hover:bg-slate-700/30 transition-all duration-200 backdrop-blur-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Tipo de anulación */}
+                    <div className="flex flex-col">
+                      <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                        <DollarSign className="h-5 w-5 mr-2" />
+                        Tipo de anulación
+                      </h3>
+                      <label className="flex items-center p-4 border-2 border-slate-600/50 rounded-xl cursor-pointer hover:bg-slate-700/30 transition-all duration-200 backdrop-blur-sm flex-1">
                         <input
                           type="radio"
                           name="tipoAnulacion"
-                          value="REEMBOLSO"
-                          checked={formData.tipoAnulacion === "REEMBOLSO"}
+                          value="ANULACION"
+                          checked={formData.tipoAnulacion === "ANULACION"}
                           onChange={(e) =>
                             setFormData((prev) => ({
                               ...prev,
@@ -534,79 +512,43 @@ export default function ModalAnularVenta({
                         />
                         <div>
                           <div className="font-medium text-slate-100">
-                            Reembolso
-                          </div>
-                          <div className="text-sm text-slate-400">
-                            Con devolución de dinero
+                            Anulación
                           </div>
                         </div>
                       </label>
-                    )}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Monto de reembolso */}
-                {formData.tipoAnulacion === "REEMBOLSO" && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Monto a reembolsar *
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-slate-400 sm:text-sm">S/</span>
-                      </div>
-                      <input
-                        type="number"
-                        min="0"
-                        max={Number(venta.total)}
-                        step="0.01"
-                        value={formData.montoReembolso}
+                    {/* Motivo */}
+                    <div className="flex flex-col">
+                      <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                        <AlertCircle className="h-5 w-5 mr-2" />
+                        Motivo de anulación *
+                      </h3>
+                      <select
+                        value={formData.motivo}
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
-                            montoReembolso: parseFloat(e.target.value) || 0,
+                            motivo: e.target.value,
                           }))
                         }
-                        className="block w-full pl-12 pr-3 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
-                        placeholder="0.00"
+                        className="flex-1 w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
                         required
-                      />
-                    </div>
-                    <p className="text-sm text-slate-400 mt-1">
-                      Máximo: S/ {Number(venta.total).toFixed(2)}
-                    </p>
-                  </div>
-                )}
-
-                {/* Motivo */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Motivo de anulación *
-                  </label>
-                  <select
-                    value={formData.motivo}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        motivo: e.target.value,
-                      }))
-                    }
-                    className="block w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
-                    required
-                  >
-                    <option value="">Seleccionar motivo...</option>
-                    {motivosComunes.map((motivo) => (
-                      <option
-                        key={motivo}
-                        value={motivo}
-                        className="bg-slate-800 text-slate-100"
                       >
-                        {motivo}
-                      </option>
-                    ))}
-                  </select>
+                        <option value="">Seleccionar motivo...</option>
+                        {motivosComunes.map((motivo) => (
+                          <option
+                            key={motivo}
+                            value={motivo}
+                            className="bg-slate-800 text-slate-100"
+                          >
+                            {motivo}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
-
                 {/* Observaciones */}
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">

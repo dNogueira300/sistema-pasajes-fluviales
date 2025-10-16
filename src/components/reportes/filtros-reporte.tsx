@@ -425,11 +425,7 @@ export default function FiltrosReporteComponent({
                 onChange={(e) =>
                   handleFiltroChange(
                     "estado",
-                    e.target.value as
-                      | "CONFIRMADA"
-                      | "ANULADA"
-                      | "REEMBOLSADA"
-                      | undefined
+                    e.target.value as "CONFIRMADA" | "ANULADA" | undefined
                   )
                 }
                 className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
@@ -437,7 +433,6 @@ export default function FiltrosReporteComponent({
                 <option value="">Todos los estados</option>
                 <option value="CONFIRMADA">Confirmadas</option>
                 <option value="ANULADA">Anuladas</option>
-                <option value="REEMBOLSADA">Reembolsadas</option>
               </select>
             </div>
           </div>

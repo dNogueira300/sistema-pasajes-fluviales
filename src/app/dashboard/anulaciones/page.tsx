@@ -120,14 +120,14 @@ export default function AnulacionesPage() {
             Gestión de Anulaciones
           </h1>
           <p className="text-slate-300">
-            Registro y seguimiento de todas las anulaciones y reembolsos
+            Registro y seguimiento de todas las anulaciones
           </p>
         </div>
       </div>
 
       {/* Estadísticas con tema oscuro, glassmorphism y efectos mejorados */}
       {estadisticas && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Total Anulaciones - Rojo */}
           <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-red-500 hover:ring-offset-2 hover:ring-offset-slate-900">
             <div className="absolute inset-0 bg-gradient-to-br from-red-600/10 to-transparent"></div>
@@ -144,27 +144,6 @@ export default function AnulacionesPage() {
                 </p>
                 <p className="text-xs text-red-400">
                   Hoy: {estadisticas.totalAnulacionesHoy}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Reembolsos - Naranja */}
-          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:ring-2 hover:ring-orange-500 hover:ring-offset-2 hover:ring-offset-slate-900">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 to-transparent"></div>
-            <div className="flex items-center">
-              <div className="bg-orange-600 p-3 rounded-xl shadow-lg">
-                <RefreshCw className="h-6 w-6 sm:h-8 sm:w-8 text-white flex-shrink-0" />
-              </div>
-              <div className="ml-4 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-slate-300 truncate">
-                  Reembolsos
-                </p>
-                <p className="text-lg sm:text-2xl font-bold text-slate-100">
-                  {estadisticas.totalReembolsos}
-                </p>
-                <p className="text-xs text-orange-400 truncate">
-                  S/ {estadisticas.montoTotalReembolsado.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -295,7 +274,7 @@ export default function AnulacionesPage() {
                   >
                     <option value="">Todos los tipos</option>
                     <option value="ANULACION">Anulación</option>
-                    <option value="REEMBOLSO">Reembolso</option>
+                    {/* <option value="REEMBOLSO">Reembolso</option> */}
                   </select>
                 </div>
 

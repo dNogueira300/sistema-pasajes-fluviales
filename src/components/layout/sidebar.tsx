@@ -1,6 +1,4 @@
-// ============================================
-// components/layout/sidebar.tsx - Con comportamiento Drawer en móvil
-// ============================================
+// components/layout/sidebar.tsx
 "use client";
 
 import { useState, useEffect } from "react";

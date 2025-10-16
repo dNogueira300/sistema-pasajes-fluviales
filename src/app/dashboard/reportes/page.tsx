@@ -12,7 +12,6 @@ import {
   CreditCard,
   AlertCircle,
   CheckCircle,
-  Clock,
   Printer,
   FileSpreadsheet,
   Eye,
@@ -488,7 +487,7 @@ export default function PaginaReportes() {
                 </div>
 
                 {/* Estados de ventas */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-slate-700/50 p-4 rounded-xl border border-slate-600/50">
                     <div className="flex items-center justify-between">
                       <div>
@@ -509,17 +508,6 @@ export default function PaginaReportes() {
                         </p>
                       </div>
                       <AlertCircle className="h-8 w-8 text-red-400" />
-                    </div>
-                  </div>
-                  <div className="bg-slate-700/50 p-4 rounded-xl border border-slate-600/50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-400">Reembolsadas</p>
-                        <p className="text-xl font-bold text-yellow-400">
-                          {reporte.resumen.ventasReembolsadas}
-                        </p>
-                      </div>
-                      <Clock className="h-8 w-8 text-yellow-400" />
                     </div>
                   </div>
                 </div>

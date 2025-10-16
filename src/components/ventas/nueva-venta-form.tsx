@@ -95,6 +95,7 @@ export default function NuevaVentaForm({
   const [diasOperativos, setDiasOperativos] = useState<string[]>([]);
   const [buscandoAutoCliente, setBuscandoAutoCliente] = useState(false);
   const [dniValido, setDniValido] = useState(false);
+  const [errorHorarios, setErrorHorarios] = useState("");
 
   const codigosPaises = useMemo(
     () => [
@@ -565,10 +566,40 @@ export default function NuevaVentaForm({
     }
   }, [formData.rutaId, formData.embarcacionId, formData.fechaViaje, rutas]);
 
+  // Manejar estado de error de hora de embarque
+  useEffect(() => {
+    // Validar horarios cuando ambos campos estén llenos
+    if (formData.horaViaje && formData.horaEmbarque) {
+      if (formData.horaEmbarque >= formData.horaViaje) {
+        if (!error || !error.includes("Hora de embarque")) {
+          setError("La hora de embarque debe ser ANTES de la hora de viaje");
+        }
+      } else {
+        if (error && error.includes("Hora de embarque")) {
+          setError("");
+        }
+      }
+    }
+  }, [formData.horaViaje, formData.horaEmbarque, error]);
+
+  // Agregar este useEffect para limpiar errores cuando se cambie la embarcación o ruta
+  useEffect(() => {
+    setErrorHorarios("");
+  }, [formData.rutaId, formData.embarcacionId]);
+
+  // Validar conflicto entre hora de viaje y hora de embarque
+  // const tieneConflictoHorarios = useMemo(() => {
+  //   return (
+  //     formData.horaViaje &&
+  //     formData.horaEmbarque &&
+  //     formData.horaEmbarque >= formData.horaViaje
+  //   );
+  // }, [formData.horaViaje, formData.horaEmbarque]);
+
   return (
     <div className="max-w-4xl mx-auto bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-600/50">
       {/* Header con steps */}
-      <div className="p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl">
+      <div className="p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl z-20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-slate-100">Nueva Venta</h2>
           <div className="flex items-center space-x-4">
@@ -998,32 +1029,14 @@ export default function NuevaVentaForm({
                       // Validar contra la hora de embarque existente
                       if (formData.horaEmbarque && nuevaHoraViaje) {
                         if (formData.horaEmbarque >= nuevaHoraViaje) {
-                          setError(
+                          setErrorHorarios(
                             "La hora de embarque debe ser ANTES de la hora de viaje"
                           );
                         } else {
-                          // Limpiar error si la validación es correcta
-                          setError((prevError) => {
-                            if (
-                              prevError &&
-                              prevError.includes("Hora de embarque")
-                            ) {
-                              return "";
-                            }
-                            return prevError;
-                          });
+                          setErrorHorarios(""); // Limpiar error si es válido
                         }
                       } else {
-                        // Limpiar error de hora si no hay hora de embarque para comparar
-                        setError((prevError) => {
-                          if (
-                            prevError &&
-                            prevError.includes("Hora de embarque")
-                          ) {
-                            return "";
-                          }
-                          return prevError;
-                        });
+                        setErrorHorarios(""); // Limpiar error si falta algún campo
                       }
                     }}
                     className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
@@ -1060,52 +1073,33 @@ export default function NuevaVentaForm({
                     // Validar que la hora de embarque no sea después ni igual a la hora de viaje
                     if (formData.horaViaje && nuevaHoraEmbarque) {
                       if (nuevaHoraEmbarque >= formData.horaViaje) {
-                        setError(
+                        setErrorHorarios(
                           "La hora de embarque debe ser ANTES de la hora de viaje"
                         );
                       } else {
-                        // Limpiar error si la validación es correcta
-                        setError((prevError) => {
-                          if (
-                            prevError &&
-                            prevError.includes("Hora de embarque")
-                          ) {
-                            return "";
-                          }
-                          return prevError;
-                        });
+                        setErrorHorarios(""); // Limpiar error si es válido
                       }
                     } else {
-                      // Limpiar error si no hay hora de viaje para comparar
-                      setError((prevError) => {
-                        if (
-                          prevError &&
-                          prevError.includes("Hora de embarque")
-                        ) {
-                          return "";
-                        }
-                        return prevError;
-                      });
+                      setErrorHorarios(""); // Limpiar error si falta algún campo
                     }
                   }}
                   className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 ${
-                    error && error.includes("Hora de embarque")
-                      ? "border-red-500/50"
-                      : "border-slate-600/50"
+                    errorHorarios ? "border-red-500/50" : "border-slate-600/50"
                   }`}
                   required
                 />
                 {/* Mensaje de ayuda - Solo mostrar si hay hora de viaje y NO hay error */}
-                {formData.horaViaje &&
-                  !(error && error.includes("Hora de embarque")) && (
-                    <div className="mt-1 text-xs text-slate-400">
-                      La hora de embarque debe ser antes de las{" "}
-                      {formData.horaViaje}
-                    </div>
-                  )}
+                {formData.horaViaje && !errorHorarios && (
+                  <div className="mt-1 text-xs text-slate-400">
+                    La hora de embarque debe ser antes de las{" "}
+                    {formData.horaViaje}
+                  </div>
+                )}
                 {/* Mensaje de error específico para horarios */}
-                {error && error.includes("Hora de embarque") && (
-                  <div className="mt-1 text-xs text-red-400">{error}</div>
+                {errorHorarios && (
+                  <div className="mt-1 text-xs text-red-400">
+                    {errorHorarios}
+                  </div>
                 )}
               </div>
 
@@ -1559,14 +1553,14 @@ export default function NuevaVentaForm({
             )}
 
             {/* Error al verificar disponibilidad */}
-            {error && (
+            {/* {error && (
               <div className="bg-red-900/30 border border-red-600/50 rounded-xl p-4 backdrop-blur-md">
                 <div className="flex items-start">
                   <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3" />
                   <span className="text-sm text-red-200">{error}</span>
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className="flex justify-between">
               <button
@@ -1584,7 +1578,9 @@ export default function NuevaVentaForm({
                   !formData.puertoEmbarqueId ||
                   !formData.fechaViaje ||
                   !formData.horaViaje ||
-                  !formData.horaEmbarque
+                  !formData.horaEmbarque ||
+                  !!errorHorarios || // Usar el nuevo estado de error
+                  !!(error && error.includes("no opera"))
                 }
                 className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
@@ -1757,14 +1753,14 @@ export default function NuevaVentaForm({
               </div>
             </div>
 
-            {error && (
+            {/* {error && (
               <div className="bg-red-900/30 border border-red-600/50 rounded-xl p-4 backdrop-blur-md">
                 <div className="flex items-start">
                   <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3" />
                   <span className="text-sm text-red-200">{error}</span>
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className="flex justify-between">
               <button
