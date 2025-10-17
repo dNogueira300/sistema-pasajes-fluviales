@@ -1,75 +1,12 @@
-// app/api/embarcacion-rutas/route.ts
+// app/api/embarcacion-rutas/route.ts - Actualizado con validaciones
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// GET - Obtener asignaciones embarcación-ruta con filtros
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const rutaId = searchParams.get("rutaId");
-    const embarcacionId = searchParams.get("embarcacionId");
-    const activa = searchParams.get("activa");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-
-    const where: Prisma.EmbarcacionRutaWhereInput = {};
-
-    if (rutaId) where.rutaId = rutaId;
-    if (embarcacionId) where.embarcacionId = embarcacionId;
-    if (activa !== null && activa !== undefined && activa !== "") {
-      where.activa = activa === "true";
-    }
-
-    const skip = (page - 1) * limit;
-
-    const [embarcacionRutas, total] = await Promise.all([
-      prisma.embarcacionRuta.findMany({
-        where,
-        include: {
-          embarcacion: true,
-          ruta: true,
-        },
-        orderBy: [{ activa: "desc" }, { createdAt: "desc" }],
-        skip,
-        take: limit,
-      }),
-      prisma.embarcacionRuta.count({ where }),
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
-    const hasNext = page < totalPages;
-    const hasPrev = page > 1;
-
-    return NextResponse.json({
-      embarcacionRutas,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext,
-        hasPrev,
-      },
-    });
-  } catch (error) {
-    console.error("Error obteniendo asignaciones embarcación-ruta:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - Crear nueva asignación embarcación-ruta
+// POST - Crear nueva asignación con validación mejorada
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -80,7 +17,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { embarcacionId, rutaId, horasSalida, diasOperacion, activa } = body;
 
-    // Validaciones
+    // Validaciones básicas
     if (!embarcacionId || !rutaId) {
       return NextResponse.json(
         { error: "Embarcación y ruta son requeridos" },
@@ -122,6 +59,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (embarcacion.estado !== "ACTIVA") {
+      return NextResponse.json(
+        {
+          error: "Embarcación no disponible",
+          detalles: `La embarcación "${embarcacion.nombre}" está en estado: ${embarcacion.estado} y no se puede asignar`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Verificar que la ruta existe y está activa
     const ruta = await prisma.ruta.findUnique({
       where: { id: rutaId },
@@ -134,21 +81,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar que no exista ya esta asignación
+    // VALIDACIÓN CLAVE: Verificar que no exista ya esta asignación activa
     const asignacionExistente = await prisma.embarcacionRuta.findFirst({
       where: {
         embarcacionId,
         rutaId,
+        activa: true,
       },
     });
 
     if (asignacionExistente) {
       return NextResponse.json(
-        { error: "Esta embarcación ya está asignada a esta ruta" },
+        {
+          error: "Asignación duplicada",
+          detalles: `La embarcación "${embarcacion.nombre}" ya está asignada a la ruta "${ruta.nombre}"`,
+        },
         { status: 400 }
       );
     }
 
+    // VALIDACIÓN NUEVA: Verificar que la embarcación no esté asignada a otras rutas activas
+    const asignacionesOtrasRutas = await prisma.embarcacionRuta.findMany({
+      where: {
+        embarcacionId,
+        rutaId: { not: rutaId },
+        activa: true,
+      },
+      include: {
+        ruta: {
+          select: {
+            nombre: true,
+            puertoOrigen: true,
+            puertoDestino: true,
+          },
+        },
+      },
+    });
+
+    if (asignacionesOtrasRutas.length > 0) {
+      const rutasConflicto = asignacionesOtrasRutas
+        .map(
+          (asignacion) =>
+            `"${asignacion.ruta.nombre}" (${asignacion.ruta.puertoOrigen} → ${asignacion.ruta.puertoDestino})`
+        )
+        .join(", ");
+
+      return NextResponse.json(
+        {
+          error: "Embarcación ya asignada",
+          detalles: `La embarcación "${embarcacion.nombre}" ya está asignada a: ${rutasConflicto}. Una embarcación solo puede estar asignada a una ruta a la vez.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Si todas las validaciones pasan, crear la asignación
     const embarcacionRuta = await prisma.embarcacionRuta.create({
       data: {
         embarcacionId,

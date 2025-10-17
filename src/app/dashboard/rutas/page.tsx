@@ -1,4 +1,4 @@
-// app/dashboard/rutas/page.tsx - Fix para el tipo any
+// app/dashboard/rutas/page.tsx
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useRequireAuth } from "@/hooks/use-auth";
@@ -22,6 +22,8 @@ import {
   MapPin,
   Ship,
   Users,
+  CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Ruta,
@@ -34,6 +36,83 @@ import {
 import NuevaRutaForm from "@/components/rutas/nueva-ruta-form";
 import EditarRutaForm from "@/components/rutas/editar-ruta-form";
 
+// Componente para notificaciones mejoradas
+interface NotificacionProps {
+  tipo: "success" | "error" | "warning" | "info";
+  titulo: string;
+  mensaje: string;
+  detalles?: string[];
+  onClose: () => void;
+}
+
+function Notificacion({
+  tipo,
+  titulo,
+  mensaje,
+  detalles,
+  onClose,
+}: NotificacionProps) {
+  const iconos = {
+    success: <CheckCircle className="h-5 w-5 text-green-400" />,
+    error: <AlertCircle className="h-5 w-5 text-red-400" />,
+    warning: <AlertTriangle className="h-5 w-5 text-yellow-400" />,
+    info: <AlertCircle className="h-5 w-5 text-blue-400" />,
+  };
+
+  const colores = {
+    success: "bg-green-900/90 border border-green-700 text-green-100",
+    error: "bg-red-900/90 border border-red-700 text-red-100",
+    warning: "bg-yellow-900/90 border border-yellow-700 text-yellow-100",
+    info: "bg-blue-900/90 border border-blue-700 text-blue-100",
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => {
+        onClose();
+      },
+      tipo === "error" || tipo === "warning" ? 10000 : 5000
+    );
+
+    return () => clearTimeout(timer);
+  }, [onClose, tipo]);
+
+  return (
+    <div
+      className={`fixed top-4 right-4 ${colores[tipo]} px-6 py-4 rounded-xl shadow-xl flex flex-col space-y-2 z-50 backdrop-blur-sm max-w-md`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          {iconos[tipo]}
+          <div>
+            <p className="font-medium">{titulo}</p>
+            <p className="text-sm opacity-90">{mensaje}</p>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-white/10 rounded-lg transition-all duration-200"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {detalles && detalles.length > 0 && (
+        <div className="mt-2 pl-8">
+          <ul className="text-xs space-y-1 opacity-90">
+            {detalles.map((detalle, index) => (
+              <li key={index} className="flex items-start">
+                <span className="mr-2">•</span>
+                <span>{detalle}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GestionRutas() {
   useRequireAuth();
   const {
@@ -45,6 +124,8 @@ export default function GestionRutas() {
     cambiarEstado,
     loading,
     error,
+    validationErrors,
+    limpiarErroresValidacion,
   } = useRutas();
 
   const { obtenerEmbarcacionesPorRuta } = useEmbarcacionRutas();
@@ -83,43 +164,29 @@ export default function GestionRutas() {
   const [embarcacionesPorRuta, setEmbarcacionesPorRuta] = useState<{
     [rutaId: string]: EmbarcacionRuta[];
   }>({});
+  const [notificacion, setNotificacion] = useState<NotificacionProps | null>(
+    null
+  );
 
   // Función para mostrar notificaciones
-  const mostrarNotificacion = (tipo: "success" | "error", texto: string) => {
-    const notification = document.createElement("div");
-    notification.className = `fixed top-4 right-4 ${
-      tipo === "success"
-        ? "bg-green-900/90 border border-green-700 text-green-100"
-        : "bg-red-900/90 border border-red-700 text-red-100"
-    } px-6 py-4 rounded-xl shadow-xl flex items-center space-x-3 z-50 backdrop-blur-sm`;
-
-    notification.innerHTML = `
-      <svg class="h-5 w-5 ${
-        tipo === "success" ? "text-green-400" : "text-red-400"
-      }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        ${
-          tipo === "success"
-            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
-            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>'
-        }
-      </svg>
-      <div>
-        <p class="font-medium">${texto}</p>
-      </div>
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-      notification.classList.add("opacity-0", "transition-opacity");
-      setTimeout(() => notification.remove(), 300);
-    }, 5000);
+  const mostrarNotificacion = (
+    tipo: NotificacionProps["tipo"],
+    titulo: string,
+    mensaje: string,
+    detalles?: string[]
+  ) => {
+    setNotificacion({
+      tipo,
+      titulo,
+      mensaje,
+      detalles,
+      onClose: () => setNotificacion(null),
+    });
   };
 
   // Cargar embarcaciones para cada ruta
   const cargarEmbarcacionesDeRutas = useCallback(
     async (rutasArray: Ruta[]) => {
-      // Cambio aquí: usar EmbarcacionRuta[] en lugar de any[]
       const embarcacionesMap: { [rutaId: string]: EmbarcacionRuta[] } = {};
 
       for (const ruta of rutasArray) {
@@ -202,14 +269,36 @@ export default function GestionRutas() {
   const handleCrearRuta = async (
     datos: CrearRutaConEmbarcaciones
   ): Promise<boolean> => {
+    limpiarErroresValidacion();
     const resultado = await crearRuta(datos);
+
     if (resultado) {
-      mostrarNotificacion("success", "¡Ruta creada correctamente!");
+      if (validationErrors.length > 0) {
+        mostrarNotificacion(
+          "warning",
+          "Ruta creada con advertencias",
+          "La ruta se creó correctamente pero hubo problemas con algunas embarcaciones",
+          validationErrors
+        );
+      } else {
+        mostrarNotificacion("success", "¡Éxito!", "Ruta creada correctamente");
+      }
       cargarRutas();
       cargarEstadisticas();
       return true;
+    } else {
+      if (validationErrors.length > 0) {
+        mostrarNotificacion(
+          "error",
+          "Errores de validación",
+          "No se pudo crear la ruta debido a problemas con las embarcaciones",
+          validationErrors
+        );
+      } else if (error) {
+        mostrarNotificacion("error", "Error", error);
+      }
+      return false;
     }
-    return false;
   };
 
   // Manejar actualización de ruta
@@ -217,15 +306,41 @@ export default function GestionRutas() {
     id: string,
     datos: ActualizarRutaConEmbarcaciones
   ): Promise<boolean> => {
+    limpiarErroresValidacion();
     const resultado = await actualizarRuta(id, datos);
+
     if (resultado) {
-      mostrarNotificacion("success", "¡Ruta actualizada correctamente!");
+      if (validationErrors.length > 0) {
+        mostrarNotificacion(
+          "warning",
+          "Ruta actualizada con advertencias",
+          "La ruta se actualizó correctamente pero hubo problemas con algunas embarcaciones",
+          validationErrors
+        );
+      } else {
+        mostrarNotificacion(
+          "success",
+          "¡Éxito!",
+          "Ruta actualizada correctamente"
+        );
+      }
       setRutaSeleccionada(null);
       cargarRutas();
       cargarEstadisticas();
       return true;
+    } else {
+      if (validationErrors.length > 0) {
+        mostrarNotificacion(
+          "error",
+          "Errores de validación",
+          "No se pudo actualizar la ruta debido a problemas con las embarcaciones",
+          validationErrors
+        );
+      } else if (error) {
+        mostrarNotificacion("error", "Error", error);
+      }
+      return false;
     }
-    return false;
   };
 
   // Manejar editar ruta
@@ -246,11 +361,13 @@ export default function GestionRutas() {
 
     const resultado = await eliminarRuta(rutaSeleccionada.id);
     if (resultado) {
-      mostrarNotificacion("success", "¡Ruta eliminada correctamente!");
+      mostrarNotificacion("success", "¡Éxito!", "Ruta eliminada correctamente");
       setModalConfirmarEliminar(false);
       setRutaSeleccionada(null);
       cargarRutas();
       cargarEstadisticas();
+    } else if (error) {
+      mostrarNotificacion("error", "Error", error);
     }
   };
 
@@ -260,19 +377,15 @@ export default function GestionRutas() {
     if (resultado) {
       mostrarNotificacion(
         "success",
+        "Estado actualizado",
         `Ruta ${!ruta.activa ? "activada" : "desactivada"} exitosamente`
       );
       cargarRutas();
       cargarEstadisticas();
+    } else if (error) {
+      mostrarNotificacion("error", "Error", error);
     }
   };
-
-  // Mostrar error si existe
-  useEffect(() => {
-    if (error) {
-      mostrarNotificacion("error", error);
-    }
-  }, [error]);
 
   // Helper para determinar si el botón debe estar deshabilitado
   const isEliminarDisabled = () => {
@@ -301,6 +414,9 @@ export default function GestionRutas() {
 
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6 max-w-full">
+      {/* Notificación */}
+      {notificacion && <Notificacion {...notificacion} />}
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Título y descripción */}
@@ -717,10 +833,14 @@ export default function GestionRutas() {
       {/* Componentes de modales */}
       <NuevaRutaForm
         isOpen={modalNuevo}
-        onClose={() => setModalNuevo(false)}
+        onClose={() => {
+          setModalNuevo(false);
+          limpiarErroresValidacion(); // Limpiar errores al cerrar
+        }}
         onSubmit={handleCrearRuta}
         loading={loading}
         error={error}
+        validationErrors={validationErrors}
       />
 
       <EditarRutaForm
@@ -730,6 +850,7 @@ export default function GestionRutas() {
         ruta={rutaSeleccionada}
         loading={loading}
         error={error}
+        validationErrors={validationErrors}
       />
 
       {/* Modal Confirmar Eliminar */}

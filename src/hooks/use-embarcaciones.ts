@@ -1,4 +1,4 @@
-// hooks/use-embarcaciones.ts
+// hooks/use-embarcaciones.ts - Versión completa
 import { useState, useCallback } from "react";
 import {
   FiltrosEmbarcaciones,
@@ -168,6 +168,14 @@ export function useEmbarcaciones() {
     []
   );
 
+  // Cambiar estado de embarcación
+  const cambiarEstado = useCallback(
+    async (id: string, estado: EstadoEmbarcacion): Promise<boolean> => {
+      return actualizarEmbarcacion(id, { estado });
+    },
+    [actualizarEmbarcacion]
+  );
+
   // Obtener estadísticas
   const obtenerEstadisticas =
     useCallback(async (): Promise<EstadisticasEmbarcaciones | null> => {
@@ -193,22 +201,14 @@ export function useEmbarcaciones() {
       }
     }, []);
 
-  // Cambiar estado
-  const cambiarEstado = useCallback(
-    async (id: string, estado: EstadoEmbarcacion): Promise<boolean> => {
-      return actualizarEmbarcacion(id, { estado });
-    },
-    [actualizarEmbarcacion]
-  );
-
   return {
     obtenerEmbarcaciones,
     obtenerEmbarcacionesActivas,
     crearEmbarcacion,
     actualizarEmbarcacion,
     eliminarEmbarcacion,
-    obtenerEstadisticas,
     cambiarEstado,
+    obtenerEstadisticas,
     loading,
     error,
     setError,

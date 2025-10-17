@@ -1,4 +1,4 @@
-// hooks/use-embarcacion-rutas.ts
+// hooks/use-embarcacion-rutas.ts - Actualizado con validaciones
 import { useState, useCallback } from "react";
 import {
   FiltrosEmbarcacionRutas,
@@ -10,7 +10,49 @@ export function useEmbarcacionRutas() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Obtener asignaciones embarcación-ruta con filtros
+  // Crear asignación embarcación-ruta con validación mejorada
+  const crearEmbarcacionRuta = useCallback(
+    async (datos: CrearEmbarcacionRutaData): Promise<boolean> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/embarcacion-rutas", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(datos),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          // Manejar errores específicos de validación
+          if (response.status === 400) {
+            if (data.detalles) {
+              throw new Error(data.detalles);
+            } else {
+              throw new Error(data.error || "Error de validación");
+            }
+          }
+          throw new Error(data.error || "Error al crear asignación");
+        }
+
+        return true;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Error desconocido";
+        setError(errorMessage);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Resto de métodos existentes...
   const obtenerEmbarcacionRutas = useCallback(
     async (filtros: FiltrosEmbarcacionRutas = {}) => {
       setLoading(true);
@@ -18,7 +60,6 @@ export function useEmbarcacionRutas() {
 
       try {
         const params = new URLSearchParams();
-
         if (filtros.rutaId) params.append("rutaId", filtros.rutaId);
         if (filtros.embarcacionId)
           params.append("embarcacionId", filtros.embarcacionId);
@@ -47,7 +88,6 @@ export function useEmbarcacionRutas() {
     []
   );
 
-  // Obtener embarcaciones por ruta
   const obtenerEmbarcacionesPorRuta = useCallback(async (rutaId: string) => {
     setLoading(true);
     setError(null);
@@ -73,41 +113,6 @@ export function useEmbarcacionRutas() {
     }
   }, []);
 
-  // Crear asignación embarcación-ruta
-  const crearEmbarcacionRuta = useCallback(
-    async (datos: CrearEmbarcacionRutaData): Promise<boolean> => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch("/api/embarcacion-rutas", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(datos),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Error al crear asignación");
-        }
-
-        return true;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Error desconocido";
-        setError(errorMessage);
-        return false;
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  // Actualizar asignación embarcación-ruta
   const actualizarEmbarcacionRuta = useCallback(
     async (
       id: string,
@@ -128,6 +133,9 @@ export function useEmbarcacionRutas() {
         const data = await response.json();
 
         if (!response.ok) {
+          if (response.status === 400 && data.detalles) {
+            throw new Error(data.detalles);
+          }
           throw new Error(data.error || "Error al actualizar asignación");
         }
 
@@ -144,7 +152,6 @@ export function useEmbarcacionRutas() {
     []
   );
 
-  // Eliminar asignación embarcación-ruta
   const eliminarEmbarcacionRuta = useCallback(
     async (id: string): Promise<boolean> => {
       setLoading(true);
@@ -174,7 +181,6 @@ export function useEmbarcacionRutas() {
     []
   );
 
-  // Cambiar estado activo
   const cambiarEstadoEmbarcacionRuta = useCallback(
     async (id: string, activa: boolean): Promise<boolean> => {
       return actualizarEmbarcacionRuta(id, { activa });

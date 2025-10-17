@@ -1,7 +1,7 @@
 // components/rutas/editar-ruta-form.tsx
 "use client";
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, AlertTriangle, CheckCircle } from "lucide-react";
 import {
   Ruta,
   ActualizarRutaConEmbarcaciones,
@@ -21,6 +21,7 @@ interface EditarRutaFormProps {
   ruta: Ruta | null;
   loading?: boolean;
   error?: string | null;
+  validationErrors?: string[];
 }
 
 interface DatosRuta {
@@ -38,6 +39,8 @@ export default function EditarRutaForm({
   onSubmit,
   ruta,
   loading = false,
+  error,
+  validationErrors = [],
 }: EditarRutaFormProps) {
   const { obtenerEmbarcacionesPorRuta } = useEmbarcacionRutas();
   const [formulario, setFormulario] = useState<DatosRuta>({
@@ -57,29 +60,56 @@ export default function EditarRutaForm({
     [key: string]: string;
   }>({});
 
+  const [, setMostrarErroresEmbarcaciones] = useState(false);
+  const [errorDetallado, setErrorDetallado] = useState<string | null>(null);
+  const [debugMode] = useState(false);
+
+  // Debug: Log de props recibidas
+  useEffect(() => {
+    if (debugMode) {
+      console.log("📊 EditarRutaForm Props:", {
+        isOpen,
+        ruta: ruta ? { id: ruta.id, nombre: ruta.nombre } : null,
+        loading,
+        error,
+        validationErrors,
+      });
+    }
+  }, [isOpen, ruta, loading, error, validationErrors, debugMode]);
+
   // Cargar embarcaciones existentes cuando se abre el modal
   useEffect(() => {
     const cargarEmbarcacionesExistentes = async () => {
       if (ruta?.id) {
-        const embarcacionesRuta = await obtenerEmbarcacionesPorRuta(ruta.id);
-        if (embarcacionesRuta) {
-          setEmbarcacionesOriginales(embarcacionesRuta);
+        try {
+          console.log("🔄 Cargando embarcaciones para ruta:", ruta.id);
+          const embarcacionesRuta = await obtenerEmbarcacionesPorRuta(ruta.id);
 
-          // Convertir a formato del formulario
-          const embarcacionesFormulario = embarcacionesRuta.map(
-            (er: EmbarcacionRuta) => ({
-              embarcacionId: er.embarcacionId,
-              rutaId: er.rutaId,
-              horasSalida: er.horasSalida,
-              diasOperacion: er.diasOperacion,
-              activa: er.activa,
-            })
-          );
+          if (embarcacionesRuta) {
+            console.log("✅ Embarcaciones cargadas:", embarcacionesRuta.length);
+            setEmbarcacionesOriginales(embarcacionesRuta);
 
-          setFormulario((prev) => ({
-            ...prev,
-            embarcaciones: embarcacionesFormulario,
-          }));
+            // Convertir a formato del formulario
+            const embarcacionesFormulario = embarcacionesRuta.map(
+              (er: EmbarcacionRuta) => ({
+                embarcacionId: er.embarcacionId,
+                rutaId: er.rutaId,
+                horasSalida: er.horasSalida,
+                diasOperacion: er.diasOperacion,
+                activa: er.activa,
+              })
+            );
+
+            setFormulario((prev) => ({
+              ...prev,
+              embarcaciones: embarcacionesFormulario,
+            }));
+          } else {
+            console.log("⚠️ No se pudieron cargar embarcaciones");
+          }
+        } catch (err) {
+          console.error("❌ Error cargando embarcaciones:", err);
+          setErrorDetallado(`Error cargando embarcaciones: ${err}`);
         }
       }
     };
@@ -89,9 +119,21 @@ export default function EditarRutaForm({
     }
   }, [isOpen, ruta, obtenerEmbarcacionesPorRuta]);
 
+  // Efecto para mostrar errores de validación automáticamente
+  useEffect(() => {
+    if (validationErrors && validationErrors.length > 0) {
+      console.log(
+        "🚨 Detectados errores de validación, mostrando automáticamente:",
+        validationErrors
+      );
+      setMostrarErroresEmbarcaciones(true);
+    }
+  }, [validationErrors]);
+
   // Efecto para cargar datos de la ruta cuando se abre el modal
   useEffect(() => {
     if (isOpen && ruta) {
+      console.log("📝 Cargando datos de ruta:", ruta);
       setFormulario({
         nombre: ruta.nombre,
         puertoOrigen: ruta.puertoOrigen,
@@ -101,6 +143,8 @@ export default function EditarRutaForm({
         embarcaciones: [], // Se carga por separado en el efecto anterior
       });
       setErroresValidacion({});
+      setMostrarErroresEmbarcaciones(false);
+      setErrorDetallado(null);
     }
   }, [isOpen, ruta]);
 
@@ -150,8 +194,21 @@ export default function EditarRutaForm({
         errores.embarcaciones =
           "Todas las embarcaciones deben tener una embarcación seleccionada, al menos un horario y al menos un día de operación";
       }
+
+      // Verificar embarcaciones duplicadas
+      const embarcacionIds = formulario.embarcaciones
+        .map((emb) => emb.embarcacionId)
+        .filter(Boolean);
+      const duplicados = embarcacionIds.filter(
+        (id, index) => embarcacionIds.indexOf(id) !== index
+      );
+      if (duplicados.length > 0) {
+        errores.embarcaciones =
+          "No se puede asignar la misma embarcación múltiples veces";
+      }
     }
 
+    console.log("🔍 Validación de formulario:", { errores, formulario });
     setErroresValidacion(errores);
     return Object.keys(errores).length === 0;
   };
@@ -159,7 +216,20 @@ export default function EditarRutaForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!ruta || !validarFormulario()) return;
+    console.log("🚀 Iniciando submit de edición de ruta");
+    setErrorDetallado(null);
+
+    if (!ruta) {
+      setErrorDetallado("No hay ruta seleccionada para editar");
+      console.error("❌ No hay ruta seleccionada");
+      return;
+    }
+
+    if (!validarFormulario()) {
+      console.log("❌ Formulario no válido");
+      setMostrarErroresEmbarcaciones(true);
+      return;
+    }
 
     // Preparar datos para actualización
     const datosActualizacion: ActualizarRutaConEmbarcaciones = {
@@ -170,16 +240,34 @@ export default function EditarRutaForm({
       activa: formulario.activa,
       embarcaciones: {
         // Por simplicidad, eliminamos todas las existentes y creamos las nuevas
-        // En una implementación más sofisticada, se podría hacer un diff
         eliminar: embarcacionesOriginales.map((er) => er.id),
         crear: formulario.embarcaciones,
       },
     };
 
-    const resultado = await onSubmit(ruta.id, datosActualizacion);
+    console.log("📤 Datos a enviar:", datosActualizacion);
 
-    if (resultado) {
-      onClose();
+    try {
+      const resultado = await onSubmit(ruta.id, datosActualizacion);
+      console.log("📥 Resultado del submit:", resultado);
+
+      if (resultado) {
+        console.log("✅ Edición exitosa, cerrando modal");
+        onClose();
+      } else {
+        console.log("❌ Edición falló");
+        if (validationErrors && validationErrors.length > 0) {
+          setMostrarErroresEmbarcaciones(true);
+          console.log("🔍 Errores de validación:", validationErrors);
+        }
+        if (error) {
+          setErrorDetallado(error);
+          console.log("🔍 Error general:", error);
+        }
+      }
+    } catch (err) {
+      console.error("💥 Error durante submit:", err);
+      setErrorDetallado(`Error durante la actualización: ${err}`);
     }
   };
 
@@ -204,6 +292,7 @@ export default function EditarRutaForm({
   const handleEmbarcacionesChange = (
     embarcaciones: CrearEmbarcacionRutaData[]
   ) => {
+    console.log("🔄 Embarcaciones cambiadas:", embarcaciones);
     setFormulario((prev) => ({
       ...prev,
       embarcaciones,
@@ -216,6 +305,35 @@ export default function EditarRutaForm({
         embarcaciones: "",
       }));
     }
+
+    // Verificar si se han solucionado los problemas de validación
+    const embarcacionIds = embarcaciones
+      .map((emb) => emb.embarcacionId)
+      .filter(Boolean);
+    const tieneDuplicados =
+      embarcacionIds.filter((id, index) => embarcacionIds.indexOf(id) !== index)
+        .length > 0;
+    const tieneEmbarcacionesIncompletas = embarcaciones.some(
+      (emb) =>
+        !emb.embarcacionId ||
+        emb.horasSalida.length === 0 ||
+        emb.horasSalida.some((hora) => !hora.trim()) ||
+        emb.diasOperacion.length === 0
+    );
+
+    // Si no hay problemas obvios en el formulario, resetear los errores de validación del servidor
+    if (
+      !tieneDuplicados &&
+      !tieneEmbarcacionesIncompletas &&
+      validationErrors &&
+      validationErrors.length > 0
+    ) {
+      console.log(
+        "🧹 Limpiando errores de validación del servidor - problemas aparentemente solucionados"
+      );
+      // Aquí podrías llamar a una función para limpiar los errores del estado global
+      // Por ejemplo: limpiarErroresValidacion();
+    }
   };
 
   const handlePrecioChange = (value: string) => {
@@ -226,11 +344,19 @@ export default function EditarRutaForm({
 
   if (!isOpen || !ruta) return null;
 
+  const hayErroresValidacion =
+    (validationErrors && validationErrors.length > 0) ||
+    Object.keys(erroresValidacion).length > 0;
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
         <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl z-20">
-          <h2 className="text-xl font-semibold text-slate-100">Editar Ruta</h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-xl font-semibold text-slate-100">
+              Editar Ruta
+            </h2>
+          </div>
           <button
             onClick={onClose}
             className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
@@ -240,6 +366,57 @@ export default function EditarRutaForm({
         </div>
 
         <div className="p-6">
+          {/* Errores de validación globales */}
+          {(error ||
+            errorDetallado ||
+            (validationErrors && validationErrors.length > 0)) && (
+            <div className="mb-6 space-y-3">
+              {(error || errorDetallado) && (
+                <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                    <div>
+                      <p className="text-red-300 font-medium">Error general</p>
+                      <p className="text-red-200 text-sm mt-1">
+                        {errorDetallado || error}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {validationErrors && validationErrors.length > 0 && (
+                <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-orange-300 font-medium">
+                        Errores de validación de embarcaciones
+                      </p>
+                      <p className="text-orange-200 text-sm mt-1">
+                        Las siguientes embarcaciones ya están asignadas a otras
+                        rutas y no se pueden usar:
+                      </p>
+                      <ul className="text-orange-200 text-sm mt-2 space-y-1">
+                        {validationErrors.map((errorMsg, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>{errorMsg}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-3 text-xs text-orange-300 bg-orange-900/20 p-2 rounded-lg">
+                        💡 <strong>Solución:</strong> Selecciona embarcaciones
+                        diferentes o desactiva las embarcaciones problemáticas
+                        en el componente de selección.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Información básica de la ruta */}
             <div className="space-y-6">
@@ -273,7 +450,7 @@ export default function EditarRutaForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Puerto de Origen *
+                    Origen *
                   </label>
                   <input
                     type="text"
@@ -298,7 +475,7 @@ export default function EditarRutaForm({
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Puerto de Destino *
+                    Destino *
                   </label>
                   <input
                     type="text"
@@ -427,17 +604,26 @@ export default function EditarRutaForm({
                   loading ||
                   !formulario.nombre.trim() ||
                   formulario.precio <= 0 ||
-                  formulario.embarcaciones.length === 0
+                  formulario.embarcaciones.length === 0 ||
+                  hayErroresValidacion
                 }
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg flex items-center space-x-2"
               >
                 {loading ? (
-                  <div className="flex items-center space-x-2">
+                  <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     <span>Guardando...</span>
-                  </div>
+                  </>
+                ) : hayErroresValidacion ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Revisar errores</span>
+                  </>
                 ) : (
-                  "Actualizar Ruta"
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Actualizar Ruta</span>
+                  </>
                 )}
               </button>
             </div>

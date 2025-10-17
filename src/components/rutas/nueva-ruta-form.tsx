@@ -1,16 +1,17 @@
-// components/rutas/nueva-ruta-form.tsx
+// components/rutas/nueva-ruta-form.tsx - Versión mejorada con validaciones
 "use client";
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, AlertTriangle, CheckCircle } from "lucide-react";
 import { CrearRutaConEmbarcaciones, CrearEmbarcacionRutaData } from "@/types";
 import SeleccionarEmbarcaciones from "./seleccionar-embarcaciones";
 
 interface NuevaRutaFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (datos: CrearRutaConEmbarcaciones) => Promise<boolean>;
+  onSubmit: (datos: CrearRutaConEmbarcaciones) => Promise<boolean>; // Correcto para crear
   loading?: boolean;
   error?: string | null;
+  validationErrors?: string[]; // Agregado
 }
 
 interface DatosRuta {
@@ -27,6 +28,8 @@ export default function NuevaRutaForm({
   onClose,
   onSubmit,
   loading = false,
+  error,
+  validationErrors = [],
 }: NuevaRutaFormProps) {
   const [formulario, setFormulario] = useState<DatosRuta>({
     nombre: "",
@@ -41,6 +44,9 @@ export default function NuevaRutaForm({
     [key: string]: string;
   }>({});
 
+  const [mostrarErroresEmbarcaciones, setMostrarErroresEmbarcaciones] =
+    useState(false);
+
   const resetFormulario = () => {
     setFormulario({
       nombre: "",
@@ -51,6 +57,7 @@ export default function NuevaRutaForm({
       embarcaciones: [],
     });
     setErroresValidacion({});
+    setMostrarErroresEmbarcaciones(false);
   };
 
   const validarFormulario = (): boolean => {
@@ -99,6 +106,18 @@ export default function NuevaRutaForm({
         errores.embarcaciones =
           "Todas las embarcaciones deben tener una embarcación seleccionada, al menos un horario y al menos un día de operación";
       }
+
+      // Verificar embarcaciones duplicadas
+      const embarcacionIds = formulario.embarcaciones
+        .map((emb) => emb.embarcacionId)
+        .filter(Boolean);
+      const duplicados = embarcacionIds.filter(
+        (id, index) => embarcacionIds.indexOf(id) !== index
+      );
+      if (duplicados.length > 0) {
+        errores.embarcaciones =
+          "No se puede asignar la misma embarcación múltiples veces";
+      }
     }
 
     setErroresValidacion(errores);
@@ -109,6 +128,7 @@ export default function NuevaRutaForm({
     e.preventDefault();
 
     if (!validarFormulario()) {
+      setMostrarErroresEmbarcaciones(true);
       return;
     }
 
@@ -117,6 +137,11 @@ export default function NuevaRutaForm({
     if (resultado) {
       resetFormulario();
       onClose();
+    } else {
+      // Si hay errores de validación de embarcaciones, mostrarlos
+      if (validationErrors.length > 0) {
+        setMostrarErroresEmbarcaciones(true);
+      }
     }
   };
 
@@ -153,6 +178,11 @@ export default function NuevaRutaForm({
         embarcaciones: "",
       }));
     }
+
+    // Ocultar errores de embarcaciones si se están editando
+    if (mostrarErroresEmbarcaciones) {
+      setMostrarErroresEmbarcaciones(false);
+    }
   };
 
   const handlePrecioChange = (value: string) => {
@@ -170,6 +200,9 @@ export default function NuevaRutaForm({
 
   if (!isOpen) return null;
 
+  const hayErroresValidacion =
+    validationErrors.length > 0 || Object.keys(erroresValidacion).length > 0;
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
@@ -184,6 +217,44 @@ export default function NuevaRutaForm({
         </div>
 
         <div className="p-6">
+          {/* Errores de validación globales */}
+          {(error || validationErrors.length > 0) && (
+            <div className="mb-6 space-y-3">
+              {error && (
+                <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                    <div>
+                      <p className="text-red-300 font-medium">Error general</p>
+                      <p className="text-red-200 text-sm mt-1">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {validationErrors.length > 0 && mostrarErroresEmbarcaciones && (
+                <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="flex items-start">
+                    <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-orange-300 font-medium">
+                        Errores de validación de embarcaciones
+                      </p>
+                      <ul className="text-orange-200 text-sm mt-2 space-y-1">
+                        {validationErrors.map((errorMsg, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="mr-2">•</span>
+                            <span>{errorMsg}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Información básica de la ruta */}
             <div className="space-y-6">
@@ -217,7 +288,7 @@ export default function NuevaRutaForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Puerto de Origen *
+                    Origen *
                   </label>
                   <input
                     type="text"
@@ -242,7 +313,7 @@ export default function NuevaRutaForm({
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Puerto de Destino *
+                    Destino *
                   </label>
                   <input
                     type="text"
@@ -370,17 +441,26 @@ export default function NuevaRutaForm({
                   loading ||
                   !formulario.nombre.trim() ||
                   formulario.precio <= 0 ||
-                  formulario.embarcaciones.length === 0
+                  formulario.embarcaciones.length === 0 ||
+                  hayErroresValidacion
                 }
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg flex items-center space-x-2"
               >
                 {loading ? (
-                  <div className="flex items-center space-x-2">
+                  <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     <span>Guardando...</span>
-                  </div>
+                  </>
+                ) : hayErroresValidacion ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Revisar errores</span>
+                  </>
                 ) : (
-                  "Crear Ruta"
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Crear Ruta</span>
+                  </>
                 )}
               </button>
             </div>
