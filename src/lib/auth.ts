@@ -29,7 +29,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           console.log("❌ Credenciales incompletas");
-          return null;
+          throw new Error("CredentialsSignin");
         }
 
         try {
@@ -48,12 +48,19 @@ export const authOptions: NextAuthOptions = {
               apellido: true,
               password: true,
               role: true,
+              activo: true, // Agregar este campo para verificar
             },
           });
 
           if (!user) {
             console.log("❌ Usuario no encontrado:", credentials.email);
-            return null;
+            throw new Error("CredentialsSignin");
+          }
+
+          // Verificar si el usuario está activo
+          if (!user.activo) {
+            console.log("❌ Usuario inactivo:", credentials.email);
+            throw new Error("UserInactive");
           }
 
           const isPasswordValid = await compare(
@@ -63,11 +70,10 @@ export const authOptions: NextAuthOptions = {
 
           if (!isPasswordValid) {
             console.log("❌ Contraseña incorrecta para:", credentials.email);
-            return null;
+            throw new Error("CredentialsSignin");
           }
 
           console.log("✅ Login exitoso:", user.email, "Rol:", user.role);
-          console.log("✅ Usuario", user.email, "inició sesión");
 
           return {
             id: user.id,
@@ -78,7 +84,14 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error("❌ Error en autenticación:", error);
-          return null;
+
+          // Si ya es un error conocido, relanzarlo
+          if (error instanceof Error) {
+            throw error;
+          }
+
+          // Para errores de base de datos u otros errores inesperados
+          throw new Error("CredentialsSignin");
         }
       },
     }),

@@ -1,9 +1,7 @@
-// ============================================
-// login/page.tsx - Con redirección por rol
-// ============================================
+// src/app/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { Eye, EyeOff, Ship, User, Lock, AlertCircle } from "lucide-react";
 
@@ -17,26 +15,93 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorTimeout] = useState<NodeJS.Timeout | null>(null);
+  const mostrarError = (mensaje: string) => {
+    setError(mensaje);
+
+    // Limpiar timeout anterior si existe
+    if (errorTimeout) {
+      clearTimeout(errorTimeout);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
+    // Validaciones básicas antes de enviar
+    if (!formData.email.trim()) {
+      mostrarError("El usuario o email es requerido.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.password.trim()) {
+      mostrarError("La contraseña es requerida.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      mostrarError("La contraseña debe tener al menos 6 caracteres.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // ⚡ SOLUCIÓN: Usar redirect: true y callbackUrl
-      await signIn("credentials", {
-        email: formData.email,
+      const result = await signIn("credentials", {
+        email: formData.email.trim(),
         password: formData.password,
-        redirect: true, // ← Cambiar a true
-        callbackUrl: "/dashboard", // ← Dejar que NextAuth maneje todo
+        redirect: false,
       });
+
+      if (result?.error) {
+        switch (result.error) {
+          case "CredentialsSignin":
+            mostrarError("Usuario o contraseña incorrectos.");
+            break;
+          case "EmailNotFound":
+            mostrarError("Usuario no encontrado en el sistema.");
+            break;
+          case "PasswordIncorrect":
+            mostrarError("Contraseña incorrecta.");
+            break;
+          case "UserInactive":
+            mostrarError(
+              "Tu cuenta está desactivada. Contacta al administrador."
+            );
+            break;
+          case "TooManyAttempts":
+            mostrarError("Demasiados intentos fallidos. Espera unos minutos.");
+            break;
+          default:
+            mostrarError(`Error de autenticación: ${result.error}`);
+        }
+      } else if (result?.ok) {
+        // Login exitoso - redirigir después de un breve delay
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 500);
+      } else {
+        mostrarError("Error inesperado durante el login.");
+      }
     } catch (error) {
-      console.error("❌ Error en login:", error);
-      setError("Error de conexión. Intenta nuevamente.");
+      console.error("Error en login:", error);
+      mostrarError("Error de conexión. Verifica tu conexión a internet.");
+    } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      // Limpiar timeout al desmontar el componente
+      if (errorTimeout) {
+        clearTimeout(errorTimeout);
+      }
+    };
+  }, [errorTimeout]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
