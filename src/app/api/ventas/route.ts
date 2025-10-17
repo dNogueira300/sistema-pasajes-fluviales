@@ -74,6 +74,9 @@ export async function POST(request: NextRequest) {
       metodoPago,
       metodosPago,
       observaciones,
+      precioFinal,
+      origenSeleccionado,
+      destinoSeleccionado,
     } = body;
 
     // Validaciones básicas
@@ -161,8 +164,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calcular total esperado
-    const totalEsperado = parseFloat(ruta.precio.toString()) * cantidadPasajes;
+    // Validar que se envió el precio final
+    if (!precioFinal || precioFinal <= 0) {
+      return NextResponse.json(
+        { error: "Precio final inválido" },
+        { status: 400 }
+      );
+    }
+
+    // Calcular total esperado usando el precio personalizado
+    const totalEsperado = precioFinal * cantidadPasajes;
 
     // Validar montos para pago híbrido
     if (tipoPago === "HIBRIDO") {
@@ -209,9 +220,10 @@ export async function POST(request: NextRequest) {
       horaEmbarque,
       horaViaje,
       cantidadPasajes,
-      puertoOrigen: ruta.puertoOrigen,
-      puertoDestino: ruta.puertoDestino,
-      precioUnitario: parseFloat(ruta.precio.toString()),
+      // USAR LOS VALORES PERSONALIZADOS EN LUGAR DE LOS DE LA RUTA
+      puertoOrigen: origenSeleccionado || ruta.puertoOrigen,
+      puertoDestino: destinoSeleccionado || ruta.puertoDestino,
+      precioUnitario: precioFinal, // Usar precio personalizado
       tipoPago,
       metodoPago: tipoPago === "UNICO" ? metodoPago : "HIBRIDO",
       metodosPago: tipoPago === "HIBRIDO" ? metodosPago : null,

@@ -229,7 +229,7 @@ export default function EditarRutaForm({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
-        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl">
+        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl z-20">
           <h2 className="text-xl font-semibold text-slate-100">Editar Ruta</h2>
           <button
             onClick={onClose}

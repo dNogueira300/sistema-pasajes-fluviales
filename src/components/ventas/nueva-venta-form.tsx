@@ -62,6 +62,9 @@ interface FormData {
   rutaId: string;
   embarcacionId: string;
   puertoEmbarqueId: string;
+  origenSeleccionado: string;
+  destinoSeleccionado: string;
+  precioFinal: number;
   fechaViaje: string;
   horaViaje: string;
   horaEmbarque: string;
@@ -102,6 +105,11 @@ export default function NuevaVentaForm({
   const [rutasFiltradas, setRutasFiltradas] = useState<Ruta[]>([]);
   const [busquedaRuta, setBusquedaRuta] = useState("");
   const [mostrarListaRutas, setMostrarListaRutas] = useState(false);
+  const [direccionViaje, setDireccionViaje] = useState<
+    "ORIGEN_DESTINO" | "DESTINO_ORIGEN"
+  >("ORIGEN_DESTINO");
+  const [precioPersonalizado, setPrecioPersonalizado] = useState<number>(0);
+  const [usarPrecioPersonalizado, setUsarPrecioPersonalizado] = useState(false);
 
   const codigosPaises = useMemo(
     () => [
@@ -128,6 +136,9 @@ export default function NuevaVentaForm({
     rutaId: "",
     embarcacionId: "",
     puertoEmbarqueId: "",
+    origenSeleccionado: "",
+    destinoSeleccionado: "",
+    precioFinal: 0,
     fechaViaje: "",
     horaViaje: "",
     horaEmbarque: "",
@@ -137,6 +148,32 @@ export default function NuevaVentaForm({
     metodosPago: [],
     observaciones: "",
   });
+
+  // Función para actualizar origen, destino y precio cuando cambia la ruta o dirección
+  const actualizarDatosRuta = useCallback(
+    (ruta: Ruta | null, direccion: "ORIGEN_DESTINO" | "DESTINO_ORIGEN") => {
+      if (!ruta) return;
+
+      const esOrigenDestino = direccion === "ORIGEN_DESTINO";
+      const origen = esOrigenDestino
+        ? limpiarNombrePuerto(ruta.puertoOrigen)
+        : limpiarNombrePuerto(ruta.puertoDestino);
+      const destino = esOrigenDestino
+        ? limpiarNombrePuerto(ruta.puertoDestino)
+        : limpiarNombrePuerto(ruta.puertoOrigen);
+
+      setFormData((prev) => ({
+        ...prev,
+        origenSeleccionado: origen,
+        destinoSeleccionado: destino,
+        precioFinal: parseFloat(ruta.precio.toString()),
+      }));
+
+      setPrecioPersonalizado(parseFloat(ruta.precio.toString()));
+      setUsarPrecioPersonalizado(false);
+    },
+    []
+  );
 
   // Función para buscar automáticamente al ingresar DNI
   const buscarClienteAutomatico = useCallback(
@@ -275,9 +312,7 @@ export default function NuevaVentaForm({
   };
 
   const calcularTotales = (metodosP: MetodoPago[] = formData.metodosPago) => {
-    const totalVenta =
-      parseFloat((rutaSeleccionada?.precio || 0).toString()) *
-      formData.cantidadPasajes;
+    const totalVenta = formData.precioFinal * formData.cantidadPasajes;
     const totalPagado = metodosP.reduce((sum, metodo) => sum + metodo.monto, 0);
     const faltaPagar = totalVenta - totalPagado;
     return { totalVenta, totalPagado, faltaPagar };
@@ -298,6 +333,14 @@ export default function NuevaVentaForm({
     } catch (error) {
       console.error("Error cargando rutas:", error);
     }
+  };
+
+  // Función para limpiar el nombre del puerto
+  const limpiarNombrePuerto = (nombrePuerto: string): string => {
+    return nombrePuerto
+      .replace(/^Puerto de\s*/i, "") // Elimina "Puerto de" al inicio
+      .replace(/^Puerto\s*/i, "") // Elimina "Puerto" al inicio
+      .trim();
   };
 
   const cargarPuertosEmbarque = async () => {
@@ -369,6 +412,10 @@ export default function NuevaVentaForm({
             ? formatearTelefonoCompleto()
             : "",
         },
+        // AGREGAR ESTOS CAMPOS
+        precioFinal: formData.precioFinal,
+        origenSeleccionado: formData.origenSeleccionado,
+        destinoSeleccionado: formData.destinoSeleccionado,
         userId: user?.id,
       };
 
@@ -395,6 +442,9 @@ export default function NuevaVentaForm({
           rutaId: "",
           embarcacionId: "",
           puertoEmbarqueId: "",
+          origenSeleccionado: "",
+          destinoSeleccionado: "",
+          precioFinal: 0,
           fechaViaje: "",
           horaViaje: "",
           horaEmbarque: "",
@@ -981,6 +1031,7 @@ export default function NuevaVentaForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Reemplaza todo el bloque del select de Ruta por esto: */}
+              {/* Sección de Ruta con Origen/Destino separados */}
               <div className="md:col-span-2 ruta-search-container">
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Ruta *
@@ -1000,6 +1051,9 @@ export default function NuevaVentaForm({
                             ...prev,
                             rutaId: "",
                             embarcacionId: "",
+                            origenSeleccionado: "",
+                            destinoSeleccionado: "",
+                            precioFinal: 0,
                           }));
                         }
                       }}
@@ -1039,7 +1093,10 @@ export default function NuevaVentaForm({
                       {rutasFiltradas.map((ruta) => (
                         <div
                           key={ruta.id}
-                          onClick={() => seleccionarRuta(ruta)}
+                          onClick={() => {
+                            seleccionarRuta(ruta);
+                            actualizarDatosRuta(ruta, direccionViaje);
+                          }}
                           className={`px-4 py-3 cursor-pointer transition-all duration-200 border-b border-slate-700/50 last:border-b-0 ${
                             formData.rutaId === ruta.id
                               ? "bg-blue-600/20 text-blue-300"
@@ -1053,7 +1110,7 @@ export default function NuevaVentaForm({
                             </span>
                           </div>
                           <div className="text-xs text-slate-400 mt-1">
-                            {ruta.puertoOrigen} → {ruta.puertoDestino}
+                            {ruta.puertoOrigen} ↔ {ruta.puertoDestino}
                           </div>
                         </div>
                       ))}
@@ -1072,30 +1129,193 @@ export default function NuevaVentaForm({
                       </div>
                     )}
                 </div>
+              </div>
 
-                {/* Información de la ruta seleccionada */}
-                {formData.rutaId && rutaSeleccionada && (
-                  <div className="mt-2 p-3 bg-blue-900/20 border border-blue-600/30 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm text-blue-300 font-medium">
-                          {rutaSeleccionada.nombre}
-                        </span>
-                        <div className="text-xs text-blue-400 mt-1">
-                          {rutaSeleccionada.puertoOrigen} →{" "}
-                          {rutaSeleccionada.puertoDestino}
+              {/* Configuración de Origen/Destino y Precio cuando hay ruta seleccionada */}
+              {formData.rutaId && rutaSeleccionada && (
+                <div className="md:col-span-2 space-y-4">
+                  {/* Selector de Dirección */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-3">
+                      Dirección del viaje
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDireccionViaje("ORIGEN_DESTINO");
+                          actualizarDatosRuta(
+                            rutaSeleccionada,
+                            "ORIGEN_DESTINO"
+                          );
+                        }}
+                        className={`p-4 rounded-xl border transition-all duration-200 ${
+                          direccionViaje === "ORIGEN_DESTINO"
+                            ? "bg-blue-600/20 border-blue-500/50 text-blue-200"
+                            : "bg-slate-700/30 border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="font-medium text-lg">
+                            {limpiarNombrePuerto(rutaSeleccionada.puertoOrigen)}{" "}
+                            →{" "}
+                            {limpiarNombrePuerto(
+                              rutaSeleccionada.puertoDestino
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <span className="text-sm font-bold text-blue-300">
-                        S/{" "}
-                        {parseFloat(rutaSeleccionada.precio.toString()).toFixed(
-                          2
-                        )}
-                      </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDireccionViaje("DESTINO_ORIGEN");
+                          actualizarDatosRuta(
+                            rutaSeleccionada,
+                            "DESTINO_ORIGEN"
+                          );
+                        }}
+                        className={`p-4 rounded-xl border transition-all duration-200 ${
+                          direccionViaje === "DESTINO_ORIGEN"
+                            ? "bg-blue-600/20 border-blue-500/50 text-blue-200"
+                            : "bg-slate-700/30 border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="font-medium text-lg">
+                            {limpiarNombrePuerto(
+                              rutaSeleccionada.puertoDestino
+                            )}{" "}
+                            →{" "}
+                            {limpiarNombrePuerto(rutaSeleccionada.puertoOrigen)}
+                          </div>
+                        </div>
+                      </button>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Configuración de Precio */}
+                  <div className="bg-slate-700/20 border border-slate-600/30 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-medium text-slate-300">
+                        Precio del viaje
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-slate-400">
+                          Precio base:
+                        </span>
+                        <span className="text-sm font-semibold text-green-400">
+                          S/{" "}
+                          {parseFloat(
+                            rutaSeleccionada.precio.toString()
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="radio"
+                          id="precio-base"
+                          name="precio"
+                          checked={!usarPrecioPersonalizado}
+                          onChange={() => {
+                            setUsarPrecioPersonalizado(false);
+                            setFormData((prev) => ({
+                              ...prev,
+                              precioFinal: parseFloat(
+                                rutaSeleccionada.precio.toString()
+                              ),
+                            }));
+                          }}
+                          className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500"
+                        />
+                        <label
+                          htmlFor="precio-base"
+                          className="text-sm text-slate-300"
+                        >
+                          Usar precio base (S/{" "}
+                          {parseFloat(
+                            rutaSeleccionada.precio.toString()
+                          ).toFixed(2)}
+                          )
+                        </label>
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="radio"
+                          id="precio-personalizado"
+                          name="precio"
+                          checked={usarPrecioPersonalizado}
+                          onChange={() => setUsarPrecioPersonalizado(true)}
+                          className="w-4 h-4 text-blue-600 bg-slate-700 border-slate-600 focus:ring-blue-500"
+                        />
+                        <label
+                          htmlFor="precio-personalizado"
+                          className="text-sm text-slate-300"
+                        >
+                          Precio personalizado
+                        </label>
+                        <input
+                          type="number"
+                          value={precioPersonalizado}
+                          onChange={(e) => {
+                            const nuevoPrecio = parseFloat(e.target.value) || 0;
+                            setPrecioPersonalizado(nuevoPrecio);
+                            if (usarPrecioPersonalizado) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                precioFinal: nuevoPrecio,
+                              }));
+                            }
+                          }}
+                          onFocus={() => setUsarPrecioPersonalizado(true)}
+                          step="0.01"
+                          min="0"
+                          disabled={!usarPrecioPersonalizado}
+                          className="w-24 px-3 py-1 text-sm border border-slate-600/50 rounded-lg bg-slate-700/50 text-slate-100 disabled:opacity-50 focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {usarPrecioPersonalizado && (
+                      <div className="mt-3 p-2 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+                        <p className="text-xs text-yellow-300">
+                          💡 Este precio solo se aplicará a esta venta. El
+                          precio base de la ruta no se modificará.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Resumen de la configuración actual */}
+                  <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-slate-100">
+                          {formData.origenSeleccionado} →{" "}
+                          {formData.destinoSeleccionado}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          {rutaSeleccionada.nombre}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-blue-300">
+                          S/ {formData.precioFinal.toFixed(2)}
+                        </div>
+                        {usarPrecioPersonalizado && (
+                          <div className="text-xs text-yellow-400">
+                            Precio personalizado
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {rutaSeleccionada && (
                 <div className="md:col-span-2">
@@ -1915,10 +2135,7 @@ export default function NuevaVentaForm({
                 <div className="flex justify-between text-sm">
                   <span className="text-blue-300">Precio unitario:</span>
                   <span className="text-blue-100">
-                    S/{" "}
-                    {parseFloat(
-                      (rutaSeleccionada?.precio || 0).toString()
-                    ).toFixed(2)}
+                    S/ {formData.precioFinal.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -1931,10 +2148,9 @@ export default function NuevaVentaForm({
                   <span className="text-blue-300">Subtotal:</span>
                   <span className="text-blue-100">
                     S/{" "}
-                    {(
-                      parseFloat((rutaSeleccionada?.precio || 0).toString()) *
-                      formData.cantidadPasajes
-                    ).toFixed(2)}
+                    {(formData.precioFinal * formData.cantidadPasajes).toFixed(
+                      2
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -1947,8 +2163,7 @@ export default function NuevaVentaForm({
                     <span className="text-blue-100">
                       S/{" "}
                       {(
-                        parseFloat((rutaSeleccionada?.precio || 0).toString()) *
-                        formData.cantidadPasajes
+                        formData.precioFinal * formData.cantidadPasajes
                       ).toFixed(2)}
                     </span>
                   </div>

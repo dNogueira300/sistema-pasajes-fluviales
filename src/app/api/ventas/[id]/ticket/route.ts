@@ -71,7 +71,7 @@ export async function GET(
         | "HIBRIDO",
       metodoPago: venta.metodoPago,
       metodosPago: venta.metodosPago
-        ? (JSON.parse(venta.metodosPago.toString()) as MetodoPago[])
+        ? (venta.metodosPago as unknown as MetodoPago[])
         : undefined,
       estado: venta.estado as "CONFIRMADA" | "ANULADA",
       observaciones: venta.observaciones || undefined,
