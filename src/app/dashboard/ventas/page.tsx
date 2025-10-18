@@ -1,7 +1,7 @@
 //src\app\dashboard\ventas\page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRequireAuth } from "@/hooks/use-auth";
 import NuevaVentaForm from "@/components/ventas/nueva-venta-form";
 import { formatearFechaViaje } from "@/lib/utils/fecha-utils";
@@ -61,6 +61,9 @@ export default function VentasPage() {
     null
   );
 
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [filtros, setFiltros] = useState<Filtros>({
     fechaInicio: "",
     fechaFin: "",
@@ -115,6 +118,35 @@ export default function VentasPage() {
       setLoading(false);
     }
   }, [filtros, pagination.currentPage]);
+
+  // Effect para cerrar el dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    // Solo agregar el listener si el dropdown está abierto
+    if (showDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup del event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDropdown]);
+
+  // También cerrar el dropdown cuando se cierre el modal
+  useEffect(() => {
+    if (!showDetalles) {
+      setShowDropdown(false);
+    }
+  }, [showDetalles]);
 
   useEffect(() => {
     cargarVentas();
@@ -1264,107 +1296,98 @@ export default function VentasPage() {
                   </div>
                 </div>
 
-                {/* Botones de acción */}
-                <div className="flex justify-end space-x-4 pt-4 border-t border-slate-600/50">
-                  <div className="relative">
-                    <button
-                      className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg transition-all duration-200"
-                      onClick={() => {
-                        const dropdownMenu =
-                          document.getElementById("print-dropdown");
-                        if (dropdownMenu) {
-                          dropdownMenu.classList.toggle("hidden");
-                        }
-                      }}
-                    >
-                      <Printer className="h-4 w-4" />
-                      <span>Opciones</span>
-                    </button>
-
-                    {/* Menú desplegable de opciones completo */}
-                    <div
-                      id="print-dropdown"
-                      className="absolute right-0 mt-2 hidden bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl overflow-hidden z-50 w-48 backdrop-blur-sm"
-                    >
-                      {/* Opciones de impresión */}
-                      <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
-                        Imprimir
-                      </div>
-                      <button
-                        onClick={() => {
-                          imprimirTicket(selectedVenta.id);
-                          document
-                            .getElementById("print-dropdown")
-                            ?.classList.add("hidden");
-                        }}
-                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                      >
-                        <Printer className="h-4 w-4 mr-2" />
-                        Ticket 80mm
-                      </button>
-                      <button
-                        onClick={() => {
-                          imprimirComprobanteA4(selectedVenta.id);
-                          document
-                            .getElementById("print-dropdown")
-                            ?.classList.add("hidden");
-                        }}
-                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                      >
-                        <Printer className="h-4 w-4 mr-2" />
-                        Comprobante A4
-                      </button>
-
-                      {/* Separador */}
-                      <div className="border-t border-slate-600/50"></div>
-
-                      {/* Opciones de descarga */}
-                      <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
-                        Descargar
-                      </div>
-                      <button
-                        onClick={() => {
-                          descargarComprobanteA4(selectedVenta);
-                          document
-                            .getElementById("print-dropdown")
-                            ?.classList.add("hidden");
-                        }}
-                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                      >
-                        <Download className="h-4 w-4 mr-2 text-blue-400" />
-                        Descargar PDF
-                      </button>
-                      <button
-                        onClick={() => {
-                          descargarComprobanteImagen(selectedVenta);
-                          document
-                            .getElementById("print-dropdown")
-                            ?.classList.add("hidden");
-                        }}
-                        className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                      >
-                        <Download className="h-4 w-4 mr-2 text-green-400" />
-                        Descargar Imagen
-                      </button>
-                    </div>
-                  </div>
-
-                  {selectedVenta.estado === "CONFIRMADA" && (
-                    <button
-                      onClick={() => {
-                        // Cerrar el modal de detalles primero
-                        setShowDetalles(false);
-                        // Abrir el modal de anulación
-                        handleAnularVenta(selectedVenta);
-                      }}
-                      className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-lg transition-all duration-200"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span>Anular</span>
-                    </button>
-                  )}
-                </div>
+                {/* Espaciado adicional para evitar que el contenido se oculte detrás del footer */}
+                <div className="h-6"></div>
               </div>
+            </div>
+
+            {/* Footer fijo */}
+            <div className="flex justify-end space-x-4 p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md flex-shrink-0 rounded-b-2xl">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg transition-all duration-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDropdown(!showDropdown);
+                  }}
+                >
+                  <Printer className="h-4 w-4" />
+                  <span>Opciones</span>
+                </button>
+
+                {/* Menú desplegable de opciones completo */}
+                {showDropdown && (
+                  <div className="absolute right-0 bottom-full mb-2 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl overflow-hidden z-50 w-48 backdrop-blur-sm">
+                    {/* Opciones de impresión */}
+                    <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
+                      Imprimir
+                    </div>
+                    <button
+                      onClick={() => {
+                        imprimirTicket(selectedVenta.id);
+                        setShowDropdown(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Ticket 80mm
+                    </button>
+                    <button
+                      onClick={() => {
+                        imprimirComprobanteA4(selectedVenta.id);
+                        setShowDropdown(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                    >
+                      <Printer className="h-4 w-4 mr-2" />
+                      Comprobante A4
+                    </button>
+
+                    {/* Separador */}
+                    <div className="border-t border-slate-600/50"></div>
+
+                    {/* Opciones de descarga */}
+                    <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
+                      Descargar
+                    </div>
+                    <button
+                      onClick={() => {
+                        descargarComprobanteA4(selectedVenta);
+                        setShowDropdown(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                    >
+                      <Download className="h-4 w-4 mr-2 text-blue-400" />
+                      Descargar PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        descargarComprobanteImagen(selectedVenta);
+                        setShowDropdown(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                    >
+                      <Download className="h-4 w-4 mr-2 text-green-400" />
+                      Descargar Imagen
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {selectedVenta.estado === "CONFIRMADA" && (
+                <button
+                  onClick={() => {
+                    // Cerrar el modal de detalles primero
+                    setShowDetalles(false);
+                    // Abrir el modal de anulación
+                    handleAnularVenta(selectedVenta);
+                  }}
+                  className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-lg transition-all duration-200"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Anular</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

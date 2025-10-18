@@ -435,7 +435,7 @@ export default function DashboardPage() {
                       maximumFractionDigits: 2,
                     })}
                   </p>
-                  {estadisticas.tendenciaVentas && (
+                  {/* {estadisticas.tendenciaVentas && (
                     <div className="flex items-center text-xs text-yellow-400">
                       <TrendingUp className="h-3 w-3 mr-1" />
                       <span>
@@ -443,7 +443,7 @@ export default function DashboardPage() {
                         {estadisticas.tendenciaVentas.cambio}% este mes
                       </span>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>

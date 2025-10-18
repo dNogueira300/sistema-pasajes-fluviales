@@ -1,4 +1,4 @@
-// components/rutas/seleccionar-embarcaciones.tsx
+// components/rutas/seleccionar-embarcaciones.tsx - Versión optimizada
 "use client";
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Ship, Clock, Calendar } from "lucide-react";
@@ -14,6 +14,7 @@ interface SeleccionarEmbarcacionesProps {
   embarcacionesSeleccionadas: CrearEmbarcacionRutaData[];
   onChange: (embarcaciones: CrearEmbarcacionRutaData[]) => void;
   rutaId?: string; // Para modo edición
+  mostrarBotonAgregar?: boolean; // Nueva prop para ocultar/mostrar botón
 }
 
 interface EmbarcacionFormulario extends CrearEmbarcacionRutaData {
@@ -24,6 +25,7 @@ export default function SeleccionarEmbarcaciones({
   embarcacionesSeleccionadas,
   onChange,
   rutaId,
+  mostrarBotonAgregar = true, // Por defecto se muestra
 }: SeleccionarEmbarcacionesProps) {
   const { obtenerEmbarcacionesActivas, loading } = useEmbarcaciones();
   const [embarcacionesDisponibles, setEmbarcacionesDisponibles] = useState<
@@ -58,7 +60,7 @@ export default function SeleccionarEmbarcaciones({
     const nuevaEmbarcacion: EmbarcacionFormulario = {
       tempId: `temp-${Date.now()}`,
       embarcacionId: "",
-      rutaId: rutaId || "",
+      rutaId: rutaId || "", // Usar rutaId pasado como prop o string vacío
       horasSalida: [""],
       diasOperacion: [],
       activa: true,
@@ -147,27 +149,32 @@ export default function SeleccionarEmbarcaciones({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium text-slate-100">
-          Embarcaciones Asignadas
-        </h3>
-        <button
-          type="button"
-          onClick={agregarEmbarcacion}
-          disabled={loading}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Agregar Embarcación</span>
-        </button>
-      </div>
+      {/* Header condicional - solo se muestra si mostrarBotonAgregar es true */}
+      {mostrarBotonAgregar && (
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-slate-100">
+            Embarcaciones Asignadas
+          </h3>
+          <button
+            type="button"
+            onClick={agregarEmbarcacion}
+            disabled={loading}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Agregar Embarcación</span>
+          </button>
+        </div>
+      )}
 
       {embarcacionesFormulario.length === 0 ? (
         <div className="text-center py-8 text-slate-400">
           <Ship className="h-12 w-12 mx-auto mb-4 opacity-50" />
           <p>No hay embarcaciones asignadas a esta ruta</p>
           <p className="text-sm">
-            Haz clic en Agregar Embarcación para comenzar
+            {mostrarBotonAgregar
+              ? "Haz clic en Agregar Embarcación para comenzar"
+              : "Usa el botón Agregar Embarcación de arriba"}
           </p>
         </div>
       ) : (
