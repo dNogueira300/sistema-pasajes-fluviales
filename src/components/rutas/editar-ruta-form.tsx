@@ -136,6 +136,17 @@ export default function EditarRutaForm({
     }
   }, [validationErrors]);
 
+  // Effect para manejar errores del servidor
+  useEffect(() => {
+    if (error && error.toLowerCase().includes("nombre")) {
+      // Si el error es sobre el nombre (ruta duplicada), mostrarlo debajo del campo nombre
+      setErroresValidacion((prev) => ({
+        ...prev,
+        nombre: error,
+      }));
+    }
+  }, [error]);
+
   // Efecto para cargar datos de la ruta cuando se abre el modal
   useEffect(() => {
     if (isOpen && ruta) {
@@ -180,6 +191,10 @@ export default function EditarRutaForm({
 
     if (!datosBasicos.precio || datosBasicos.precio <= 0) {
       errores.precio = "El precio debe ser mayor a 0";
+    }
+
+    if (datosBasicos.precio > 1000) {
+      errores.precio = "El precio no puede ser mayor a 1000 soles";
     }
 
     // Validar embarcaciones
@@ -292,6 +307,16 @@ export default function EditarRutaForm({
         setErroresValidacion((prev) => ({
           ...prev,
           [field]: "",
+        }));
+      }
+
+      // Si se cambia origen o destino, limpiar errores de ambos puertos
+      // porque el error "origen = destino" puede estar en cualquiera de los dos
+      if (field === "puertoOrigen" || field === "puertoDestino") {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          puertoOrigen: "",
+          puertoDestino: "",
         }));
       }
     },
@@ -493,6 +518,7 @@ export default function EditarRutaForm({
                       type="number"
                       step="0.01"
                       min="0"
+                      max="1000"
                       required
                       value={datosBasicos.precio}
                       onChange={(e) => handlePrecioChange(e.target.value)}
@@ -510,7 +536,7 @@ export default function EditarRutaForm({
                     </p>
                   )}
                   <p className="mt-1 text-xs text-slate-400">
-                    Precio por pasaje en soles peruanos
+                    Precio entre 0.01 y 1000 soles peruanos
                   </p>
                 </div>
 
@@ -598,7 +624,8 @@ export default function EditarRutaForm({
                 errorDetallado ||
                 (validationErrors && validationErrors.length > 0)) && (
                 <div className="mb-6 space-y-3">
-                  {(error || errorDetallado) && (
+                  {(error || errorDetallado) &&
+                   (!error || !error.toLowerCase().includes("nombre")) && (
                     <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
                       <div className="flex items-center">
                         <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />

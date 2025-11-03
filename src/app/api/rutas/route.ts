@@ -142,6 +142,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (precio > 1000) {
+      return NextResponse.json(
+        { error: "El precio no puede ser mayor a 1000 soles" },
+        { status: 400 }
+      );
+    }
+
     // Validar que el puerto origen sea diferente al destino
     if (
       puertoOrigen.trim().toLowerCase() === puertoDestino.trim().toLowerCase()

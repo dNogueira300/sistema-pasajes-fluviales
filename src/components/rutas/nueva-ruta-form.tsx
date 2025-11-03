@@ -96,6 +96,10 @@ export default function NuevaRutaForm({
       errores.precio = "El precio debe ser mayor a 0";
     }
 
+    if (datosBasicos.precio > 1000) {
+      errores.precio = "El precio no puede ser mayor a 1000 soles";
+    }
+
     // Validar embarcaciones
     if (embarcaciones.length === 0) {
       errores.embarcaciones = "Debe asignar al menos una embarcación a la ruta";
@@ -164,10 +168,21 @@ export default function NuevaRutaForm({
         [field]: value,
       }));
 
+      // Limpiar errores del campo actual
       if (erroresValidacion[field]) {
         setErroresValidacion((prev) => ({
           ...prev,
           [field]: "",
+        }));
+      }
+
+      // Si se cambia origen o destino, limpiar errores de ambos puertos
+      // porque el error "origen = destino" puede estar en cualquiera de los dos
+      if (field === "puertoOrigen" || field === "puertoDestino") {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          puertoOrigen: "",
+          puertoDestino: "",
         }));
       }
     },
@@ -220,6 +235,17 @@ export default function NuevaRutaForm({
       }
     }, 100);
   }, [embarcaciones]);
+
+  // Effect para manejar errores del servidor
+  useEffect(() => {
+    if (error && error.toLowerCase().includes("nombre")) {
+      // Si el error es sobre el nombre (ruta duplicada), mostrarlo debajo del campo nombre
+      setErroresValidacion((prev) => ({
+        ...prev,
+        nombre: error,
+      }));
+    }
+  }, [error]);
 
   // Effect para limpiar cuando se cierra el modal
   useEffect(() => {
@@ -350,6 +376,7 @@ export default function NuevaRutaForm({
                       type="number"
                       step="0.01"
                       min="0"
+                      max="1000"
                       required
                       value={datosBasicos.precio}
                       onChange={(e) => handlePrecioChange(e.target.value)}
@@ -367,7 +394,7 @@ export default function NuevaRutaForm({
                     </p>
                   )}
                   <p className="mt-1 text-xs text-slate-400">
-                    Precio por pasaje en soles peruanos
+                    Precio entre 0.01 y 1000 soles peruanos
                   </p>
                 </div>
 
@@ -452,7 +479,7 @@ export default function NuevaRutaForm({
               {/* Errores de validación globales */}
               {(error || (validationErrors && validationErrors.length > 0)) && (
                 <div className="mb-6 space-y-3">
-                  {error && (
+                  {error && !error.toLowerCase().includes("nombre") && (
                     <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
                       <div className="flex items-center">
                         <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />

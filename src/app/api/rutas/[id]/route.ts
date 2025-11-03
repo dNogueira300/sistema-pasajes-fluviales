@@ -126,6 +126,13 @@ export async function PUT(
       );
     }
 
+    if (precio !== undefined && precio > 1000) {
+      return NextResponse.json(
+        { error: "El precio no puede ser mayor a 1000 soles" },
+        { status: 400 }
+      );
+    }
+
     // Validar puertos si se están actualizando
     const nuevoPuertoOrigen =
       puertoOrigen?.trim() || rutaExistente.puertoOrigen;
