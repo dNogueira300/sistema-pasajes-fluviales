@@ -56,7 +56,7 @@ interface EstadisticasDashboard {
   ventasConfirmadas: number;
   ventasAnuladas: number;
   totalRecaudado: number;
-  ventasReembolsadas: number;
+  //ventasReembolsadas: number;
   totalClientes: number;
   clientesConVentas: number;
   clientesSinVentas: number;
@@ -173,7 +173,7 @@ export default function DashboardPage() {
         ventasConfirmadas: ventasData.ventasConfirmadas || 0,
         ventasAnuladas: ventasData.ventasAnuladas || 0,
         totalRecaudado: ventasData.totalRecaudado || 0,
-        ventasReembolsadas: ventasData.ventasReembolsadas || 0,
+        //ventasReembolsadas: ventasData.ventasReembolsadas || 0,
         totalClientes: clientesData.totalClientes || 0,
         clientesConVentas: clientesData.clientesConVentas || 0,
         clientesSinVentas: clientesData.clientesSinVentas || 0,
