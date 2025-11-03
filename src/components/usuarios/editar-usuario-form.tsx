@@ -1,7 +1,7 @@
 // components/usuarios/editar-usuario-form.tsx
 "use client";
 import { useState, useEffect, Fragment } from "react";
-import { X, ChevronsUpDown, Check } from "lucide-react";
+import { X, ChevronsUpDown, Check, AlertTriangle } from "lucide-react";
 import { Listbox, Transition } from "@headlessui/react";
 import { Usuario, UserRole, ActualizarUsuarioData } from "@/types";
 
@@ -48,6 +48,9 @@ export default function EditarUsuarioForm({
   const [erroresValidacion, setErroresValidacion] = useState<{
     [key: string]: string;
   }>({});
+
+  const [mostrarConfirmacionDesactivar, setMostrarConfirmacionDesactivar] =
+    useState(false);
 
   // Efecto para cargar datos del usuario cuando se abre el modal
   useEffect(() => {
@@ -132,6 +135,24 @@ export default function EditarUsuarioForm({
     }
   };
 
+  const handleActivoChange = (checked: boolean) => {
+    // Si está intentando desactivar el usuario (cambiar de true a false)
+    if (formulario.activo && !checked) {
+      setMostrarConfirmacionDesactivar(true);
+    } else {
+      handleInputChange("activo", checked);
+    }
+  };
+
+  const confirmarDesactivacion = () => {
+    handleInputChange("activo", false);
+    setMostrarConfirmacionDesactivar(false);
+  };
+
+  const cancelarDesactivacion = () => {
+    setMostrarConfirmacionDesactivar(false);
+  };
+
   if (!isOpen || !usuario) return null;
 
   const rolSeleccionado =
@@ -139,8 +160,8 @@ export default function EditarUsuarioForm({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl drop-shadow-2xl border border-slate-600/50">
-        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl z-20">
+      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl drop-shadow-2xl border border-slate-600/50 flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md z-20">
           <h2 className="text-xl font-semibold text-slate-100">
             Editar Usuario
           </h2>
@@ -152,10 +173,11 @@ export default function EditarUsuarioForm({
           </button>
         </div>
 
-        <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Información Personal */}
-            <div className="space-y-4">
+        <div className="overflow-y-auto flex-1">
+          <form onSubmit={handleSubmit} className="flex flex-col h-full">
+            <div className="p-6 space-y-6">
+              {/* Información Personal */}
+              <div className="space-y-4">
               <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
                 Información Personal
               </h3>
@@ -387,9 +409,7 @@ export default function EditarUsuarioForm({
                   <input
                     type="checkbox"
                     checked={formulario.activo}
-                    onChange={(e) =>
-                      handleInputChange("activo", e.target.checked)
-                    }
+                    onChange={(e) => handleActivoChange(e.target.checked)}
                     className="w-5 h-5 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500 focus:ring-2"
                   />
                   <div>
@@ -423,40 +443,93 @@ export default function EditarUsuarioForm({
                 </div>
               </div>
             )}
+            </div>
 
-            <div className="flex justify-end space-x-4 pt-6">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={
-                  loading ||
-                  !formulario.email?.trim() ||
-                  !formulario.username?.trim() ||
-                  !formulario.nombre?.trim() ||
-                  !formulario.apellido?.trim()
-                }
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
-              >
-                {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Guardando...</span>
-                  </div>
-                ) : (
-                  "Actualizar Usuario"
-                )}
-              </button>
+            {/* Footer con botones de acción */}
+            <div className="border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md p-6">
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={loading}
+                  className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    loading ||
+                    !formulario.email?.trim() ||
+                    !formulario.username?.trim() ||
+                    !formulario.nombre?.trim() ||
+                    !formulario.apellido?.trim()
+                  }
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Guardando...</span>
+                    </div>
+                  ) : (
+                    "Actualizar Usuario"
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Modal de confirmación para desactivar usuario */}
+      {mostrarConfirmacionDesactivar && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60]">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-600/50">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="bg-yellow-900/30 p-3 rounded-xl">
+                  <AlertTriangle className="h-6 w-6 text-yellow-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-100">
+                  Confirmar desactivación
+                </h3>
+              </div>
+
+              <p className="text-slate-300 mb-6">
+                ¿Estás seguro de que deseas desactivar este usuario?
+                <br />
+                <br />
+                <span className="text-sm text-slate-400">
+                  El usuario{" "}
+                  <strong className="text-slate-200">
+                    {usuario?.nombre} {usuario?.apellido}
+                  </strong>{" "}
+                  no podrá iniciar sesión ni acceder al sistema hasta que sea
+                  reactivado.
+                </span>
+              </p>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={cancelarDesactivacion}
+                  className="px-4 py-2 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmarDesactivacion}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl font-medium transition-all duration-200"
+                >
+                  Sí, desactivar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
