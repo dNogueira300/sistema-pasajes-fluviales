@@ -156,23 +156,12 @@ export default function VentasPage() {
     cargarEstadisticas();
   }, [cargarEstadisticas]);
 
-  // Efecto para cerrar los menús de impresión cuando se hace clic fuera
+  // Efecto para cerrar los menús cuando se hace clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const printMenus = document.querySelectorAll(".print-menu");
       const moreMenus = document.querySelectorAll(".more-menu");
 
-      // Cerrar menús de impresión
-      printMenus.forEach((menu) => {
-        if (
-          !menu.contains(event.target as Node) &&
-          !menu.previousElementSibling?.contains(event.target as Node)
-        ) {
-          menu.classList.add("hidden");
-        }
-      });
-
-      // Cerrar menús de más opciones
+      // Cerrar menús de opciones
       moreMenus.forEach((menu) => {
         if (
           !menu.contains(event.target as Node) &&
@@ -903,6 +892,7 @@ export default function VentasPage() {
                     {/* Columna de acciones actualizada */}
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end space-x-3">
+                        {/* Botón Ver detalles */}
                         <button
                           onClick={() => {
                             setSelectedVenta(venta);
@@ -914,62 +904,7 @@ export default function VentasPage() {
                           <Eye className="h-5 w-5" />
                         </button>
 
-                        <div className="relative">
-                          <button
-                            onClick={(e) => {
-                              const target = e.currentTarget.nextElementSibling;
-                              if (target) {
-                                target.classList.toggle("hidden");
-                              }
-                              // Cerrar otros menús abiertos
-                              document
-                                .querySelectorAll(".print-menu")
-                                .forEach((menu) => {
-                                  if (menu !== target) {
-                                    menu.classList.add("hidden");
-                                  }
-                                });
-                            }}
-                            className="p-2 text-emerald-400 hover:bg-emerald-900/30 rounded-xl transition-colors"
-                            title="Opciones de impresión"
-                          >
-                            <Printer className="h-5 w-5" />
-                          </button>
-
-                          {/* Menú desplegable de impresión */}
-                          <div className="print-menu hidden absolute right-0 mt-1 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-10 w-44 backdrop-blur-sm">
-                            <button
-                              onClick={() => {
-                                imprimirTicket(venta.id);
-                                document
-                                  .querySelectorAll(".print-menu")
-                                  .forEach((menu) =>
-                                    menu.classList.add("hidden")
-                                  );
-                              }}
-                              className="w-full px-4 py-3 text-sm text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                            >
-                              <Printer className="h-5 w-5 mr-2 text-emerald-400" />
-                              Ticket 80mm
-                            </button>
-                            <button
-                              onClick={() => {
-                                imprimirComprobanteA4(venta.id);
-                                document
-                                  .querySelectorAll(".print-menu")
-                                  .forEach((menu) =>
-                                    menu.classList.add("hidden")
-                                  );
-                              }}
-                              className="w-full px-4 py-3 text-sm text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
-                            >
-                              <Printer className="h-5 w-5 mr-2 text-emerald-400" />
-                              Comprobante A4
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Menú de más opciones (3 puntos) */}
+                        {/* Menú unificado de acciones (3 puntos) */}
                         <div className="relative">
                           <button
                             onClick={(e) => {
@@ -987,13 +922,53 @@ export default function VentasPage() {
                                 });
                             }}
                             className="p-2 text-slate-400 hover:bg-slate-700/50 rounded-xl transition-colors"
-                            title="Más opciones"
+                            title="Opciones"
                           >
                             <MoreVertical className="h-5 w-5" />
                           </button>
 
-                          {/* Menú desplegable de más opciones */}
-                          <div className="more-menu hidden absolute right-0 mt-1 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-10 w-48 backdrop-blur-sm">
+                          {/* Menú desplegable unificado */}
+                          <div className="more-menu hidden absolute right-0 mt-1 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-10 w-56 backdrop-blur-sm">
+                            {/* Sección: Imprimir comprobante */}
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
+                              Imprimir comprobante
+                            </div>
+                            <button
+                              onClick={() => {
+                                imprimirComprobanteA4(venta.id);
+                                document
+                                  .querySelectorAll(".more-menu")
+                                  .forEach((menu) =>
+                                    menu.classList.add("hidden")
+                                  );
+                              }}
+                              className="w-full px-4 py-3 text-sm text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                            >
+                              <Printer className="h-5 w-5 mr-2 text-emerald-400" />
+                              A4
+                            </button>
+                            <button
+                              onClick={() => {
+                                imprimirTicket(venta.id);
+                                document
+                                  .querySelectorAll(".more-menu")
+                                  .forEach((menu) =>
+                                    menu.classList.add("hidden")
+                                  );
+                              }}
+                              className="w-full px-4 py-3 text-sm text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
+                            >
+                              <Printer className="h-5 w-5 mr-2 text-emerald-400" />
+                              Ticket
+                            </button>
+
+                            {/* Separador */}
+                            <div className="border-t border-slate-600/50 my-1"></div>
+
+                            {/* Sección: Descargar comprobante */}
+                            <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
+                              Descargar comprobante
+                            </div>
                             <button
                               onClick={() => {
                                 descargarComprobanteA4(venta);
@@ -1006,7 +981,7 @@ export default function VentasPage() {
                               className="w-full px-4 py-3 text-sm text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
                             >
                               <Download className="h-5 w-5 mr-2 text-blue-400" />
-                              Descargar PDF
+                              PDF
                             </button>
                             <button
                               onClick={() => {
@@ -1020,20 +995,21 @@ export default function VentasPage() {
                               className="w-full px-4 py-3 text-sm text-left text-slate-200 hover:bg-slate-700/50 flex items-center transition-colors"
                             >
                               <Download className="h-5 w-5 mr-2 text-green-400" />
-                              Descargar Imagen
+                              Imagen
                             </button>
 
                             {/* Separador */}
-                            <div className="border-t border-slate-600/50 my-1"></div>
-
                             {venta.estado === "CONFIRMADA" && (
-                              <button
-                                onClick={() => handleAnularVenta(venta)}
-                                className="w-full px-4 py-3 text-sm text-left text-red-400 hover:bg-red-900/30 flex items-center transition-colors"
-                              >
-                                <Trash2 className="h-5 w-5 mr-2" />
-                                Anular Venta
-                              </button>
+                              <>
+                                <div className="border-t border-slate-600/50 my-1"></div>
+                                <button
+                                  onClick={() => handleAnularVenta(venta)}
+                                  className="w-full px-4 py-3 text-sm text-left text-red-400 hover:bg-red-900/30 flex items-center transition-colors"
+                                >
+                                  <Trash2 className="h-5 w-5 mr-2" />
+                                  Anular
+                                </button>
+                              </>
                             )}
                           </div>
                         </div>
