@@ -572,6 +572,7 @@ async function obtenerVentasDetalladas(
       total: true,
       metodoPago: true,
       tipoPago: true,
+      metodosPago: true,
       estado: true,
       cliente: {
         select: {
@@ -609,6 +610,7 @@ async function obtenerVentasDetalladas(
     ruta: venta.ruta.nombre,
     tipoPago: venta.tipoPago,
     metodoPago: venta.metodoPago,
+    metodosPago: venta.metodosPago,
     estado: venta.estado,
     total: toNumber(venta.total),
   }));

@@ -126,6 +126,7 @@ export interface VentaDetallada {
   ruta: string;
   tipoPago: string;
   metodoPago: string;
+  metodosPago?: any; // Array de métodos de pago para pagos híbridos
   estado: string;
   total: number;
 }
