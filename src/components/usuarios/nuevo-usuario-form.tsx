@@ -187,59 +187,60 @@ export default function NuevoUsuarioForm({
             <div className="p-6 space-y-6">
               {/* Información Personal */}
               <div className="space-y-4">
-              <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
-                Información Personal
-              </h3>
+                <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+                  Información Personal
+                </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formulario.nombre}
-                    onChange={(e) =>
-                      handleInputChange("nombre", e.target.value)
-                    }
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                      erroresValidacion.nombre
-                        ? "border-red-500/50 focus:border-red-500"
-                        : "border-slate-600/50 focus:border-blue-500"
-                    }`}
-                    placeholder="Ej: Juan"
-                  />
-                  {erroresValidacion.nombre && (
-                    <p className="mt-1 text-sm text-red-400">
-                      {erroresValidacion.nombre}
-                    </p>
-                  )}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Nombre *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formulario.nombre}
+                      onChange={(e) =>
+                        handleInputChange("nombre", e.target.value)
+                      }
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                        erroresValidacion.nombre
+                          ? "border-red-500/50 focus:border-red-500"
+                          : "border-slate-600/50 focus:border-blue-500"
+                      }`}
+                      placeholder="Ej: Juan"
+                    />
+                    {erroresValidacion.nombre && (
+                      <p className="mt-1 text-sm text-red-400">
+                        {erroresValidacion.nombre}
+                      </p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Apellido *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formulario.apellido}
-                    onChange={(e) =>
-                      handleInputChange("apellido", e.target.value)
-                    }
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                      erroresValidacion.apellido
-                        ? "border-red-500/50 focus:border-red-500"
-                        : "border-slate-600/50 focus:border-blue-500"
-                    }`}
-                    placeholder="Ej: Pérez"
-                  />
-                  {erroresValidacion.apellido && (
-                    <p className="mt-1 text-sm text-red-400">
-                      {erroresValidacion.apellido}
-                    </p>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Apellido *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formulario.apellido}
+                      onChange={(e) =>
+                        handleInputChange("apellido", e.target.value)
+                      }
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                        erroresValidacion.apellido
+                          ? "border-red-500/50 focus:border-red-500"
+                          : "border-slate-600/50 focus:border-blue-500"
+                      }`}
+                      placeholder="Ej: Pérez"
+                    />
+                    {erroresValidacion.apellido && (
+                      <p className="mt-1 text-sm text-red-400">
+                        {erroresValidacion.apellido}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
