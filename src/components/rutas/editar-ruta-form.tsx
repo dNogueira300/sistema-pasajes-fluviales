@@ -600,7 +600,7 @@ export default function EditarRutaForm({
                       Precio *
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 z-10">
                         S/
                       </span>
                       <input
