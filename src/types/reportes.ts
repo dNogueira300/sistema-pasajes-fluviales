@@ -1,3 +1,9 @@
+// Definir tipo específico para método de pago híbrido
+export interface MetodoPagoHibrido {
+  metodo: string;
+  monto: number;
+}
+
 // Tipos para filtros de reportes
 export interface FiltrosReporte {
   fechaInicio: string;
@@ -126,6 +132,7 @@ export interface VentaDetallada {
   ruta: string;
   tipoPago: string;
   metodoPago: string;
+  metodosPago?: MetodoPagoHibrido[] | string; // Array de métodos de pago para pagos híbridos
   estado: string;
   total: number;
 }

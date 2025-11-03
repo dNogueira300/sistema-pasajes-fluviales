@@ -924,14 +924,13 @@ export default function VentasPage() {
                                   // Posicionar el menú basado en la posición del botón
                                   const rect = button.getBoundingClientRect();
                                   const menuWidth = 224; // 224px = w-56 (14rem)
-                                  const viewportWidth = window.innerWidth;
 
                                   // Calcular posición vertical (debajo del botón)
-                                  (target as HTMLElement).style.top = `${rect.bottom + window.scrollY + 4}px`;
+                                  (target as HTMLElement).style.top = `${rect.bottom + 4}px`;
 
-                                  // Calcular posición horizontal - SIEMPRE alinear a la IZQUIERDA del botón
-                                  // El menú se abre hacia la izquierda desde el botón de 3 puntos
-                                  let leftPosition = rect.right + window.scrollX - menuWidth;
+                                  // Calcular posición horizontal - el menú se alinea con el borde derecho del botón
+                                  // rect.right es la posición del borde derecho del botón en el viewport
+                                  let leftPosition = rect.right - menuWidth;
 
                                   // Si se sale por la izquierda del viewport, ajustar al margen mínimo
                                   if (leftPosition < 10) {

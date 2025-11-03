@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(7);
       pdf.setFont(undefined, "bold");
 
-      // Definir posiciones de columnas (ajustadas para que Total quede dentro del ancho)
+      // Definir posiciones de columnas (sin T.Pago, M.Pago más amplio)
       const col = {
         num: margin + 2,
         fechaEmision: margin + 10,
@@ -418,8 +418,7 @@ export async function POST(request: NextRequest) {
         contacto: margin + 125,
         embarcacion: margin + 145,
         ruta: margin + 170,
-        tipoPago: margin + 195,
-        metodoPago: margin + 215,
+        metodoPago: margin + 195,
         estado: margin + 235,
         total: margin + 250,
       };
@@ -433,7 +432,6 @@ export async function POST(request: NextRequest) {
       pdf.text("Contacto", col.contacto, yPosition);
       pdf.text("Embarcación", col.embarcacion, yPosition);
       pdf.text("Ruta", col.ruta, yPosition);
-      pdf.text("T.Pago", col.tipoPago, yPosition);
       pdf.text("M.Pago", col.metodoPago, yPosition);
       pdf.text("Estado", col.estado, yPosition);
       pdf.text("Total", col.total, yPosition);
@@ -454,23 +452,48 @@ export async function POST(request: NextRequest) {
         }
 
         // Determinar si es una venta anulada para usar color rojo
-        const esAnulada = venta.estado === "ANULADA" || venta.estado === "REEMBOLSADA";
+        const esAnulada =
+          venta.estado === "ANULADA" || venta.estado === "REEMBOLSADA";
         const colorTexto = esAnulada ? colors.danger : colors.text;
 
         pdf.setTextColor(colorTexto);
         pdf.setFontSize(6);
 
-        // Formatear fechas
-        const fechaEmision = format(
-          new Date(venta.fechaVenta),
-          "dd/MM/yy",
-          { locale: es }
+        // Formatear fechas con zona horaria de Perú
+        const fechaEmision = new Date(venta.fechaVenta).toLocaleString(
+          "es-PE",
+          {
+            timeZone: "America/Lima",
+            day: "2-digit",
+            month: "2-digit",
+            year: "2-digit",
+          }
         );
-        const fechaViaje = format(
-          new Date(venta.fechaViaje),
-          "dd/MM/yy",
-          { locale: es }
+        const fechaViaje = new Date(venta.fechaViaje).toLocaleDateString(
+          "es-PE",
+          {
+            timeZone: "America/Lima",
+            day: "2-digit",
+            month: "2-digit",
+            year: "2-digit",
+          }
         );
+
+        // Formatear método de pago (mostrar detalles si es híbrido)
+        let metodoPagoTexto = venta.metodoPago.substring(0, 20);
+        if (venta.tipoPago === "HIBRIDO" && venta.metodosPago) {
+          try {
+            const metodos = Array.isArray(venta.metodosPago)
+              ? venta.metodosPago
+              : JSON.parse(venta.metodosPago as string);
+            metodoPagoTexto = metodos
+              .map((m: { metodo: string }) => m.metodo)
+              .join("+")
+              .substring(0, 20);
+          } catch {
+            metodoPagoTexto = "HIBRIDO";
+          }
+        }
 
         // Renderizar datos
         pdf.text(`${index + 1}`, col.num, yPosition);
@@ -480,10 +503,13 @@ export async function POST(request: NextRequest) {
         pdf.text(venta.cliente.substring(0, 15), col.cliente, yPosition);
         pdf.text(venta.documentoIdentidad, col.dni, yPosition);
         pdf.text(venta.contacto.substring(0, 10), col.contacto, yPosition);
-        pdf.text(venta.embarcacion.substring(0, 15), col.embarcacion, yPosition);
+        pdf.text(
+          venta.embarcacion.substring(0, 15),
+          col.embarcacion,
+          yPosition
+        );
         pdf.text(venta.ruta.substring(0, 15), col.ruta, yPosition);
-        pdf.text(venta.tipoPago.substring(0, 10), col.tipoPago, yPosition);
-        pdf.text(venta.metodoPago.substring(0, 12), col.metodoPago, yPosition);
+        pdf.text(metodoPagoTexto, col.metodoPago, yPosition);
         pdf.text(venta.estado.substring(0, 8), col.estado, yPosition);
         pdf.setTextColor(esAnulada ? colors.danger : colors.success);
         pdf.setFont(undefined, "bold");
@@ -526,7 +552,11 @@ export async function POST(request: NextRequest) {
       pdf.rect(margin, yPosition - 5, tableWidth, 8, "F");
       pdf.setTextColor(colors.text);
       pdf.setFontSize(9);
-      pdf.text("Total General (Confirmadas + Anuladas):", margin + 5, yPosition);
+      pdf.text(
+        "Total General (Confirmadas + Anuladas):",
+        margin + 5,
+        yPosition
+      );
       pdf.setTextColor(colors.primary);
       pdf.setFont(undefined, "bold");
       pdf.text(
