@@ -640,8 +640,78 @@ export async function POST(request: NextRequest) {
       yPosition += 10;
 
       reporte.ventasDetalladas.forEach((venta, index) => {
+        // Formatear método de pago (mostrar detalles si es híbrido)
+        let metodoPagoTexto = String(venta.metodoPago || "").substring(0, 20);
+        if (
+          String(venta.tipoPago || "").toUpperCase() === "HIBRIDO" &&
+          venta.metodosPago
+        ) {
+          try {
+            const raw = venta.metodosPago;
+            const metodos = Array.isArray(raw) ? raw : JSON.parse(String(raw));
+            const partes = (metodos || []).map((m: unknown) => {
+              if (!m) return "";
+              if (typeof m === "string") return m as string;
+              if (typeof m === "object" && m !== null) {
+                const obj = m as Record<string, unknown>;
+                const metodo = String(
+                  obj.tipo || obj.metodo || obj.metodoPago || obj.nombre || ""
+                ).trim();
+                const monto = Number(obj.monto || 0);
+                return monto > 0 ? `${metodo}: S/ ${monto.toFixed(2)}` : metodo;
+              }
+              return String(m);
+            });
+            metodoPagoTexto =
+              partes.filter(Boolean).join(" + ").substring(0, 40) || "HIBRIDO";
+          } catch {
+            metodoPagoTexto = "HIBRIDO";
+          }
+        }
+
+        // Dividir textos en múltiples líneas según el ancho de cada columna
+        pdf.setFontSize(6);
+
+        // Calcular anchos máximos para cada columna
+        const maxWidthNumEmision = 24; // numEmision: 60-86 = 26mm (menos margen)
+        const maxWidthCliente = 32; // cliente: 86-120 = 34mm (menos margen)
+        const maxWidthEmbarcacion = 26; // embarcacion: 162-190 = 28mm (menos margen)
+        const maxWidthRuta = 28; // ruta: 190-220 = 30mm (menos margen)
+        const maxWidthMetodoPago = 28; // metodoPago: 220-250 = 30mm (menos margen)
+
+        const numEmisionLineas = pdf.splitTextToSize(
+          venta.numeroVenta,
+          maxWidthNumEmision
+        );
+        const clienteLineas = pdf.splitTextToSize(
+          venta.cliente,
+          maxWidthCliente
+        );
+        const embarcacionLineas = pdf.splitTextToSize(
+          venta.embarcacion,
+          maxWidthEmbarcacion
+        );
+        const rutaLineas = pdf.splitTextToSize(
+          venta.ruta,
+          maxWidthRuta
+        );
+        const metodoPagoLineas = pdf.splitTextToSize(
+          metodoPagoTexto,
+          maxWidthMetodoPago
+        );
+
+        // Calcular el número máximo de líneas entre todas las columnas
+        const maxNumLineas = Math.max(
+          numEmisionLineas.length,
+          clienteLineas.length,
+          embarcacionLineas.length,
+          rutaLineas.length,
+          metodoPagoLineas.length
+        );
+        const alturaFila = Math.max(7, maxNumLineas * 3 + 1); // Altura dinámica basada en número de líneas
+
         // Verificar si necesitamos una nueva página
-        if (yPosition + 7 > getPageHeight() - 20) {
+        if (yPosition + alturaFila > getPageHeight() - 20) {
           pdf.addPage("a4", "landscape");
           yPosition = 20;
         }
@@ -649,7 +719,7 @@ export async function POST(request: NextRequest) {
         // Alternar color de fondo
         if (index % 2 === 0) {
           pdf.setFillColor(240, 244, 248);
-          pdf.rect(margin, yPosition - 5, tableWidth, 7, "F");
+          pdf.rect(margin, yPosition - 5, tableWidth, alturaFila, "F");
         }
 
         // Determinar si es una venta anulada para usar color rojo
@@ -680,57 +750,52 @@ export async function POST(request: NextRequest) {
           }
         );
 
-        // Formatear método de pago (mostrar detalles si es híbrido)
-        let metodoPagoTexto = String(venta.metodoPago || "").substring(0, 20);
-        if (
-          String(venta.tipoPago || "").toUpperCase() === "HIBRIDO" &&
-          venta.metodosPago
-        ) {
-          try {
-            const raw = venta.metodosPago;
-            const metodos = Array.isArray(raw) ? raw : JSON.parse(String(raw));
-            const partes = (metodos || []).map((m: unknown) => {
-              if (!m) return "";
-              if (typeof m === "string") return m as string;
-              if (typeof m === "object" && m !== null) {
-                const obj = m as Record<string, unknown>;
-                const metodo = String(
-                  obj.tipo || obj.metodo || obj.metodoPago || obj.nombre || ""
-                ).trim();
-                const monto = Number(obj.monto || 0);
-                return monto > 0 ? `${metodo}: S/ ${monto.toFixed(2)}` : metodo;
-              }
-              return String(m);
-            });
-            metodoPagoTexto =
-              partes.filter(Boolean).join(" + ").substring(0, 40) || "HIBRIDO";
-          } catch {
-            metodoPagoTexto = "HIBRIDO";
-          }
-        }
+        // Renderizar datos de columnas simples (alinear verticalmente al centro de la fila)
+        const yCenter = yPosition + (alturaFila - 7) / 2;
+        pdf.text(`${index + 1}`, col.num, yCenter);
+        pdf.text(fechaEmision, col.fechaEmision, yCenter);
+        pdf.text(`${fechaViaje} ${venta.horaViaje}`, col.fechaViaje, yCenter);
+        pdf.text(venta.documentoIdentidad, col.dni, yCenter);
+        pdf.text(venta.contacto.substring(0, 10), col.contacto, yCenter);
 
-        // Renderizar datos
-        pdf.text(`${index + 1}`, col.num, yPosition);
-        pdf.text(fechaEmision, col.fechaEmision, yPosition);
-        pdf.text(`${fechaViaje} ${venta.horaViaje}`, col.fechaViaje, yPosition);
-        pdf.text(venta.numeroVenta.substring(0, 8), col.numEmision, yPosition);
-        pdf.text(venta.cliente.substring(0, 15), col.cliente, yPosition);
-        pdf.text(venta.documentoIdentidad, col.dni, yPosition);
-        pdf.text(venta.contacto.substring(0, 10), col.contacto, yPosition);
-        pdf.text(
-          venta.embarcacion.substring(0, 15),
-          col.embarcacion,
-          yPosition
-        );
-        pdf.text(venta.ruta.substring(0, 15), col.ruta, yPosition);
-        pdf.text(metodoPagoTexto, col.metodoPago, yPosition);
-        pdf.text(venta.estado.substring(0, 8), col.estado, yPosition);
+        // Renderizar columnas con múltiples líneas
+        let yNumEmision = yPosition;
+        numEmisionLineas.forEach((linea: string) => {
+          pdf.text(linea, col.numEmision, yNumEmision);
+          yNumEmision += 3;
+        });
+
+        let yCliente = yPosition;
+        clienteLineas.forEach((linea: string) => {
+          pdf.text(linea, col.cliente, yCliente);
+          yCliente += 3;
+        });
+
+        let yEmbarcacion = yPosition;
+        embarcacionLineas.forEach((linea: string) => {
+          pdf.text(linea, col.embarcacion, yEmbarcacion);
+          yEmbarcacion += 3;
+        });
+
+        let yRuta = yPosition;
+        rutaLineas.forEach((linea: string) => {
+          pdf.text(linea, col.ruta, yRuta);
+          yRuta += 3;
+        });
+
+        let yMetodoPago = yPosition;
+        metodoPagoLineas.forEach((linea: string) => {
+          pdf.text(linea, col.metodoPago, yMetodoPago);
+          yMetodoPago += 3;
+        });
+
+        pdf.text(venta.estado.substring(0, 8), col.estado, yCenter);
         pdf.setTextColor(esAnulada ? colors.danger : colors.success);
         pdf.setFont(undefined, "bold");
-        pdf.text(`S/ ${venta.total.toFixed(2)}`, col.total, yPosition);
+        pdf.text(`S/ ${venta.total.toFixed(2)}`, col.total, yCenter);
         pdf.setFont(undefined, "normal");
 
-        yPosition += 7;
+        yPosition += alturaFila;
       });
 
       // Calcular totales
