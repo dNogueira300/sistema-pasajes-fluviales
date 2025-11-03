@@ -234,216 +234,221 @@ export default function EditarUsuarioForm({
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Credenciales de Acceso */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
-                Credenciales de Acceso
-              </h3>
+              {/* Credenciales de Acceso */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+                  Credenciales de Acceso
+                </h3>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formulario.email || ""}
-                  onChange={(e) =>
-                    handleInputChange("email", e.target.value.toLowerCase())
-                  }
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                    erroresValidacion.email
-                      ? "border-red-500/50 focus:border-red-500"
-                      : "border-slate-600/50 focus:border-blue-500"
-                  }`}
-                  placeholder="usuario@ejemplo.com"
-                />
-                {erroresValidacion.email && (
-                  <p className="mt-1 text-sm text-red-400">
-                    {erroresValidacion.email}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Username *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formulario.username || ""}
-                  onChange={(e) =>
-                    handleInputChange("username", e.target.value.toLowerCase())
-                  }
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                    erroresValidacion.username
-                      ? "border-red-500/50 focus:border-red-500"
-                      : "border-slate-600/50 focus:border-blue-500"
-                  }`}
-                  placeholder="usuario123"
-                />
-                {erroresValidacion.username && (
-                  <p className="mt-1 text-sm text-red-400">
-                    {erroresValidacion.username}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-slate-400">
-                  Mínimo 3 caracteres, se convertirá a minúsculas
-                  automáticamente
-                </p>
-              </div>
-
-              <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-xl p-4">
-                <h4 className="text-sm font-medium text-yellow-300 mb-2">
-                  Cambio de contraseña
-                </h4>
-                <p className="text-xs text-yellow-200">
-                  La contraseña actual no se mostrará por seguridad. Para
-                  cambiarla, usa el botón Cambiar Contraseña en la lista de
-                  usuarios.
-                </p>
-              </div>
-            </div>
-
-            {/* Configuración del Usuario */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
-                Configuración del Usuario
-              </h3>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Rol del Usuario
-                </label>
-                <Listbox
-                  value={rolSeleccionado}
-                  onChange={(rol) => handleInputChange("role", rol.id)}
-                >
-                  <div className="relative">
-                    <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-4 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 backdrop-blur-sm">
-                      <span className="flex items-center">
-                        <span className="block truncate text-slate-100">
-                          {rolSeleccionado.nombre}
-                        </span>
-                        <span className="ml-2 text-xs text-slate-400">
-                          - {rolSeleccionado.descripcion}
-                        </span>
-                      </span>
-                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <ChevronsUpDown
-                          className="h-5 w-5 text-slate-400"
-                          aria-hidden="true"
-                        />
-                      </span>
-                    </Listbox.Button>
-                    <Transition
-                      as={Fragment}
-                      leave="transition ease-in duration-100"
-                      leaveFrom="opacity-100"
-                      leaveTo="opacity-0"
-                    >
-                      <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
-                        {rolesUsuario.map((rol) => (
-                          <Listbox.Option
-                            key={rol.id}
-                            className={({ active }) =>
-                              `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
-                                active ? "bg-slate-700/50" : ""
-                              }`
-                            }
-                            value={rol}
-                          >
-                            {({ selected }) => (
-                              <>
-                                <span className="flex items-center">
-                                  <span
-                                    className={`block truncate ${
-                                      selected
-                                        ? `font-semibold ${rol.color}`
-                                        : "font-normal text-slate-200"
-                                    }`}
-                                  >
-                                    {rol.nombre}
-                                  </span>
-                                  <span className="ml-2 text-xs text-slate-400">
-                                    - {rol.descripcion}
-                                  </span>
-                                </span>
-                                {selected ? (
-                                  <span
-                                    className={`absolute inset-y-0 right-0 flex items-center pr-3 ${rol.color}`}
-                                  >
-                                    <Check
-                                      className="h-5 w-5"
-                                      aria-hidden="true"
-                                    />
-                                  </span>
-                                ) : null}
-                              </>
-                            )}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </Transition>
-                  </div>
-                </Listbox>
-                <div className="mt-2 text-xs text-slate-400">
-                  <div className="space-y-1">
-                    <div>
-                      <strong>Administrador:</strong> Acceso completo al
-                      sistema, puede gestionar usuarios, embarcaciones, rutas y
-                      ventas
-                    </div>
-                    <div>
-                      <strong>Vendedor:</strong> Puede realizar ventas,
-                      gestionar clientes y ver reportes básicos
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="flex items-center space-x-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Email *
+                  </label>
                   <input
-                    type="checkbox"
-                    checked={formulario.activo}
-                    onChange={(e) => handleActivoChange(e.target.checked)}
-                    className="w-5 h-5 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500 focus:ring-2"
+                    type="email"
+                    required
+                    value={formulario.email || ""}
+                    onChange={(e) =>
+                      handleInputChange("email", e.target.value.toLowerCase())
+                    }
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                      erroresValidacion.email
+                        ? "border-red-500/50 focus:border-red-500"
+                        : "border-slate-600/50 focus:border-blue-500"
+                    }`}
+                    placeholder="usuario@ejemplo.com"
                   />
-                  <div>
-                    <span className="text-sm font-medium text-slate-300">
-                      Usuario activo
-                    </span>
-                    <p className="text-xs text-slate-400">
-                      El usuario podrá iniciar sesión y usar el sistema
+                  {erroresValidacion.email && (
+                    <p className="mt-1 text-sm text-red-400">
+                      {erroresValidacion.email}
                     </p>
-                  </div>
-                </label>
-              </div>
-            </div>
+                  )}
+                </div>
 
-            {/* Información adicional sobre el uso actual */}
-            {((usuario._count?.ventas ?? 0) > 0 ||
-              (usuario._count?.anulaciones ?? 0) > 0) && (
-              <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
-                <h4 className="text-sm font-medium text-blue-300 mb-2">
-                  Información de actividad
-                </h4>
-                <div className="text-xs text-blue-200 space-y-1">
-                  <div>Ventas realizadas: {usuario._count?.ventas ?? 0}</div>
-                  <div>
-                    Anulaciones registradas: {usuario._count?.anulaciones ?? 0}
-                  </div>
-                  <div className="mt-2 text-blue-300">
-                    <strong>Nota:</strong> Desactivar este usuario no afectará
-                    las ventas existentes, pero le impedirá acceder al sistema.
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Username *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formulario.username || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "username",
+                        e.target.value.toLowerCase()
+                      )
+                    }
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                      erroresValidacion.username
+                        ? "border-red-500/50 focus:border-red-500"
+                        : "border-slate-600/50 focus:border-blue-500"
+                    }`}
+                    placeholder="usuario123"
+                  />
+                  {erroresValidacion.username && (
+                    <p className="mt-1 text-sm text-red-400">
+                      {erroresValidacion.username}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-slate-400">
+                    Mínimo 3 caracteres, se convertirá a minúsculas
+                    automáticamente
+                  </p>
+                </div>
+
+                <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-yellow-300 mb-2">
+                    Cambio de contraseña
+                  </h4>
+                  <p className="text-xs text-yellow-200">
+                    La contraseña actual no se mostrará por seguridad. Para
+                    cambiarla, usa el botón Cambiar Contraseña en la lista de
+                    usuarios.
+                  </p>
                 </div>
               </div>
-            )}
+
+              {/* Configuración del Usuario */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+                  Configuración del Usuario
+                </h3>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Rol del Usuario
+                  </label>
+                  <Listbox
+                    value={rolSeleccionado}
+                    onChange={(rol) => handleInputChange("role", rol.id)}
+                  >
+                    <div className="relative">
+                      <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-4 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 backdrop-blur-sm">
+                        <span className="flex items-center">
+                          <span className="block truncate text-slate-100">
+                            {rolSeleccionado.nombre}
+                          </span>
+                          <span className="ml-2 text-xs text-slate-400">
+                            - {rolSeleccionado.descripcion}
+                          </span>
+                        </span>
+                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <ChevronsUpDown
+                            className="h-5 w-5 text-slate-400"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </Listbox.Button>
+                      <Transition
+                        as={Fragment}
+                        leave="transition ease-in duration-100"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                      >
+                        <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                          {rolesUsuario.map((rol) => (
+                            <Listbox.Option
+                              key={rol.id}
+                              className={({ active }) =>
+                                `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                                  active ? "bg-slate-700/50" : ""
+                                }`
+                              }
+                              value={rol}
+                            >
+                              {({ selected }) => (
+                                <>
+                                  <span className="flex items-center">
+                                    <span
+                                      className={`block truncate ${
+                                        selected
+                                          ? `font-semibold ${rol.color}`
+                                          : "font-normal text-slate-200"
+                                      }`}
+                                    >
+                                      {rol.nombre}
+                                    </span>
+                                    <span className="ml-2 text-xs text-slate-400">
+                                      - {rol.descripcion}
+                                    </span>
+                                  </span>
+                                  {selected ? (
+                                    <span
+                                      className={`absolute inset-y-0 right-0 flex items-center pr-3 ${rol.color}`}
+                                    >
+                                      <Check
+                                        className="h-5 w-5"
+                                        aria-hidden="true"
+                                      />
+                                    </span>
+                                  ) : null}
+                                </>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </Transition>
+                    </div>
+                  </Listbox>
+                  <div className="mt-2 text-xs text-slate-400">
+                    <div className="space-y-1">
+                      <div>
+                        <strong>Administrador:</strong> Acceso completo al
+                        sistema, puede gestionar usuarios, embarcaciones, rutas
+                        y ventas
+                      </div>
+                      <div>
+                        <strong>Vendedor:</strong> Puede realizar ventas,
+                        gestionar clientes y ver reportes básicos
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={formulario.activo}
+                      onChange={(e) => handleActivoChange(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 bg-slate-700 border-slate-600 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-slate-300">
+                        Usuario activo
+                      </span>
+                      <p className="text-xs text-slate-400">
+                        El usuario podrá iniciar sesión y usar el sistema
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Información adicional sobre el uso actual */}
+              {((usuario._count?.ventas ?? 0) > 0 ||
+                (usuario._count?.anulaciones ?? 0) > 0) && (
+                <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-blue-300 mb-2">
+                    Información de actividad
+                  </h4>
+                  <div className="text-xs text-blue-200 space-y-1">
+                    <div>Ventas realizadas: {usuario._count?.ventas ?? 0}</div>
+                    <div>
+                      Anulaciones registradas:{" "}
+                      {usuario._count?.anulaciones ?? 0}
+                    </div>
+                    <div className="mt-2 text-blue-300">
+                      <strong>Nota:</strong> Desactivar este usuario no afectará
+                      las ventas existentes, pero le impedirá acceder al
+                      sistema.
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </form>
         </div>
 

@@ -86,12 +86,12 @@ export default function EditarEmbarcacionForm({
       errores.nombre = "El nombre de la embarcación es obligatorio";
     }
 
-    if (!formulario.capacidad || formulario.capacidad <= 0) {
-      errores.capacidad = "La capacidad debe ser mayor a 0";
+    if (!formulario.capacidad || formulario.capacidad < 10) {
+      errores.capacidad = "La capacidad debe ser entre 10 y 200 pasajeros";
     }
 
-    if (formulario.capacidad && formulario.capacidad > 500) {
-      errores.capacidad = "La capacidad no puede ser mayor a 500 pasajeros";
+    if (formulario.capacidad && formulario.capacidad > 200) {
+      errores.capacidad = "La capacidad debe ser entre 10 y 200 pasajeros";
     }
 
     setErroresValidacion(errores);
@@ -189,8 +189,8 @@ export default function EditarEmbarcacionForm({
                 </label>
                 <input
                   type="number"
-                  min="1"
-                  max="500"
+                  min="10"
+                  max="200"
                   required
                   value={formulario.capacidad}
                   onChange={(e) => handleCapacidadChange(e.target.value)}
@@ -207,7 +207,7 @@ export default function EditarEmbarcacionForm({
                   </p>
                 )}
                 <p className="mt-1 text-xs text-slate-400">
-                  Número máximo de pasajeros que puede transportar
+                  Capacidad entre 10 y 200 pasajeros
                 </p>
               </div>
 
@@ -427,7 +427,8 @@ export default function EditarEmbarcacionForm({
                   loading ||
                   !formulario.nombre?.trim() ||
                   !formulario.capacidad ||
-                  formulario.capacidad <= 0
+                  formulario.capacidad < 10 ||
+                  formulario.capacidad > 200
                 }
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
