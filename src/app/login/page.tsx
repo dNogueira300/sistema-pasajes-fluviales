@@ -37,6 +37,16 @@ export default function LoginPage() {
       return;
     }
 
+    // Validar formato de email si contiene @
+    if (formData.email.includes("@")) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        mostrarError("Formato de email inválido. Debe ser usuario@dominio.com");
+        setIsLoading(false);
+        return;
+      }
+    }
+
     if (!formData.password.trim()) {
       mostrarError("La contraseña es requerida.");
       setIsLoading(false);
