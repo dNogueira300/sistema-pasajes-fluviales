@@ -795,7 +795,7 @@ export default function VentasPage() {
                 {ventas.map((venta) => (
                   <tr
                     key={venta.id}
-                    className="hover:bg-slate-700/30 transition-colors"
+                    className="hover:bg-slate-700/30 transition-colors align-top"
                   >
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-100">
@@ -825,7 +825,7 @@ export default function VentasPage() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-100">
                         <TruncatedText
-                          text={venta.ruta.nombre}
+                          text={`${venta.puertoOrigen} - ${venta.puertoDestino}`}
                           maxLength={22}
                         />
                       </div>
@@ -877,7 +877,17 @@ export default function VentasPage() {
                         S/ {venta.total.toFixed(2)}
                       </div>
                       <div className="text-sm text-slate-400">
-                        <TruncatedText text={venta.metodoPago} maxLength={12} />
+                        {venta.tipoPago === "HIBRIDO" && venta.metodosPago ? (
+                          <div className="space-y-0.5">
+                            {venta.metodosPago.map((metodo, idx) => (
+                              <div key={idx}>
+                                {metodo.tipo}: S/ {metodo.monto.toFixed(2)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <TruncatedText text={venta.metodoPago} maxLength={12} />
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -1176,7 +1186,7 @@ export default function VentasPage() {
                     <div className="flex justify-between">
                       <span className="text-slate-300">Ruta:</span>
                       <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                        {selectedVenta.ruta.nombre}
+                        {selectedVenta.puertoOrigen} - {selectedVenta.puertoDestino}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1231,9 +1241,21 @@ export default function VentasPage() {
                   <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
                     <div className="flex justify-between">
                       <span className="text-slate-300">Método de pago:</span>
-                      <span className="font-medium text-slate-100">
-                        {selectedVenta.metodoPago}
-                      </span>
+                      <div className="text-right">
+                        {selectedVenta.tipoPago === "HIBRIDO" && selectedVenta.metodosPago ? (
+                          <div className="space-y-1">
+                            {selectedVenta.metodosPago.map((metodo, idx) => (
+                              <div key={idx} className="font-medium text-slate-100">
+                                {metodo.tipo}: S/ {metodo.monto.toFixed(2)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="font-medium text-slate-100">
+                            {selectedVenta.metodoPago}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-300">Total:</span>

@@ -68,13 +68,17 @@ export async function GET(
         | "TARJETA"
         | "YAPE"
         | "PLIN"
-        | "HIBRIDO",
+        | "HIBRIDO"
+        | "UNICO",
       metodoPago: venta.metodoPago,
       metodosPago: venta.metodosPago
         ? (venta.metodosPago as unknown as MetodoPago[])
         : undefined,
       estado: venta.estado as "CONFIRMADA" | "ANULADA",
       observaciones: venta.observaciones || undefined,
+      // Dirección específica del viaje (puede ser diferente a la ruta)
+      puertoOrigen: venta.puertoOrigen,
+      puertoDestino: venta.puertoDestino,
       cliente: {
         nombre: venta.cliente.nombre,
         apellido: venta.cliente.apellido,

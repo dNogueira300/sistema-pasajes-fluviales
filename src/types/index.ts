@@ -408,6 +408,7 @@ export interface Venta {
   fechaVenta: string;
   fechaViaje: string;
   horaViaje: string;
+  horaEmbarque: string;
   cliente: {
     nombre: string;
     apellido: string;
@@ -420,6 +421,9 @@ export interface Venta {
     puertoOrigen: string;
     puertoDestino: string;
   };
+  // Campos específicos de la venta (pueden ser diferentes a los de la ruta)
+  puertoOrigen: string;
+  puertoDestino: string;
   embarcacion: {
     nombre: string;
   };
@@ -429,9 +433,17 @@ export interface Venta {
     descripcion?: string;
   };
   cantidadPasajes: number;
+  precioUnitario: number;
+  subtotal: number;
+  impuestos: number;
   total: number;
   estado: "CONFIRMADA" | "ANULADA" | "REEMBOLSADA";
+  tipoPago: "UNICO" | "HIBRIDO";
   metodoPago: string;
+  metodosPago?: Array<{
+    tipo: string;
+    monto: number;
+  }>;
   vendedor: {
     nombre: string;
     apellido: string;

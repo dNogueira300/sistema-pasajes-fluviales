@@ -20,11 +20,14 @@ interface VentaComprobante {
   subtotal: number;
   impuestos: number;
   total: number;
-  tipoPago: "EFECTIVO" | "TARJETA" | "YAPE" | "PLIN" | "HIBRIDO";
+  tipoPago: "EFECTIVO" | "TARJETA" | "YAPE" | "PLIN" | "HIBRIDO" | "UNICO";
   metodoPago: string;
   metodosPago?: MetodoPago[];
   estado: "CONFIRMADA" | "ANULADA" | "REEMBOLSADA";
   observaciones?: string;
+  // Campos específicos de la venta (dirección seleccionada)
+  puertoOrigen: string;
+  puertoDestino: string;
   cliente: {
     nombre: string;
     apellido: string;
@@ -190,7 +193,7 @@ export async function generarComprobanteA4(
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
 
-  doc.text(`Ruta: ${venta.ruta.nombre}`, margin, yPos);
+  doc.text(`Ruta: ${venta.puertoOrigen} - ${venta.puertoDestino}`, margin, yPos);
   yPos += 5;
   doc.text(`Embarcación: ${venta.embarcacion.nombre}`, margin, yPos);
   yPos += 5;
