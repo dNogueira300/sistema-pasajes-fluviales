@@ -3,7 +3,7 @@ name: Respaldo de Base de Datos Supabase a S3
 on:
   workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña "Actions"
   schedule:
-    # Se ejecuta todos los días a las 5:00 AM UTC
+    # Se ejecuta todos días a las 5:00 AM UTC
     # (Ajusta la hora '0 5' según tu preferencia)
     - cron: "0 5 * * *"
 
@@ -15,9 +15,19 @@ jobs:
       - name: Checkout (Opcional, solo si necesitas algo del repo)
         uses: actions/checkout@v3
 
-      - name: 1. Instalar el cliente de PostgreSQL (pg_dump)
-        # El CLI de AWS ya viene preinstalado en los runners de GitHub
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: 1. Instalar el cliente de PostgreSQL 17 (pg_dump)
+        # El runner de GitHub tiene pg_dump 16 por defecto, pero Supabase usa Postgres 17.
+        # Debemos instalar la versión 17 del cliente para que coincida.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget ca-certificates
+          # Añadir el repositorio oficial de PostgreSQL
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          # Importar la llave del repositorio
+          wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc > /dev/null
+          # Actualizar e instalar el cliente v17
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
 
       - name: 2. Configurar credenciales de AWS
         # Usa los secretos guardados en GitHub
