@@ -909,9 +909,11 @@ export default function VentasPage() {
                           <button
                             onClick={(e) => {
                               const button = e.currentTarget;
-                              const target = button.nextElementSibling;
+                              const target =
+                                button.nextElementSibling as HTMLElement | null;
                               if (target) {
-                                const isHidden = target.classList.contains("hidden");
+                                const isHidden =
+                                  target.classList.contains("hidden");
 
                                 // Cerrar otros menús abiertos
                                 document
@@ -920,24 +922,8 @@ export default function VentasPage() {
                                     menu.classList.add("hidden");
                                   });
 
+                                // Mostrar/ocultar con posicionamiento CSS absoluto relativo al padre
                                 if (isHidden) {
-                                  // Posicionar el menú basado en la posición del botón
-                                  const rect = button.getBoundingClientRect();
-                                  const menuWidth = 224; // 224px = w-56 (14rem)
-
-                                  // Calcular posición vertical (debajo del botón)
-                                  (target as HTMLElement).style.top = `${rect.bottom + 4}px`;
-
-                                  // Calcular posición horizontal - el menú se alinea con el borde derecho del botón
-                                  // rect.right es la posición del borde derecho del botón en el viewport
-                                  let leftPosition = rect.right - menuWidth;
-
-                                  // Si se sale por la izquierda del viewport, ajustar al margen mínimo
-                                  if (leftPosition < 10) {
-                                    leftPosition = 10;
-                                  }
-
-                                  (target as HTMLElement).style.left = `${leftPosition}px`;
                                   target.classList.remove("hidden");
                                 }
                               }
@@ -949,7 +935,7 @@ export default function VentasPage() {
                           </button>
 
                           {/* Menú desplegable unificado */}
-                          <div className="more-menu hidden fixed bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-[9999] w-56 backdrop-blur-sm">
+                          <div className="more-menu hidden absolute right-0 mt-2 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-50 w-56 backdrop-blur-sm">
                             {/* Sección: Imprimir comprobante */}
                             <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
                               Imprimir comprobante
