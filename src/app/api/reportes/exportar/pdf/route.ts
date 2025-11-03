@@ -407,7 +407,7 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(7);
       pdf.setFont(undefined, "bold");
 
-      // Definir posiciones de columnas
+      // Definir posiciones de columnas (ajustadas para que Total quede dentro del ancho)
       const col = {
         num: margin + 2,
         fechaEmision: margin + 10,
@@ -420,8 +420,8 @@ export async function POST(request: NextRequest) {
         ruta: margin + 170,
         tipoPago: margin + 195,
         metodoPago: margin + 215,
-        estado: margin + 240,
-        total: margin + 260,
+        estado: margin + 235,
+        total: margin + 250,
       };
 
       pdf.text("N°", col.num, yPosition);
@@ -453,7 +453,11 @@ export async function POST(request: NextRequest) {
           pdf.rect(margin, yPosition - 5, tableWidth, 7, "F");
         }
 
-        pdf.setTextColor(colors.text);
+        // Determinar si es una venta anulada para usar color rojo
+        const esAnulada = venta.estado === "ANULADA" || venta.estado === "REEMBOLSADA";
+        const colorTexto = esAnulada ? colors.danger : colors.text;
+
+        pdf.setTextColor(colorTexto);
         pdf.setFontSize(6);
 
         // Formatear fechas
@@ -481,13 +485,74 @@ export async function POST(request: NextRequest) {
         pdf.text(venta.tipoPago.substring(0, 10), col.tipoPago, yPosition);
         pdf.text(venta.metodoPago.substring(0, 12), col.metodoPago, yPosition);
         pdf.text(venta.estado.substring(0, 8), col.estado, yPosition);
-        pdf.setTextColor(colors.success);
+        pdf.setTextColor(esAnulada ? colors.danger : colors.success);
         pdf.setFont(undefined, "bold");
         pdf.text(`S/ ${venta.total.toFixed(2)}`, col.total, yPosition);
         pdf.setFont(undefined, "normal");
 
         yPosition += 7;
       });
+
+      // Calcular totales
+      const totalGeneral = reporte.ventasDetalladas.reduce(
+        (sum, venta) => sum + venta.total,
+        0
+      );
+      const totalValido = reporte.ventasDetalladas
+        .filter((venta) => venta.estado === "CONFIRMADA")
+        .reduce((sum, venta) => sum + venta.total, 0);
+
+      // Agregar espacio antes de los totales
+      yPosition += 10;
+
+      // Verificar si necesitamos una nueva página para los totales
+      if (yPosition + 20 > getPageHeight() - 20) {
+        pdf.addPage("a4", "landscape");
+        yPosition = 20;
+      }
+
+      // Renderizar totales con fondo destacado
+      pdf.setFillColor(30, 64, 175);
+      pdf.rect(margin, yPosition - 5, tableWidth, 8, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, "bold");
+      pdf.text("TOTALES", margin + 5, yPosition);
+      pdf.setFont(undefined, "normal");
+      yPosition += 12;
+
+      // Total general (confirmadas + anuladas)
+      pdf.setFillColor(240, 244, 248);
+      pdf.rect(margin, yPosition - 5, tableWidth, 8, "F");
+      pdf.setTextColor(colors.text);
+      pdf.setFontSize(9);
+      pdf.text("Total General (Confirmadas + Anuladas):", margin + 5, yPosition);
+      pdf.setTextColor(colors.primary);
+      pdf.setFont(undefined, "bold");
+      pdf.text(
+        `S/ ${totalGeneral.toFixed(2)}`,
+        margin + tableWidth - 5,
+        yPosition,
+        { align: "right" }
+      );
+      pdf.setFont(undefined, "normal");
+      yPosition += 10;
+
+      // Total válido (solo confirmadas)
+      pdf.setFillColor(240, 244, 248);
+      pdf.rect(margin, yPosition - 5, tableWidth, 8, "F");
+      pdf.setTextColor(colors.text);
+      pdf.setFontSize(9);
+      pdf.text("Total Válido (Solo Confirmadas):", margin + 5, yPosition);
+      pdf.setTextColor(colors.success);
+      pdf.setFont(undefined, "bold");
+      pdf.text(
+        `S/ ${totalValido.toFixed(2)}`,
+        margin + tableWidth - 5,
+        yPosition,
+        { align: "right" }
+      );
+      pdf.setFont(undefined, "normal");
     }
 
     // Pie de página

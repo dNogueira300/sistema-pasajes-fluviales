@@ -166,19 +166,26 @@ function construirCondicionesWhere(
 ): Prisma.VentaWhereInput {
   const where: Prisma.VentaWhereInput = {};
 
-  // Filtro por fechas usando zona horaria de Perú
+  // Filtro por fechas usando zona horaria de Perú (UTC-5)
+  // Convertimos las fechas a la zona horaria de Perú para evitar problemas de interpretación
   if (filtros.fechaInicio && filtros.fechaFin) {
+    // Crear fechas en zona horaria de Perú
+    const fechaInicioStr = `${filtros.fechaInicio}T00:00:00-05:00`;
+    const fechaFinStr = `${filtros.fechaFin}T23:59:59.999-05:00`;
+
     where.fechaVenta = {
-      gte: new Date(filtros.fechaInicio + "T00:00:00"),
-      lte: new Date(filtros.fechaFin + "T23:59:59.999"),
+      gte: new Date(fechaInicioStr),
+      lte: new Date(fechaFinStr),
     };
   } else if (filtros.fechaInicio) {
+    const fechaInicioStr = `${filtros.fechaInicio}T00:00:00-05:00`;
     where.fechaVenta = {
-      gte: new Date(filtros.fechaInicio + "T00:00:00"),
+      gte: new Date(fechaInicioStr),
     };
   } else if (filtros.fechaFin) {
+    const fechaFinStr = `${filtros.fechaFin}T23:59:59.999-05:00`;
     where.fechaVenta = {
-      lte: new Date(filtros.fechaFin + "T23:59:59.999"),
+      lte: new Date(fechaFinStr),
     };
   }
 
