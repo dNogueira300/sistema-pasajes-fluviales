@@ -250,9 +250,8 @@ export async function POST(request: NextRequest) {
       pdf.setFontSize(9);
       pdf.setFont(undefined, 'bold');
       pdf.text("Método", margin + 2, yPosition);
-      pdf.text("Tipo", margin + 50, yPosition);
-      pdf.text("Ventas", margin + 90, yPosition);
-      pdf.text("Pasajes", margin + 115, yPosition);
+      pdf.text("Tipo", margin + 60, yPosition);
+      pdf.text("Ventas", margin + 105, yPosition);
       pdf.text("Recaudado", margin + 140, yPosition);
       pdf.setFont(undefined, 'normal');
       yPosition += 10;
@@ -268,10 +267,9 @@ export async function POST(request: NextRequest) {
 
         pdf.setTextColor(colors.text);
         pdf.setFontSize(9);
-        pdf.text(metodo.metodoPago.substring(0, 20), margin + 2, yPosition);
-        pdf.text(metodo.tipoPago.substring(0, 15), margin + 50, yPosition);
-        pdf.text(metodo.totalVentas.toString(), margin + 90, yPosition);
-        pdf.text(metodo.totalPasajes.toString(), margin + 115, yPosition);
+        pdf.text(metodo.metodoPago.substring(0, 25), margin + 2, yPosition);
+        pdf.text(metodo.tipoPago.substring(0, 20), margin + 60, yPosition);
+        pdf.text(metodo.totalVentas.toString(), margin + 105, yPosition);
         pdf.setTextColor(colors.success);
         pdf.setFont(undefined, 'bold');
         pdf.text(`S/ ${metodo.totalRecaudado.toFixed(2)}`, margin + 140, yPosition);
@@ -328,7 +326,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Pie de página
-    const pageCount = pdf.getNumberOfPages();
+    const pageCount = (pdf as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
       pdf.setFontSize(8);
