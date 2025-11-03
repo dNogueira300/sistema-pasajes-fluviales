@@ -326,6 +326,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Pie de página
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pageCount = (pdf as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       pdf.setPage(i);
