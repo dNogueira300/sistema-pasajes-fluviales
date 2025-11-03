@@ -14,6 +14,7 @@ import {
   VentaResumen,
   VentaDetallada,
   OpcionesReporte,
+  MetodoPagoHibrido,
 } from "@/types/reportes";
 import { format } from "date-fns";
 
@@ -267,10 +268,13 @@ async function obtenerResumenVentas(
   ]);
 
   // Crear mapa de estados para lookup O(1)
-  const ventasPorEstado = estadisticas.reduce((acc, item) => {
-    acc[item.estado] = item._count;
-    return acc;
-  }, {} as Record<string, number>);
+  const ventasPorEstado = estadisticas.reduce(
+    (acc: Record<string, number>, item) => {
+      acc[item.estado] = item._count;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   return {
     totalVentas: totales._count || 0,
@@ -598,22 +602,61 @@ async function obtenerVentasDetalladas(
     },
   });
 
-  return ventas.map((venta) => ({
-    numeroVenta: venta.numeroVenta,
-    fechaVenta: venta.fechaVenta.toISOString(),
-    fechaViaje: venta.fechaViaje.toISOString(),
-    horaViaje: venta.horaViaje,
-    cliente: `${venta.cliente.nombre} ${venta.cliente.apellido}`,
-    documentoIdentidad: venta.cliente.dni,
-    contacto: venta.cliente.telefono || "N/A",
-    embarcacion: venta.embarcacion.nombre,
-    ruta: venta.ruta.nombre,
-    tipoPago: venta.tipoPago,
-    metodoPago: venta.metodoPago,
-    metodosPago: venta.metodosPago,
-    estado: venta.estado,
-    total: toNumber(venta.total),
-  }));
+  return ventas.map((venta): VentaDetallada => {
+    // Procesar metodosPago de forma type-safe
+    let metodosPagoProcessed: MetodoPagoHibrido[] | string | undefined;
+
+    if (venta.metodosPago !== null && venta.metodosPago !== undefined) {
+      if (typeof venta.metodosPago === "string") {
+        metodosPagoProcessed = venta.metodosPago;
+      } else {
+        // Para evitar errores de conversión directa de `JsonValue[]` a `MetodoPagoHibrido[]`,
+        // primero tratamos el valor como `unknown` y luego validamos con un type guard.
+        const posible = venta.metodosPago as unknown;
+
+        if (Array.isArray(posible)) {
+          const arr = posible as unknown[];
+
+          const isMetodoPagoHibrido = (
+            item: unknown
+          ): item is MetodoPagoHibrido =>
+            typeof item === "object" &&
+            item !== null &&
+            typeof (item as Record<string, unknown>).metodo === "string" &&
+            typeof (item as Record<string, unknown>).monto === "number";
+
+          const isValidArray = arr.every(isMetodoPagoHibrido);
+
+          if (isValidArray) {
+            // Primero unknown para satisfacer al compilador y luego convertir al tipo esperado
+            metodosPagoProcessed = arr as unknown as MetodoPagoHibrido[];
+          } else {
+            metodosPagoProcessed = JSON.stringify(arr);
+          }
+        } else {
+          // Si no es array, serializar a JSON para mostrar el contenido
+          metodosPagoProcessed = JSON.stringify(posible);
+        }
+      }
+    }
+
+    return {
+      numeroVenta: venta.numeroVenta,
+      fechaVenta: venta.fechaVenta.toISOString(),
+      fechaViaje: venta.fechaViaje.toISOString(),
+      horaViaje: venta.horaViaje,
+      cliente: `${venta.cliente.nombre} ${venta.cliente.apellido}`,
+      documentoIdentidad: venta.cliente.dni,
+      contacto: venta.cliente.telefono || "N/A",
+      embarcacion: venta.embarcacion.nombre,
+      ruta: venta.ruta.nombre,
+      tipoPago: venta.tipoPago,
+      metodoPago: venta.metodoPago,
+      metodosPago: metodosPagoProcessed,
+      estado: venta.estado,
+      total: toNumber(venta.total),
+    };
+  });
 }
 
 // ============================================
@@ -679,7 +722,12 @@ export async function obtenerOpcionesReporte(): Promise<OpcionesReporte> {
 // 🚀 ESTADÍSTICAS RÁPIDAS PARA DASHBOARD
 // ============================================
 
-export async function obtenerEstadisticasRapidas() {
+export async function obtenerEstadisticasRapidas(): Promise<{
+  ventasHoy: ResumenVentas;
+  ventasMes: ResumenVentas;
+  topRutasMes: ReportePorRuta[];
+  fechaActualizacion: string;
+}> {
   const fechaEnPeru = obtenerFechaEnPeru();
   const { inicio: inicioHoy, fin: finHoy } = crearRangoDia(fechaEnPeru);
   const inicioMes = new Date(
