@@ -243,10 +243,9 @@ export default function NuevoUsuarioForm({
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Credenciales de Acceso */}
-            <div className="space-y-4">
+              {/* Credenciales de Acceso */}
+              <div className="space-y-4">
               <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
                 Credenciales de Acceso
               </h3>
@@ -389,10 +388,9 @@ export default function NuevoUsuarioForm({
                   <li>• Al menos 1 número</li>
                 </ul>
               </div>
-            </div>
 
-            {/* Configuración del Usuario */}
-            <div className="space-y-4">
+              {/* Configuración del Usuario */}
+              <div className="space-y-4">
               <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
                 Configuración del Usuario
               </h3>

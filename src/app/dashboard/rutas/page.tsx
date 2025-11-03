@@ -388,13 +388,12 @@ export default function GestionRutas() {
   };
 
   // Helper para determinar si el botón debe estar deshabilitado
+  // Solo se deshabilita si la ruta tiene ventas, NO si solo tiene embarcaciones
   const isEliminarDisabled = () => {
     return (
       loading ||
       (rutaSeleccionada?._count?.ventas &&
         rutaSeleccionada._count.ventas > 0) ||
-      (rutaSeleccionada?._count?.embarcacionRutas &&
-        rutaSeleccionada._count.embarcacionRutas > 0) ||
       false
     );
   };
@@ -876,21 +875,33 @@ export default function GestionRutas() {
                 </span>
                 ?
               </p>
-              {((rutaSeleccionada._count?.ventas &&
-                rutaSeleccionada._count.ventas > 0) ||
-                (rutaSeleccionada._count?.embarcacionRutas &&
-                  rutaSeleccionada._count.embarcacionRutas > 0)) && (
-                <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 mb-6 backdrop-blur-sm">
-                  <div className="flex items-center">
-                    <AlertCircle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0" />
-                    <p className="text-sm text-orange-300">
-                      Esta ruta tiene {rutaSeleccionada._count?.ventas || 0}{" "}
-                      ventas y {rutaSeleccionada._count?.embarcacionRutas || 0}{" "}
-                      embarcaciones asociadas. No podrás eliminarla.
-                    </p>
+              {/* Mostrar información de embarcaciones si las tiene */}
+              {rutaSeleccionada._count?.embarcacionRutas &&
+                rutaSeleccionada._count.embarcacionRutas > 0 && (
+                  <div className="bg-blue-900/40 border border-blue-700/50 rounded-xl p-4 mb-6 backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-5 w-5 text-blue-400 mr-3 flex-shrink-0" />
+                      <p className="text-sm text-blue-300">
+                        Esta ruta tiene {rutaSeleccionada._count.embarcacionRutas}{" "}
+                        embarcación(es) asignada(s). Al eliminar la ruta, también se eliminarán estas asignaciones.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+              {/* Mostrar warning si tiene ventas (bloquea eliminación) */}
+              {rutaSeleccionada._count?.ventas &&
+                rutaSeleccionada._count.ventas > 0 && (
+                  <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 mb-6 backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                      <p className="text-sm text-red-300">
+                        ⚠️ Esta ruta tiene {rutaSeleccionada._count.ventas}{" "}
+                        venta(s) registrada(s). No se puede eliminar para mantener la integridad de los registros.
+                      </p>
+                    </div>
+                  </div>
+                )}
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setModalConfirmarEliminar(false)}

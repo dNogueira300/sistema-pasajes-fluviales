@@ -234,10 +234,9 @@ export default function EditarUsuarioForm({
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Credenciales de Acceso */}
-            <div className="space-y-4">
+              {/* Credenciales de Acceso */}
+              <div className="space-y-4">
               <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
                 Credenciales de Acceso
               </h3>
@@ -306,10 +305,9 @@ export default function EditarUsuarioForm({
                   usuarios.
                 </p>
               </div>
-            </div>
 
-            {/* Configuración del Usuario */}
-            <div className="space-y-4">
+              {/* Configuración del Usuario */}
+              <div className="space-y-4">
               <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
                 Configuración del Usuario
               </h3>
@@ -425,25 +423,26 @@ export default function EditarUsuarioForm({
               </div>
             </div>
 
-            {/* Información adicional sobre el uso actual */}
-            {((usuario._count?.ventas ?? 0) > 0 ||
-              (usuario._count?.anulaciones ?? 0) > 0) && (
-              <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
-                <h4 className="text-sm font-medium text-blue-300 mb-2">
-                  Información de actividad
-                </h4>
-                <div className="text-xs text-blue-200 space-y-1">
-                  <div>Ventas realizadas: {usuario._count?.ventas ?? 0}</div>
-                  <div>
-                    Anulaciones registradas: {usuario._count?.anulaciones ?? 0}
-                  </div>
-                  <div className="mt-2 text-blue-300">
-                    <strong>Nota:</strong> Desactivar este usuario no afectará
-                    las ventas existentes, pero le impedirá acceder al sistema.
+              {/* Información adicional sobre el uso actual */}
+              {((usuario._count?.ventas ?? 0) > 0 ||
+                (usuario._count?.anulaciones ?? 0) > 0) && (
+                <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-blue-300 mb-2">
+                    Información de actividad
+                  </h4>
+                  <div className="text-xs text-blue-200 space-y-1">
+                    <div>Ventas realizadas: {usuario._count?.ventas ?? 0}</div>
+                    <div>
+                      Anulaciones registradas: {usuario._count?.anulaciones ?? 0}
+                    </div>
+                    <div className="mt-2 text-blue-300">
+                      <strong>Nota:</strong> Desactivar este usuario no afectará
+                      las ventas existentes, pero le impedirá acceder al sistema.
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </form>
         </div>
 

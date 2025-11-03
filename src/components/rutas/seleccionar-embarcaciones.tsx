@@ -200,24 +200,45 @@ export default function SeleccionarEmbarcaciones({
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                       Embarcación *
                     </label>
-                    <select
-                      value={embarcacionForm.embarcacionId}
-                      onChange={(e) =>
-                        actualizarEmbarcacion(embarcacionForm.tempId, {
-                          embarcacionId: e.target.value,
-                        })
-                      }
-                      className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
-                      required
-                    >
-                      <option value="">Seleccionar embarcación</option>
-                      {embarcacionesDisponiblesFiltradas.map((embarcacion) => (
-                        <option key={embarcacion.id} value={embarcacion.id}>
-                          {embarcacion.nombre} - Capacidad:{" "}
-                          {embarcacion.capacidad}
+                    <div className="relative">
+                      <select
+                        value={embarcacionForm.embarcacionId}
+                        onChange={(e) =>
+                          actualizarEmbarcacion(embarcacionForm.tempId, {
+                            embarcacionId: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-3 pr-10 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer hover:bg-slate-700/70"
+                        required
+                      >
+                        <option value="" className="bg-slate-800 text-slate-400">
+                          Seleccionar embarcación
                         </option>
-                      ))}
-                    </select>
+                        {embarcacionesDisponiblesFiltradas.map((embarcacion) => (
+                          <option
+                            key={embarcacion.id}
+                            value={embarcacion.id}
+                            className="bg-slate-800 text-slate-100 py-2"
+                          >
+                            {embarcacion.nombre} - Capacidad: {embarcacion.capacidad}
+                          </option>
+                        ))}
+                      </select>
+                      {/* Icono de flecha personalizado */}
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg
+                          className="h-5 w-5 text-slate-400"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex items-center space-x-4">
