@@ -669,15 +669,46 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Dividir el texto del método de pago en múltiples líneas si es necesario
+        // Dividir textos en múltiples líneas según el ancho de cada columna
         pdf.setFontSize(6);
-        const maxWidthMetodoPago = 28; // Ancho máximo para la columna método de pago
+
+        // Calcular anchos máximos para cada columna
+        const maxWidthNumEmision = 24; // numEmision: 60-86 = 26mm (menos margen)
+        const maxWidthCliente = 32; // cliente: 86-120 = 34mm (menos margen)
+        const maxWidthEmbarcacion = 26; // embarcacion: 162-190 = 28mm (menos margen)
+        const maxWidthRuta = 28; // ruta: 190-220 = 30mm (menos margen)
+        const maxWidthMetodoPago = 28; // metodoPago: 220-250 = 30mm (menos margen)
+
+        const numEmisionLineas = pdf.splitTextToSize(
+          venta.numeroVenta,
+          maxWidthNumEmision
+        );
+        const clienteLineas = pdf.splitTextToSize(
+          venta.cliente,
+          maxWidthCliente
+        );
+        const embarcacionLineas = pdf.splitTextToSize(
+          venta.embarcacion,
+          maxWidthEmbarcacion
+        );
+        const rutaLineas = pdf.splitTextToSize(
+          venta.ruta,
+          maxWidthRuta
+        );
         const metodoPagoLineas = pdf.splitTextToSize(
           metodoPagoTexto,
           maxWidthMetodoPago
         );
-        const numLineas = metodoPagoLineas.length;
-        const alturaFila = Math.max(7, numLineas * 3 + 1); // Altura dinámica basada en número de líneas
+
+        // Calcular el número máximo de líneas entre todas las columnas
+        const maxNumLineas = Math.max(
+          numEmisionLineas.length,
+          clienteLineas.length,
+          embarcacionLineas.length,
+          rutaLineas.length,
+          metodoPagoLineas.length
+        );
+        const alturaFila = Math.max(7, maxNumLineas * 3 + 1); // Altura dinámica basada en número de líneas
 
         // Verificar si necesitamos una nueva página
         if (yPosition + alturaFila > getPageHeight() - 20) {
@@ -719,23 +750,39 @@ export async function POST(request: NextRequest) {
           }
         );
 
-        // Renderizar datos (alinear verticalmente al centro de la fila)
+        // Renderizar datos de columnas simples (alinear verticalmente al centro de la fila)
         const yCenter = yPosition + (alturaFila - 7) / 2;
         pdf.text(`${index + 1}`, col.num, yCenter);
         pdf.text(fechaEmision, col.fechaEmision, yCenter);
         pdf.text(`${fechaViaje} ${venta.horaViaje}`, col.fechaViaje, yCenter);
-        pdf.text(venta.numeroVenta.substring(0, 8), col.numEmision, yCenter);
-        pdf.text(venta.cliente.substring(0, 15), col.cliente, yCenter);
         pdf.text(venta.documentoIdentidad, col.dni, yCenter);
         pdf.text(venta.contacto.substring(0, 10), col.contacto, yCenter);
-        pdf.text(
-          venta.embarcacion.substring(0, 15),
-          col.embarcacion,
-          yCenter
-        );
-        pdf.text(venta.ruta.substring(0, 15), col.ruta, yCenter);
 
-        // Renderizar método de pago con múltiples líneas
+        // Renderizar columnas con múltiples líneas
+        let yNumEmision = yPosition;
+        numEmisionLineas.forEach((linea: string) => {
+          pdf.text(linea, col.numEmision, yNumEmision);
+          yNumEmision += 3;
+        });
+
+        let yCliente = yPosition;
+        clienteLineas.forEach((linea: string) => {
+          pdf.text(linea, col.cliente, yCliente);
+          yCliente += 3;
+        });
+
+        let yEmbarcacion = yPosition;
+        embarcacionLineas.forEach((linea: string) => {
+          pdf.text(linea, col.embarcacion, yEmbarcacion);
+          yEmbarcacion += 3;
+        });
+
+        let yRuta = yPosition;
+        rutaLineas.forEach((linea: string) => {
+          pdf.text(linea, col.ruta, yRuta);
+          yRuta += 3;
+        });
+
         let yMetodoPago = yPosition;
         metodoPagoLineas.forEach((linea: string) => {
           pdf.text(linea, col.metodoPago, yMetodoPago);
