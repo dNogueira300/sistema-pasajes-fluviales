@@ -130,6 +130,7 @@ export interface VentaDetallada {
   contacto: string;
   embarcacion: string;
   ruta: string;
+  vendedor: string;
   tipoPago: string;
   metodoPago: string;
   metodosPago?: MetodoPagoHibrido[] | string; // Array de métodos de pago para pagos híbridos

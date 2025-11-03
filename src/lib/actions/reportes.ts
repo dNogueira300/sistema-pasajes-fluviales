@@ -596,6 +596,12 @@ async function obtenerVentasDetalladas(
           nombre: true,
         },
       },
+      vendedor: {
+        select: {
+          nombre: true,
+          apellido: true,
+        },
+      },
     },
     orderBy: {
       fechaVenta: "desc",
@@ -650,6 +656,7 @@ async function obtenerVentasDetalladas(
       contacto: venta.cliente.telefono || "N/A",
       embarcacion: venta.embarcacion.nombre,
       ruta: venta.ruta.nombre,
+      vendedor: `${venta.vendedor.nombre} ${venta.vendedor.apellido}`,
       tipoPago: venta.tipoPago,
       metodoPago: venta.metodoPago,
       metodosPago: metodosPagoProcessed,

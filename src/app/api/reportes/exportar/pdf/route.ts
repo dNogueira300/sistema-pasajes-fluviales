@@ -192,9 +192,8 @@ export async function POST(request: NextRequest) {
     const vendedoresMap = new Map<string, VendedorAgg>();
     ventasValidas.forEach((v) => {
       const vv = v as unknown as Record<string, unknown>;
-      const key = String(
-        vv.vendedor || vv.nombreVendedor || vv.vendedorId || "Sin Vendedor"
-      );
+      // Priorizar el campo vendedor que ahora viene del servidor
+      const key = String(vv.vendedor || "Sin Vendedor");
       const totalNum = Number((vv.total as number | string) || 0);
       const pasajesNum = Number((vv.cantidadPasajes as number | string) || 0);
       const existing = vendedoresMap.get(key);
@@ -695,9 +694,11 @@ export async function POST(request: NextRequest) {
               if (typeof m === "string") return m as string;
               if (typeof m === "object" && m !== null) {
                 const obj = m as Record<string, unknown>;
-                return String(
+                const metodo = String(
                   obj.metodo || obj.metodoPago || obj.nombre || ""
                 ).trim();
+                const monto = Number(obj.monto || 0);
+                return monto > 0 ? `${metodo}: S/ ${monto.toFixed(2)}` : metodo;
               }
               return String(m);
             });
