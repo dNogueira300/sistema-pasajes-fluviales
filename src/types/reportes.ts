@@ -84,6 +84,7 @@ export interface ReporteCompleto {
   porVendedor: ReportePorVendedor[];
   porMetodoPago: ReportePorMetodoPago[];
   porFecha: ReportePorFecha[];
+  ventasDetalladas: VentaDetallada[];
   filtros: FiltrosReporte;
   fechaGeneracion: string;
 }
@@ -110,6 +111,23 @@ export interface VentaResumen {
   tipoPago: string;
   estado: string;
   fechaVenta: string;
+}
+
+// Venta detallada para reportes PDF
+export interface VentaDetallada {
+  numeroVenta: string;
+  fechaVenta: string;
+  fechaViaje: string;
+  horaViaje: string;
+  cliente: string;
+  documentoIdentidad: string;
+  contacto: string;
+  embarcacion: string;
+  ruta: string;
+  tipoPago: string;
+  metodoPago: string;
+  estado: string;
+  total: number;
 }
 
 // Configuración de exportación

@@ -384,6 +384,112 @@ export async function POST(request: NextRequest) {
       yPosition += 10;
     }
 
+    // Detalle de Ventas
+    if (reporte.ventasDetalladas && reporte.ventasDetalladas.length > 0) {
+      // Agregar nueva página en orientación landscape para la tabla detallada
+      pdf.addPage("a4", "landscape");
+      yPosition = 20;
+
+      pdf.setFontSize(14);
+      pdf.setTextColor(colors.text);
+      pdf.text(
+        `Detalle de Ventas (${reporte.ventasDetalladas.length} ventas)`,
+        margin,
+        yPosition
+      );
+      yPosition += 10;
+
+      // Encabezado de tabla
+      pdf.setFillColor(30, 64, 175);
+      const tableWidth = 257; // Ancho disponible en landscape (297mm - 2*20mm margen)
+      pdf.rect(margin, yPosition - 5, tableWidth, 8, "F");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(7);
+      pdf.setFont(undefined, "bold");
+
+      // Definir posiciones de columnas
+      const col = {
+        num: margin + 2,
+        fechaEmision: margin + 10,
+        fechaViaje: margin + 30,
+        numEmision: margin + 60,
+        cliente: margin + 80,
+        dni: margin + 105,
+        contacto: margin + 125,
+        embarcacion: margin + 145,
+        ruta: margin + 170,
+        tipoPago: margin + 195,
+        metodoPago: margin + 215,
+        estado: margin + 240,
+        total: margin + 260,
+      };
+
+      pdf.text("N°", col.num, yPosition);
+      pdf.text("F.Emisión", col.fechaEmision, yPosition);
+      pdf.text("F/H.Viaje", col.fechaViaje, yPosition);
+      pdf.text("N°Emisión", col.numEmision, yPosition);
+      pdf.text("Cliente", col.cliente, yPosition);
+      pdf.text("DNI", col.dni, yPosition);
+      pdf.text("Contacto", col.contacto, yPosition);
+      pdf.text("Embarcación", col.embarcacion, yPosition);
+      pdf.text("Ruta", col.ruta, yPosition);
+      pdf.text("T.Pago", col.tipoPago, yPosition);
+      pdf.text("M.Pago", col.metodoPago, yPosition);
+      pdf.text("Estado", col.estado, yPosition);
+      pdf.text("Total", col.total, yPosition);
+      pdf.setFont(undefined, "normal");
+      yPosition += 10;
+
+      reporte.ventasDetalladas.forEach((venta, index) => {
+        // Verificar si necesitamos una nueva página
+        if (yPosition + 7 > getPageHeight() - 20) {
+          pdf.addPage("a4", "landscape");
+          yPosition = 20;
+        }
+
+        // Alternar color de fondo
+        if (index % 2 === 0) {
+          pdf.setFillColor(240, 244, 248);
+          pdf.rect(margin, yPosition - 5, tableWidth, 7, "F");
+        }
+
+        pdf.setTextColor(colors.text);
+        pdf.setFontSize(6);
+
+        // Formatear fechas
+        const fechaEmision = format(
+          new Date(venta.fechaVenta),
+          "dd/MM/yy",
+          { locale: es }
+        );
+        const fechaViaje = format(
+          new Date(venta.fechaViaje),
+          "dd/MM/yy",
+          { locale: es }
+        );
+
+        // Renderizar datos
+        pdf.text(`${index + 1}`, col.num, yPosition);
+        pdf.text(fechaEmision, col.fechaEmision, yPosition);
+        pdf.text(`${fechaViaje} ${venta.horaViaje}`, col.fechaViaje, yPosition);
+        pdf.text(venta.numeroVenta.substring(0, 8), col.numEmision, yPosition);
+        pdf.text(venta.cliente.substring(0, 15), col.cliente, yPosition);
+        pdf.text(venta.documentoIdentidad, col.dni, yPosition);
+        pdf.text(venta.contacto.substring(0, 10), col.contacto, yPosition);
+        pdf.text(venta.embarcacion.substring(0, 15), col.embarcacion, yPosition);
+        pdf.text(venta.ruta.substring(0, 15), col.ruta, yPosition);
+        pdf.text(venta.tipoPago.substring(0, 10), col.tipoPago, yPosition);
+        pdf.text(venta.metodoPago.substring(0, 12), col.metodoPago, yPosition);
+        pdf.text(venta.estado.substring(0, 8), col.estado, yPosition);
+        pdf.setTextColor(colors.success);
+        pdf.setFont(undefined, "bold");
+        pdf.text(`S/ ${venta.total.toFixed(2)}`, col.total, yPosition);
+        pdf.setFont(undefined, "normal");
+
+        yPosition += 7;
+      });
+    }
+
     // Pie de página
     const pageCount = getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {

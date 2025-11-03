@@ -12,6 +12,7 @@ import {
   ReportePorFecha,
   ReporteDiario,
   VentaResumen,
+  VentaDetallada,
   OpcionesReporte,
 } from "@/types/reportes";
 import { format } from "date-fns";
@@ -208,6 +209,7 @@ export async function generarReporteCompleto(
     porVendedor,
     porMetodoPago,
     porFecha,
+    ventasDetalladas,
   ] = await Promise.all([
     obtenerResumenVentas(whereConditions),
     obtenerReportePorRuta(whereConditions),
@@ -215,6 +217,7 @@ export async function generarReporteCompleto(
     obtenerReportePorVendedor(whereConditions),
     obtenerReportePorMetodoPago(whereConditions),
     obtenerReportePorFecha(whereConditions),
+    obtenerVentasDetalladas(whereConditions),
   ]);
 
   return {
@@ -224,6 +227,7 @@ export async function generarReporteCompleto(
     porVendedor,
     porMetodoPago,
     porFecha,
+    ventasDetalladas,
     filtros,
     fechaGeneracion: new Date().toISOString(),
   };
@@ -541,6 +545,65 @@ async function obtenerVentasDelDia(
     tipoPago: venta.tipoPago,
     estado: venta.estado,
     fechaVenta: venta.fechaVenta.toISOString(),
+  }));
+}
+
+// ============================================
+// 🚀 VENTAS DETALLADAS PARA REPORTES
+// ============================================
+
+async function obtenerVentasDetalladas(
+  whereConditions: Prisma.VentaWhereInput
+): Promise<VentaDetallada[]> {
+  const ventas = await prisma.venta.findMany({
+    where: whereConditions,
+    select: {
+      numeroVenta: true,
+      fechaVenta: true,
+      fechaViaje: true,
+      horaViaje: true,
+      total: true,
+      metodoPago: true,
+      tipoPago: true,
+      estado: true,
+      cliente: {
+        select: {
+          nombre: true,
+          apellido: true,
+          dni: true,
+          telefono: true,
+        },
+      },
+      ruta: {
+        select: {
+          nombre: true,
+        },
+      },
+      embarcacion: {
+        select: {
+          nombre: true,
+        },
+      },
+    },
+    orderBy: {
+      fechaVenta: "desc",
+    },
+  });
+
+  return ventas.map((venta) => ({
+    numeroVenta: venta.numeroVenta,
+    fechaVenta: venta.fechaVenta.toISOString(),
+    fechaViaje: venta.fechaViaje.toISOString(),
+    horaViaje: venta.horaViaje,
+    cliente: `${venta.cliente.nombre} ${venta.cliente.apellido}`,
+    documentoIdentidad: venta.cliente.dni,
+    contacto: venta.cliente.telefono || "N/A",
+    embarcacion: venta.embarcacion.nombre,
+    ruta: venta.ruta.nombre,
+    tipoPago: venta.tipoPago,
+    metodoPago: venta.metodoPago,
+    estado: venta.estado,
+    total: toNumber(venta.total),
   }));
 }
 

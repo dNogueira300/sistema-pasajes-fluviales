@@ -923,8 +923,25 @@ export default function VentasPage() {
                                 if (isHidden) {
                                   // Posicionar el menú basado en la posición del botón
                                   const rect = button.getBoundingClientRect();
+                                  const menuWidth = 224; // 224px = w-56 (14rem)
+                                  const viewportWidth = window.innerWidth;
+
+                                  // Calcular posición vertical (debajo del botón)
                                   (target as HTMLElement).style.top = `${rect.bottom + window.scrollY + 4}px`;
-                                  (target as HTMLElement).style.left = `${rect.right + window.scrollX - 224}px`; // 224px = w-56 (14rem)
+
+                                  // Calcular posición horizontal (evitar que se salga del viewport)
+                                  // Si hay espacio suficiente, alinear a la derecha del botón
+                                  // Si no hay espacio, alinear al borde derecho del viewport con un margen
+                                  let leftPosition = rect.right + window.scrollX - menuWidth;
+                                  if (leftPosition < 10) {
+                                    // Si se sale por la izquierda, ajustar
+                                    leftPosition = 10;
+                                  } else if (leftPosition + menuWidth > viewportWidth - 10) {
+                                    // Si se sale por la derecha, ajustar al borde derecho
+                                    leftPosition = viewportWidth - menuWidth - 10;
+                                  }
+
+                                  (target as HTMLElement).style.left = `${leftPosition}px`;
                                   target.classList.remove("hidden");
                                 }
                               }
