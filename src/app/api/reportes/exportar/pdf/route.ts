@@ -104,14 +104,27 @@ export async function POST(request: NextRequest) {
     pdf.text("Resumen Ejecutivo", margin, yPosition);
     yPosition += 10;
 
+    // Calcular totales válidos (solo confirmadas) para el resumen
+    const totalConfirmadas = reporte.ventasDetalladas
+      ? reporte.ventasDetalladas.filter((v) => v.estado === "CONFIRMADA").length
+      : 0;
+    const totalRecaudadoConfirmadas = reporte.ventasDetalladas
+      ? reporte.ventasDetalladas
+          .filter((v) => v.estado === "CONFIRMADA")
+          .reduce((s, v) => s + (Number(v.total) || 0), 0)
+      : 0;
+    const promedioConfirmadas =
+      totalConfirmadas > 0 ? totalRecaudadoConfirmadas / totalConfirmadas : 0;
+
     // Crear tabla de resumen
     const resumenData: [string, string][] = [
-      ["Total de Ventas", reporte.resumen.totalVentas.toString()],
-      ["Total Recaudado", `S/ ${reporte.resumen.totalRecaudado.toFixed(2)}`],
+      // Mostrar en el resumen los totales válidos (solo confirmadas)
+      ["Total de Ventas", totalConfirmadas.toString()],
+      ["Total Recaudado", `S/ ${totalRecaudadoConfirmadas.toFixed(2)}`],
       ["Total Pasajes", reporte.resumen.totalPasajes.toString()],
       ["Ventas Confirmadas", reporte.resumen.ventasConfirmadas.toString()],
       ["Ventas Anuladas", reporte.resumen.ventasAnuladas.toString()],
-      ["Promedio por Venta", `S/ ${reporte.resumen.promedioVenta.toFixed(2)}`],
+      ["Promedio por Venta", `S/ ${promedioConfirmadas.toFixed(2)}`],
     ];
 
     // Dibujar tabla de resumen con fondo

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { useReportes } from "@/hooks/use-reportes";
+import { useMemo } from "react";
 import {
   BarChart,
   FileText,
@@ -49,6 +50,19 @@ export default function PaginaReportes() {
   // Estados principales
   const [reporte, setReporte] = useState<ReporteCompleto | null>(null);
   const [opciones, setOpciones] = useState<OpcionesReporte | null>(null);
+
+  // Totales calculados (solo ventas confirmadas)
+  const confirmedStats = useMemo(() => {
+    if (!reporte) return { count: 0, total: 0, avg: 0 };
+    const confirmed = reporte.ventasDetalladas.filter((v) =>
+      String(v.estado || "")
+        .toUpperCase()
+        .includes("CONFIRMA")
+    );
+    const total = confirmed.reduce((s, v) => s + (Number(v.total) || 0), 0);
+    const avg = confirmed.length > 0 ? total / confirmed.length : 0;
+    return { count: confirmed.length, total, avg };
+  }, [reporte]);
 
   // Inicializar filtros con fecha de hoy en Perú
   const [filtros, setFiltros] = useState<FiltrosReporte>(() => {
@@ -431,7 +445,7 @@ export default function PaginaReportes() {
                           Total Ventas
                         </p>
                         <p className="text-2xl font-bold text-white">
-                          {reporte.resumen.totalVentas}
+                          {confirmedStats.count}
                         </p>
                       </div>
                     </div>
@@ -447,7 +461,7 @@ export default function PaginaReportes() {
                           Total Recaudado
                         </p>
                         <p className="text-2xl font-bold text-white">
-                          S/ {reporte.resumen.totalRecaudado.toFixed(2)}
+                          S/ {confirmedStats.total.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -479,7 +493,7 @@ export default function PaginaReportes() {
                           Promedio/Venta
                         </p>
                         <p className="text-2xl font-bold text-white">
-                          S/ {reporte.resumen.promedioVenta.toFixed(2)}
+                          S/ {confirmedStats.avg.toFixed(2)}
                         </p>
                       </div>
                     </div>
