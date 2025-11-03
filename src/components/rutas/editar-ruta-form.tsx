@@ -703,67 +703,73 @@ export default function EditarRutaForm({
                 </div>
 
                 {erroresValidacion.embarcaciones && (
-                  <p className="text-sm text-red-400">
-                    {erroresValidacion.embarcaciones}
-                  </p>
-                )}
-              </div>
-
-              {/* Errores de validación globales */}
-              {(error ||
-                errorDetallado ||
-                (validationErrors && validationErrors.length > 0)) && (
-                <div className="mb-6 space-y-3">
-                  {(error || errorDetallado) &&
-                   (!error || !error.toLowerCase().includes("nombre")) && (
-                    <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
-                      <div className="flex items-center">
-                        <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
-                        <div>
-                          <p className="text-red-300 font-medium">
-                            Error general
-                          </p>
-                          <p className="text-red-200 text-sm mt-1">
-                            {errorDetallado || error}
-                          </p>
-                        </div>
-                      </div>
+                  <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                    <div className="flex items-center">
+                      <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                      <p className="text-red-300 text-sm">
+                        {erroresValidacion.embarcaciones}
+                      </p>
                     </div>
-                  )}
-                  {validationErrors &&
-                    validationErrors.length > 0 &&
-                    mostrarErroresEmbarcaciones && (
-                      <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
-                        <div className="flex items-start">
-                          <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <p className="text-orange-300 font-medium">
-                              Errores de validación de embarcaciones
+                  </div>
+                )}
+
+                {/* Errores de validación globales */}
+                {(error ||
+                  errorDetallado ||
+                  (validationErrors && validationErrors.length > 0)) && (
+                  <div className="space-y-3">
+                    {(error || errorDetallado) &&
+                     (!error || !error.toLowerCase().includes("nombre")) && (
+                      <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                        <div className="flex items-center">
+                          <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                          <div>
+                            <p className="text-red-300 font-medium">
+                              Error general
                             </p>
-                            <p className="text-orange-200 text-sm mt-1">
-                              Las siguientes embarcaciones ya están asignadas a
-                              otras rutas y no se pueden usar:
+                            <p className="text-red-200 text-sm mt-1">
+                              {errorDetallado || error}
                             </p>
-                            <ul className="text-orange-200 text-sm mt-2 space-y-1">
-                              {validationErrors.map((errorMsg, index) => (
-                                <li key={index} className="flex items-start">
-                                  <span className="mr-2">•</span>
-                                  <span>{errorMsg}</span>
-                                </li>
-                              ))}
-                            </ul>
-                            <div className="mt-3 text-xs text-orange-300 bg-orange-900/20 p-2 rounded-lg">
-                              💡 <strong>Solución:</strong> Selecciona
-                              embarcaciones diferentes o desactiva las
-                              embarcaciones problemáticas en el componente de
-                              selección.
-                            </div>
                           </div>
                         </div>
                       </div>
                     )}
-                </div>
-              )}
+                    {validationErrors &&
+                      validationErrors.length > 0 &&
+                      mostrarErroresEmbarcaciones && (
+                        <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
+                          <div className="flex items-start">
+                            <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-orange-300 font-medium">
+                                Errores de validación de embarcaciones
+                              </p>
+                              <p className="text-orange-200 text-sm mt-1">
+                                Las siguientes embarcaciones ya están asignadas a
+                                otras rutas y no se pueden usar:
+                              </p>
+                              <ul className="text-orange-200 text-sm mt-2 space-y-1">
+                                {validationErrors.map((errorMsg, index) => (
+                                  <li key={index} className="flex items-start">
+                                    <span className="mr-2">•</span>
+                                    <span>{errorMsg}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              <div className="mt-3 text-xs text-orange-300 bg-orange-900/20 p-2 rounded-lg">
+                                💡 <strong>Solución:</strong> Selecciona
+                                embarcaciones diferentes o desactiva las
+                                embarcaciones problemáticas en el componente de
+                                selección.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                )}
+              </div>
+            )}
             </form>
           </div>
         </div>
