@@ -695,7 +695,7 @@ export async function POST(request: NextRequest) {
               if (typeof m === "object" && m !== null) {
                 const obj = m as Record<string, unknown>;
                 const metodo = String(
-                  obj.metodo || obj.metodoPago || obj.nombre || ""
+                  obj.tipo || obj.metodo || obj.metodoPago || obj.nombre || ""
                 ).trim();
                 const monto = Number(obj.monto || 0);
                 return monto > 0 ? `${metodo}: S/ ${monto.toFixed(2)}` : metodo;

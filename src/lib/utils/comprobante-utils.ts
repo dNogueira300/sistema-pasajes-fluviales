@@ -216,7 +216,7 @@ export async function generarComprobanteA4(
   // ============================================
 
   // Calcular altura dinámica del recuadro
-  let alturaRecuadro = 45; // Altura base
+  let alturaRecuadro = 52; // Altura base (ajustada para contener todo el contenido)
   if (venta.tipoPago === "HIBRIDO" && venta.metodosPago) {
     alturaRecuadro += venta.metodosPago.length * 4; // +4mm por cada método
   }
