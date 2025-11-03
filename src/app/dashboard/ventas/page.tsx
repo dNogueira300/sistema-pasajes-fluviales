@@ -929,16 +929,13 @@ export default function VentasPage() {
                                   // Calcular posición vertical (debajo del botón)
                                   (target as HTMLElement).style.top = `${rect.bottom + window.scrollY + 4}px`;
 
-                                  // Calcular posición horizontal (evitar que se salga del viewport)
-                                  // Si hay espacio suficiente, alinear a la derecha del botón
-                                  // Si no hay espacio, alinear al borde derecho del viewport con un margen
+                                  // Calcular posición horizontal - SIEMPRE alinear a la IZQUIERDA del botón
+                                  // El menú se abre hacia la izquierda desde el botón de 3 puntos
                                   let leftPosition = rect.right + window.scrollX - menuWidth;
+
+                                  // Si se sale por la izquierda del viewport, ajustar al margen mínimo
                                   if (leftPosition < 10) {
-                                    // Si se sale por la izquierda, ajustar
                                     leftPosition = 10;
-                                  } else if (leftPosition + menuWidth > viewportWidth - 10) {
-                                    // Si se sale por la derecha, ajustar al borde derecho
-                                    leftPosition = viewportWidth - menuWidth - 10;
                                   }
 
                                   (target as HTMLElement).style.left = `${leftPosition}px`;
