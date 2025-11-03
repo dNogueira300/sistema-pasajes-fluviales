@@ -1,4 +1,4 @@
-// components/rutas/editar-ruta-form.tsx - Versión con scroll optimizado
+// components/rutas/editar-ruta-form.tsx
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -445,7 +445,9 @@ export default function EditarRutaForm({
         {/* Header fijo */}
         <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl flex-shrink-0">
           <div>
-            <h2 className="text-xl font-semibold text-slate-100">Editar Ruta</h2>
+            <h2 className="text-xl font-semibold text-slate-100">
+              Editar Ruta
+            </h2>
             <p className="text-sm text-slate-400 mt-1">
               Paso {pasoActual} de 2:{" "}
               {pasoActual === 1
@@ -516,158 +518,159 @@ export default function EditarRutaForm({
               {/* PASO 1: Información de la Ruta */}
               {pasoActual === 1 && (
                 <div className="space-y-6">
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Nombre de la Ruta *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={datosBasicos.nombre}
-                    onChange={(e) =>
-                      handleInputChange("nombre", e.target.value)
-                    }
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                      erroresValidacion.nombre
-                        ? "border-red-500/50 focus:border-red-500"
-                        : "border-slate-600/50 focus:border-blue-500"
-                    }`}
-                    placeholder="Ej: Iquitos - Yurimaguas"
-                  />
-                  {erroresValidacion.nombre && (
-                    <p className="mt-1 text-sm text-red-400">
-                      {erroresValidacion.nombre}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Origen *
+                      Nombre de la Ruta *
                     </label>
                     <input
                       type="text"
                       required
-                      value={datosBasicos.puertoOrigen}
+                      value={datosBasicos.nombre}
                       onChange={(e) =>
-                        handleInputChange("puertoOrigen", e.target.value)
+                        handleInputChange("nombre", e.target.value)
                       }
                       className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                        erroresValidacion.puertoOrigen
+                        erroresValidacion.nombre
                           ? "border-red-500/50 focus:border-red-500"
                           : "border-slate-600/50 focus:border-blue-500"
                       }`}
-                      placeholder="Ej: Iquitos"
+                      placeholder="Ej: Iquitos - Yurimaguas"
                     />
-                    {erroresValidacion.puertoOrigen && (
+                    {erroresValidacion.nombre && (
                       <p className="mt-1 text-sm text-red-400">
-                        {erroresValidacion.puertoOrigen}
+                        {erroresValidacion.nombre}
                       </p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Destino *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={datosBasicos.puertoDestino}
-                      onChange={(e) =>
-                        handleInputChange("puertoDestino", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                        erroresValidacion.puertoDestino
-                          ? "border-red-500/50 focus:border-red-500"
-                          : "border-slate-600/50 focus:border-blue-500"
-                      }`}
-                      placeholder="Ej: Yurimaguas"
-                    />
-                    {erroresValidacion.puertoDestino && (
-                      <p className="mt-1 text-sm text-red-400">
-                        {erroresValidacion.puertoDestino}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Precio *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
-                      S/
-                    </span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="1000"
-                      required
-                      value={datosBasicos.precio}
-                      onChange={(e) => handlePrecioChange(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                        erroresValidacion.precio
-                          ? "border-red-500/50 focus:border-red-500"
-                          : "border-slate-600/50 focus:border-blue-500"
-                      }`}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  {erroresValidacion.precio && (
-                    <p className="mt-1 text-sm text-red-400">
-                      {erroresValidacion.precio}
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs text-slate-400">
-                    Precio entre 0.01 y 1000 soles peruanos
-                  </p>
-                </div>
-
-                {/* Toggle Button para Estado Activo */}
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-slate-300">
-                    Estado de la Ruta
-                  </label>
-                  <div className="flex items-center space-x-4">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleInputChange("activa", !datosBasicos.activa)
-                      }
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 shadow-lg ${
-                        datosBasicos.activa
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-slate-600 hover:bg-slate-500"
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
-                          datosBasicos.activa
-                            ? "translate-x-6"
-                            : "translate-x-1"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Origen *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={datosBasicos.puertoOrigen}
+                        onChange={(e) =>
+                          handleInputChange("puertoOrigen", e.target.value)
+                        }
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                          erroresValidacion.puertoOrigen
+                            ? "border-red-500/50 focus:border-red-500"
+                            : "border-slate-600/50 focus:border-blue-500"
                         }`}
+                        placeholder="Ej: Iquitos"
                       />
-                    </button>
-                    <span
-                      className={`text-sm font-medium transition-colors duration-200 ${
-                        datosBasicos.activa
-                          ? "text-green-400"
-                          : "text-slate-400"
-                      }`}
-                    >
-                      {datosBasicos.activa ? "Activa para ventas" : "Inactiva"}
-                    </span>
+                      {erroresValidacion.puertoOrigen && (
+                        <p className="mt-1 text-sm text-red-400">
+                          {erroresValidacion.puertoOrigen}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Destino *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={datosBasicos.puertoDestino}
+                        onChange={(e) =>
+                          handleInputChange("puertoDestino", e.target.value)
+                        }
+                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                          erroresValidacion.puertoDestino
+                            ? "border-red-500/50 focus:border-red-500"
+                            : "border-slate-600/50 focus:border-blue-500"
+                        }`}
+                        placeholder="Ej: Yurimaguas"
+                      />
+                      {erroresValidacion.puertoDestino && (
+                        <p className="mt-1 text-sm text-red-400">
+                          {erroresValidacion.puertoDestino}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-300">
-                    Las rutas activas estarán disponibles para seleccionar en
-                    las ventas
-                  </p>
-                </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Precio *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+                        S/
+                      </span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="1000"
+                        required
+                        value={datosBasicos.precio}
+                        onChange={(e) => handlePrecioChange(e.target.value)}
+                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                          erroresValidacion.precio
+                            ? "border-red-500/50 focus:border-red-500"
+                            : "border-slate-600/50 focus:border-blue-500"
+                        }`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    {erroresValidacion.precio && (
+                      <p className="mt-1 text-sm text-red-400">
+                        {erroresValidacion.precio}
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-slate-400">
+                      Precio entre 0.01 y 1000 soles peruanos
+                    </p>
+                  </div>
+
+                  {/* Toggle Button para Estado Activo */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-slate-300">
+                      Estado de la Ruta
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleInputChange("activa", !datosBasicos.activa)
+                        }
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 shadow-lg ${
+                          datosBasicos.activa
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-slate-600 hover:bg-slate-500"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                            datosBasicos.activa
+                              ? "translate-x-6"
+                              : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                      <span
+                        className={`text-sm font-medium transition-colors duration-200 ${
+                          datosBasicos.activa
+                            ? "text-green-400"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        {datosBasicos.activa
+                          ? "Activa para ventas"
+                          : "Inactiva"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300">
+                      Las rutas activas estarán disponibles para seleccionar en
+                      las ventas
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -679,97 +682,100 @@ export default function EditarRutaForm({
                     <h3 className="text-lg font-medium text-slate-100">
                       Embarcaciones para la Ruta
                     </h3>
-                  <button
-                    type="button"
-                    onClick={handleAgregarEmbarcacion}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Agregar Embarcación</span>
-                  </button>
-                </div>
-
-                {/* Contenedor de embarcaciones con scroll propio */}
-                <div
-                  ref={embarcacionesContainerRef}
-                  className="max-h-96 overflow-y-auto bg-slate-700/20 rounded-xl p-4 border border-slate-600/30"
-                >
-                  <SeleccionarEmbarcaciones
-                    embarcacionesSeleccionadas={embarcaciones}
-                    onChange={handleEmbarcacionesChange}
-                    rutaId={ruta.id}
-                    mostrarBotonAgregar={false} // Ocultamos el botón interno
-                  />
-                </div>
-
-                {erroresValidacion.embarcaciones && (
-                  <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
-                    <div className="flex items-center">
-                      <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
-                      <p className="text-red-300 text-sm">
-                        {erroresValidacion.embarcaciones}
-                      </p>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAgregarEmbarcacion}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>Agregar Embarcación</span>
+                    </button>
                   </div>
-                )}
 
-                {/* Errores de validación globales */}
-                {(error ||
-                  errorDetallado ||
-                  (validationErrors && validationErrors.length > 0)) && (
-                  <div className="space-y-3">
-                    {(error || errorDetallado) &&
-                     (!error || !error.toLowerCase().includes("nombre")) && (
-                      <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
-                        <div className="flex items-center">
-                          <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
-                          <div>
-                            <p className="text-red-300 font-medium">
-                              Error general
-                            </p>
-                            <p className="text-red-200 text-sm mt-1">
-                              {errorDetallado || error}
-                            </p>
-                          </div>
-                        </div>
+                  {/* Contenedor de embarcaciones con scroll propio */}
+                  <div
+                    ref={embarcacionesContainerRef}
+                    className="max-h-96 overflow-y-auto bg-slate-700/20 rounded-xl p-4 border border-slate-600/30"
+                  >
+                    <SeleccionarEmbarcaciones
+                      embarcacionesSeleccionadas={embarcaciones}
+                      onChange={handleEmbarcacionesChange}
+                      rutaId={ruta.id}
+                      mostrarBotonAgregar={false} // Ocultamos el botón interno
+                    />
+                  </div>
+
+                  {erroresValidacion.embarcaciones && (
+                    <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                      <div className="flex items-center">
+                        <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                        <p className="text-red-300 text-sm">
+                          {erroresValidacion.embarcaciones}
+                        </p>
                       </div>
-                    )}
-                    {validationErrors &&
-                      validationErrors.length > 0 &&
-                      mostrarErroresEmbarcaciones && (
-                        <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
-                          <div className="flex items-start">
-                            <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
-                            <div className="flex-1">
-                              <p className="text-orange-300 font-medium">
-                                Errores de validación de embarcaciones
-                              </p>
-                              <p className="text-orange-200 text-sm mt-1">
-                                Las siguientes embarcaciones ya están asignadas a
-                                otras rutas y no se pueden usar:
-                              </p>
-                              <ul className="text-orange-200 text-sm mt-2 space-y-1">
-                                {validationErrors.map((errorMsg, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="mr-2">•</span>
-                                    <span>{errorMsg}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                              <div className="mt-3 text-xs text-orange-300 bg-orange-900/20 p-2 rounded-lg">
-                                💡 <strong>Solución:</strong> Selecciona
-                                embarcaciones diferentes o desactiva las
-                                embarcaciones problemáticas en el componente de
-                                selección.
+                    </div>
+                  )}
+
+                  {/* Errores de validación globales */}
+                  {(error ||
+                    errorDetallado ||
+                    (validationErrors && validationErrors.length > 0)) && (
+                    <div className="space-y-3">
+                      {(error || errorDetallado) &&
+                        (!error || !error.toLowerCase().includes("nombre")) && (
+                          <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                            <div className="flex items-center">
+                              <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                              <div>
+                                <p className="text-red-300 font-medium">
+                                  Error general
+                                </p>
+                                <p className="text-red-200 text-sm mt-1">
+                                  {errorDetallado || error}
+                                </p>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                  </div>
-                )}
-              </div>
-            )}
+                        )}
+                      {validationErrors &&
+                        validationErrors.length > 0 &&
+                        mostrarErroresEmbarcaciones && (
+                          <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
+                            <div className="flex items-start">
+                              <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-orange-300 font-medium">
+                                  Errores de validación de embarcaciones
+                                </p>
+                                <p className="text-orange-200 text-sm mt-1">
+                                  Las siguientes embarcaciones ya están
+                                  asignadas a otras rutas y no se pueden usar:
+                                </p>
+                                <ul className="text-orange-200 text-sm mt-2 space-y-1">
+                                  {validationErrors.map((errorMsg, index) => (
+                                    <li
+                                      key={index}
+                                      className="flex items-start"
+                                    >
+                                      <span className="mr-2">•</span>
+                                      <span>{errorMsg}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                                <div className="mt-3 text-xs text-orange-300 bg-orange-900/20 p-2 rounded-lg">
+                                  💡 <strong>Solución:</strong> Selecciona
+                                  embarcaciones diferentes o desactiva las
+                                  embarcaciones problemáticas en el componente
+                                  de selección.
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  )}
+                </div>
+              )}
             </form>
           </div>
         </div>
