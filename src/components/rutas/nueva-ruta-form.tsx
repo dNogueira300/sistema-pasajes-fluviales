@@ -1,7 +1,14 @@
 // components/rutas/nueva-ruta-form.tsx - Versión con dos pasos
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { X, AlertTriangle, CheckCircle, Plus, ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  X,
+  AlertTriangle,
+  CheckCircle,
+  Plus,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 import { CrearRutaConEmbarcaciones, CrearEmbarcacionRutaData } from "@/types";
 import SeleccionarEmbarcaciones from "./seleccionar-embarcaciones";
 
@@ -303,7 +310,10 @@ export default function NuevaRutaForm({
           <div>
             <h2 className="text-xl font-semibold text-slate-100">Nueva Ruta</h2>
             <p className="text-sm text-slate-400 mt-1">
-              Paso {pasoActual} de 2: {pasoActual === 1 ? "Información de la Ruta" : "Asignación de Embarcaciones"}
+              Paso {pasoActual} de 2:{" "}
+              {pasoActual === 1
+                ? "Información de la Ruta"
+                : "Asignación de Embarcaciones"}
             </p>
           </div>
           <button
@@ -451,7 +461,7 @@ export default function NuevaRutaForm({
                       Precio *
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 z-10">
                         S/
                       </span>
                       <input
@@ -511,7 +521,9 @@ export default function NuevaRutaForm({
                             : "text-slate-400"
                         }`}
                       >
-                        {datosBasicos.activa ? "Activa para ventas" : "Inactiva"}
+                        {datosBasicos.activa
+                          ? "Activa para ventas"
+                          : "Inactiva"}
                       </span>
                     </div>
                     <p className="text-xs text-slate-300">
@@ -564,7 +576,8 @@ export default function NuevaRutaForm({
                   )}
 
                   {/* Errores de validación globales */}
-                  {(error || (validationErrors && validationErrors.length > 0)) && (
+                  {(error ||
+                    (validationErrors && validationErrors.length > 0)) && (
                     <div className="space-y-3">
                       {error && !error.toLowerCase().includes("nombre") && (
                         <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
@@ -574,7 +587,9 @@ export default function NuevaRutaForm({
                               <p className="text-red-300 font-medium">
                                 Error general
                               </p>
-                              <p className="text-red-200 text-sm mt-1">{error}</p>
+                              <p className="text-red-200 text-sm mt-1">
+                                {error}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -592,7 +607,10 @@ export default function NuevaRutaForm({
                                 </p>
                                 <ul className="text-orange-200 text-sm mt-2 space-y-1">
                                   {validationErrors.map((errorMsg, index) => (
-                                    <li key={index} className="flex items-start">
+                                    <li
+                                      key={index}
+                                      className="flex items-start"
+                                    >
                                       <span className="mr-2">•</span>
                                       <span>{errorMsg}</span>
                                     </li>
@@ -657,9 +675,7 @@ export default function NuevaRutaForm({
                 type="submit"
                 form="nueva-ruta-form"
                 disabled={
-                  loading ||
-                  embarcaciones.length === 0 ||
-                  hayErroresValidacion
+                  loading || embarcaciones.length === 0 || hayErroresValidacion
                 }
                 className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
