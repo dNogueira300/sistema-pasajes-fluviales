@@ -2,40 +2,14 @@
 import { formatearFechaViaje } from "./fecha-utils";
 import type { Venta } from "@/types";
 
-interface VentaExtendida extends Venta {
-  precioUnitario?: number;
-  subtotal?: number;
-  impuestos?: number;
-  horaEmbarque?: string;
-  tipoPago?: "EFECTIVO" | "TARJETA" | "YAPE" | "PLIN" | "HIBRIDO";
-  metodosPago?: MetodoPago[];
-}
-
-interface VentaConHoraEmbarque extends Venta {
-  horaEmbarque?: string;
-}
-
 interface ClienteConNacionalidad {
   nacionalidad?: string;
-}
-
-interface MetodoPago {
-  tipo: string;
-  monto: number;
 }
 
 export async function generarComprobanteImagen(
   ventaInput: Venta
 ): Promise<Blob> {
-  const ventaConHora = ventaInput as VentaConHoraEmbarque;
-
-  const venta: VentaExtendida = {
-    ...ventaInput,
-    precioUnitario: ventaInput.total / ventaInput.cantidadPasajes,
-    subtotal: ventaInput.total,
-    impuestos: 0,
-    horaEmbarque: ventaConHora.horaEmbarque || ventaInput.horaViaje,
-  };
+  const venta = ventaInput;
 
   // Crear canvas con tamaño A4 (794x1123 px a 96 DPI)
   const canvas = document.createElement("canvas");

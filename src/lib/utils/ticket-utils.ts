@@ -19,11 +19,14 @@ interface VentaTicket {
   subtotal: number;
   impuestos: number;
   total: number;
-  tipoPago: "EFECTIVO" | "TARJETA" | "YAPE" | "PLIN" | "HIBRIDO";
+  tipoPago: "EFECTIVO" | "TARJETA" | "YAPE" | "PLIN" | "HIBRIDO" | "UNICO";
   metodoPago: string;
   metodosPago?: MetodoPago[];
   estado: "CONFIRMADA" | "ANULADA";
   observaciones?: string;
+  // Campos específicos de la venta (dirección seleccionada)
+  puertoOrigen: string;
+  puertoDestino: string;
   cliente: {
     nombre: string;
     apellido: string;
