@@ -9,7 +9,7 @@ import {
   Search,
   Filter,
   Edit,
-  //Trash2,
+  Trash2,
   Route,
   DollarSign,
   ToggleLeft,
@@ -350,10 +350,10 @@ export default function GestionRutas() {
   };
 
   // Manejar eliminar ruta
-  // const abrirModalEliminar = (ruta: Ruta) => {
-  //   setRutaSeleccionada(ruta);
-  //   setModalConfirmarEliminar(true);
-  // };
+  const abrirModalEliminar = (ruta: Ruta) => {
+    setRutaSeleccionada(ruta);
+    setModalConfirmarEliminar(true);
+  };
 
   // Manejar eliminación de ruta
   const handleEliminarRuta = async () => {
@@ -778,13 +778,13 @@ export default function GestionRutas() {
                           >
                             <Edit className="h-5 w-5" />
                           </button>
-                          {/* <button
+                          <button
                             onClick={() => abrirModalEliminar(ruta)}
                             className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-xl transition-all duration-200"
                             title="Eliminar ruta"
                           >
                             <Trash2 className="h-5 w-5" />
-                          </button> */}
+                          </button>
                         </div>
                       </td>
                     </tr>
