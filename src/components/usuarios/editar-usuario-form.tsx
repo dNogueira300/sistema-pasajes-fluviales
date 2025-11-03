@@ -161,7 +161,7 @@ export default function EditarUsuarioForm({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl drop-shadow-2xl border border-slate-600/50 flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md z-20">
+        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md z-20 flex-shrink-0">
           <h2 className="text-xl font-semibold text-slate-100">
             Editar Usuario
           </h2>
@@ -174,7 +174,7 @@ export default function EditarUsuarioForm({
         </div>
 
         <div className="overflow-y-auto flex-1">
-          <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          <form id="editar-usuario-form" onSubmit={handleSubmit}>
             <div className="p-6 space-y-6">
               {/* Información Personal */}
               <div className="space-y-4">
@@ -443,42 +443,42 @@ export default function EditarUsuarioForm({
                 </div>
               </div>
             )}
-            </div>
-
-            {/* Footer con botones de acción */}
-            <div className="border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md p-6">
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={loading}
-                  className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    loading ||
-                    !formulario.email?.trim() ||
-                    !formulario.username?.trim() ||
-                    !formulario.nombre?.trim() ||
-                    !formulario.apellido?.trim()
-                  }
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
-                >
-                  {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Guardando...</span>
-                    </div>
-                  ) : (
-                    "Actualizar Usuario"
-                  )}
-                </button>
-              </div>
-            </div>
           </form>
+        </div>
+
+        {/* Footer con botones de acción */}
+        <div className="border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md p-6 flex-shrink-0">
+          <div className="flex justify-end space-x-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              form="editar-usuario-form"
+              disabled={
+                loading ||
+                !formulario.email?.trim() ||
+                !formulario.username?.trim() ||
+                !formulario.nombre?.trim() ||
+                !formulario.apellido?.trim()
+              }
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+            >
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Guardando...</span>
+                </div>
+              ) : (
+                "Actualizar Usuario"
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
