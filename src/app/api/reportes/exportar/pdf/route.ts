@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
       text: "#1f2937",
     };
 
-    let yPosition = 20;
-    const margin = 20;
+    let yPosition = 18;
+    const margin = 12; // reducir márgenes laterales para más espacio
 
     // Función para agregar nueva página si es necesario
     const checkPageBreak = (requiredSpace: number): void => {
@@ -104,17 +104,190 @@ export async function POST(request: NextRequest) {
     pdf.text("Resumen Ejecutivo", margin, yPosition);
     yPosition += 10;
 
-    // Calcular totales válidos (solo confirmadas) para el resumen
-    const totalConfirmadas = reporte.ventasDetalladas
-      ? reporte.ventasDetalladas.filter((v) => v.estado === "CONFIRMADA").length
-      : 0;
-    const totalRecaudadoConfirmadas = reporte.ventasDetalladas
-      ? reporte.ventasDetalladas
-          .filter((v) => v.estado === "CONFIRMADA")
-          .reduce((s, v) => s + (Number(v.total) || 0), 0)
-      : 0;
+    // Preparar ventas válidas: filtrar por rango de fechas seleccionado y solo CONFIRMADA
+    const ventas: Record<string, unknown>[] = Array.isArray(
+      reporte.ventasDetalladas
+    )
+      ? (reporte.ventasDetalladas as unknown as Record<string, unknown>[])
+      : [];
+    const startDate =
+      reporte.filtros && reporte.filtros.fechaInicio
+        ? new Date(String(reporte.filtros.fechaInicio))
+        : null;
+    const endDate =
+      reporte.filtros && reporte.filtros.fechaFin
+        ? new Date(String(reporte.filtros.fechaFin))
+        : null;
+    if (endDate) endDate.setHours(23, 59, 59, 999);
+
+    const ventasEnRango = ventas.filter((v) => {
+      if (!v) return false;
+      if (!startDate || !endDate) return true;
+      const fecha = v.fechaVenta ? new Date(String(v.fechaVenta)) : null;
+      if (!fecha) return false;
+      return fecha >= startDate && fecha <= endDate;
+    });
+
+    const ventasValidas = ventasEnRango.filter((v) => {
+      if (!v) return false;
+      const estado = String(v.estado || "").toUpperCase();
+      if (estado !== "CONFIRMADA") return false;
+      return true;
+    });
+
+    // Calcular totales válidos (solo confirmadas y en rango)
+    const totalConfirmadas = ventasValidas.length;
+    const totalRecaudadoConfirmadas = ventasValidas.reduce((s, v) => {
+      const vv = v as Record<string, unknown>;
+      return s + (Number(vv.total as number | string) || 0);
+    }, 0);
     const promedioConfirmadas =
       totalConfirmadas > 0 ? totalRecaudadoConfirmadas / totalConfirmadas : 0;
+
+    // Agregaciones explícitas (tipadas) basadas en ventasValidas
+    type RutaAgg = {
+      rutaId: string;
+      nombreRuta: string;
+      totalVentas: number;
+      totalRecaudado: number;
+      totalPasajes: number;
+      porcentaje: number;
+    };
+
+    const rutasMap = new Map<string, RutaAgg>();
+    ventasValidas.forEach((v) => {
+      const vv = v as unknown as Record<string, unknown>;
+      const key = String(vv.ruta || vv.nombreRuta || vv.rutaId || "Sin Ruta");
+      const totalNum = Number((vv.total as number | string) || 0);
+      const pasajesNum = Number((vv.cantidadPasajes as number | string) || 0);
+      const existing = rutasMap.get(key);
+      if (existing) {
+        existing.totalVentas += 1;
+        existing.totalRecaudado += totalNum;
+        existing.totalPasajes += pasajesNum;
+      } else {
+        rutasMap.set(key, {
+          rutaId: String(vv.rutaId || ""),
+          nombreRuta: key,
+          totalVentas: 1,
+          totalRecaudado: totalNum,
+          totalPasajes: pasajesNum,
+          porcentaje: 0,
+        });
+      }
+    });
+    const porRutaFiltradas = Array.from(rutasMap.values()).sort(
+      (a, b) => b.totalRecaudado - a.totalRecaudado
+    );
+
+    type VendedorAgg = {
+      vendedorId: string;
+      nombreVendedor: string;
+      totalVentas: number;
+      totalRecaudado: number;
+      totalPasajes: number;
+      porcentaje: number;
+    };
+
+    const vendedoresMap = new Map<string, VendedorAgg>();
+    ventasValidas.forEach((v) => {
+      const vv = v as unknown as Record<string, unknown>;
+      const key = String(
+        vv.vendedor || vv.nombreVendedor || vv.vendedorId || "Sin Vendedor"
+      );
+      const totalNum = Number((vv.total as number | string) || 0);
+      const pasajesNum = Number((vv.cantidadPasajes as number | string) || 0);
+      const existing = vendedoresMap.get(key);
+      if (existing) {
+        existing.totalVentas += 1;
+        existing.totalRecaudado += totalNum;
+        existing.totalPasajes += pasajesNum;
+      } else {
+        vendedoresMap.set(key, {
+          vendedorId: String(vv.vendedorId || ""),
+          nombreVendedor: key,
+          totalVentas: 1,
+          totalRecaudado: totalNum,
+          totalPasajes: pasajesNum,
+          porcentaje: 0,
+        });
+      }
+    });
+    const porVendedorFiltradas = Array.from(vendedoresMap.values()).sort(
+      (a, b) => b.totalRecaudado - a.totalRecaudado
+    );
+
+    type EmbarcacionAgg = {
+      embarcacionId: string;
+      nombreEmbarcacion: string;
+      totalVentas: number;
+      totalRecaudado: number;
+      totalPasajes: number;
+      porcentaje: number;
+    };
+
+    const embarcacionesMap = new Map<string, EmbarcacionAgg>();
+    ventasValidas.forEach((v) => {
+      const vv = v as unknown as Record<string, unknown>;
+      const key = String(
+        vv.embarcacion ||
+          vv.nombreEmbarcacion ||
+          vv.embarcacionId ||
+          "Sin Embarcación"
+      );
+      const totalNum = Number((vv.total as number | string) || 0);
+      const pasajesNum = Number((vv.cantidadPasajes as number | string) || 0);
+      const existing = embarcacionesMap.get(key);
+      if (existing) {
+        existing.totalVentas += 1;
+        existing.totalRecaudado += totalNum;
+        existing.totalPasajes += pasajesNum;
+      } else {
+        embarcacionesMap.set(key, {
+          embarcacionId: String(vv.embarcacionId || ""),
+          nombreEmbarcacion: key,
+          totalVentas: 1,
+          totalRecaudado: totalNum,
+          totalPasajes: pasajesNum,
+          porcentaje: 0,
+        });
+      }
+    });
+    const porEmbarcacionFiltradas = Array.from(embarcacionesMap.values()).sort(
+      (a, b) => b.totalRecaudado - a.totalRecaudado
+    );
+
+    type MetodoAgg = {
+      metodoPago: string;
+      tipoPago: string;
+      totalVentas: number;
+      totalRecaudado: number;
+      porcentaje: number;
+    };
+
+    const metodoMap = new Map<string, MetodoAgg>();
+    ventasValidas.forEach((v) => {
+      const vv = v as unknown as Record<string, unknown>;
+      const key = String(vv.metodoPago || "Sin Método");
+      const tipo = String(vv.tipoPago || "");
+      const totalNum = Number((vv.total as number | string) || 0);
+      const existing = metodoMap.get(key);
+      if (existing) {
+        existing.totalVentas += 1;
+        existing.totalRecaudado += totalNum;
+      } else {
+        metodoMap.set(key, {
+          metodoPago: key,
+          tipoPago: tipo,
+          totalVentas: 1,
+          totalRecaudado: totalNum,
+          porcentaje: 0,
+        });
+      }
+    });
+    const porMetodoPagoFiltradas = Array.from(metodoMap.values()).sort(
+      (a, b) => b.totalRecaudado - a.totalRecaudado
+    );
 
     // Crear tabla de resumen
     const resumenData: [string, string][] = [
@@ -177,13 +350,13 @@ export async function POST(request: NextRequest) {
       yPosition += 10;
     }
 
-    // Reporte por rutas (Top 10)
-    if (reporte.porRuta.length > 0) {
+    // Reporte por rutas (Top 10) — ahora basado en ventas filtradas y solo confirmadas
+    if (porRutaFiltradas.length > 0) {
       checkPageBreak(50);
       pdf.setFontSize(14);
       pdf.setTextColor(colors.text);
       pdf.text(
-        `Reporte por Rutas (${reporte.porRuta.length} rutas totales)`,
+        `Reporte por Rutas (${porRutaFiltradas.length} rutas totales)`,
         margin,
         yPosition
       );
@@ -203,7 +376,7 @@ export async function POST(request: NextRequest) {
       pdf.setFont(undefined, "normal");
       yPosition += 10;
 
-      const topRutas = reporte.porRuta.slice(0, 10);
+      const topRutas = porRutaFiltradas.slice(0, 10);
       topRutas.forEach((ruta, index) => {
         checkPageBreak(8);
 
@@ -218,7 +391,7 @@ export async function POST(request: NextRequest) {
         pdf.text(`${index + 1}`, margin + 2, yPosition);
         pdf.text(ruta.nombreRuta.substring(0, 35), margin + 10, yPosition);
         pdf.text(ruta.totalVentas.toString(), margin + 90, yPosition);
-        pdf.text(ruta.totalPasajes.toString(), margin + 115, yPosition);
+        pdf.text((ruta.totalPasajes || 0).toString(), margin + 115, yPosition);
         pdf.setTextColor(colors.success);
         pdf.setFont(undefined, "bold");
         pdf.text(
@@ -232,13 +405,13 @@ export async function POST(request: NextRequest) {
       yPosition += 10;
     }
 
-    // Reporte por vendedores
-    if (reporte.porVendedor.length > 0) {
+    // Reporte por vendedores (solo confirmadas)
+    if (porVendedorFiltradas.length > 0) {
       checkPageBreak(50);
       pdf.setFontSize(14);
       pdf.setTextColor(colors.text);
       pdf.text(
-        `Reporte por Vendedores (${reporte.porVendedor.length} vendedores)`,
+        `Reporte por Vendedores (${porVendedorFiltradas.length} vendedores)`,
         margin,
         yPosition
       );
@@ -258,7 +431,7 @@ export async function POST(request: NextRequest) {
       pdf.setFont(undefined, "normal");
       yPosition += 10;
 
-      const topVendedores = reporte.porVendedor.slice(0, 10);
+      const topVendedores = porVendedorFiltradas.slice(0, 10);
       topVendedores.forEach((vendedor, index) => {
         checkPageBreak(8);
 
@@ -277,7 +450,11 @@ export async function POST(request: NextRequest) {
           yPosition
         );
         pdf.text(vendedor.totalVentas.toString(), margin + 90, yPosition);
-        pdf.text(vendedor.totalPasajes.toString(), margin + 115, yPosition);
+        pdf.text(
+          (vendedor.totalPasajes || 0).toString(),
+          margin + 115,
+          yPosition
+        );
         pdf.setTextColor(colors.success);
         pdf.setFont(undefined, "bold");
         pdf.text(
@@ -291,8 +468,8 @@ export async function POST(request: NextRequest) {
       yPosition += 10;
     }
 
-    // Métodos de pago
-    if (reporte.porMetodoPago.length > 0) {
+    // Métodos de pago (solo confirmadas)
+    if (porMetodoPagoFiltradas.length > 0) {
       checkPageBreak(50);
       pdf.setFontSize(14);
       pdf.setTextColor(colors.text);
@@ -312,7 +489,7 @@ export async function POST(request: NextRequest) {
       pdf.setFont(undefined, "normal");
       yPosition += 10;
 
-      reporte.porMetodoPago.forEach((metodo, index) => {
+      porMetodoPagoFiltradas.forEach((metodo, index) => {
         checkPageBreak(8);
 
         // Alternar color de fondo
@@ -323,13 +500,21 @@ export async function POST(request: NextRequest) {
 
         pdf.setTextColor(colors.text);
         pdf.setFontSize(9);
-        pdf.text(metodo.metodoPago.substring(0, 25), margin + 2, yPosition);
-        pdf.text(metodo.tipoPago.substring(0, 20), margin + 60, yPosition);
-        pdf.text(metodo.totalVentas.toString(), margin + 105, yPosition);
+        pdf.text(
+          String(metodo.metodoPago).substring(0, 25),
+          margin + 2,
+          yPosition
+        );
+        pdf.text(
+          String(metodo.tipoPago || "").substring(0, 20),
+          margin + 60,
+          yPosition
+        );
+        pdf.text(String(metodo.totalVentas || 0), margin + 105, yPosition);
         pdf.setTextColor(colors.success);
         pdf.setFont(undefined, "bold");
         pdf.text(
-          `S/ ${metodo.totalRecaudado.toFixed(2)}`,
+          `S/ ${Number(metodo.totalRecaudado || 0).toFixed(2)}`,
           margin + 140,
           yPosition
         );
@@ -339,13 +524,13 @@ export async function POST(request: NextRequest) {
       yPosition += 10;
     }
 
-    // Reporte por embarcaciones
-    if (reporte.porEmbarcacion && reporte.porEmbarcacion.length > 0) {
+    // Reporte por embarcaciones (solo confirmadas)
+    if (porEmbarcacionFiltradas && porEmbarcacionFiltradas.length > 0) {
       checkPageBreak(50);
       pdf.setFontSize(14);
       pdf.setTextColor(colors.text);
       pdf.text(
-        `Reporte por Embarcaciones (${reporte.porEmbarcacion.length} embarcaciones)`,
+        `Reporte por Embarcaciones (${porEmbarcacionFiltradas.length} embarcaciones)`,
         margin,
         yPosition
       );
@@ -365,7 +550,7 @@ export async function POST(request: NextRequest) {
       pdf.setFont(undefined, "normal");
       yPosition += 10;
 
-      reporte.porEmbarcacion.forEach((embarcacion, index) => {
+      porEmbarcacionFiltradas.forEach((embarcacion, index) => {
         checkPageBreak(8);
 
         // Alternar color de fondo
@@ -383,7 +568,11 @@ export async function POST(request: NextRequest) {
           yPosition
         );
         pdf.text(embarcacion.totalVentas.toString(), margin + 90, yPosition);
-        pdf.text(embarcacion.totalPasajes.toString(), margin + 115, yPosition);
+        pdf.text(
+          (embarcacion.totalPasajes || 0).toString(),
+          margin + 115,
+          yPosition
+        );
         pdf.setTextColor(colors.success);
         pdf.setFont(undefined, "bold");
         pdf.text(
@@ -412,28 +601,28 @@ export async function POST(request: NextRequest) {
       );
       yPosition += 10;
 
-      // Encabezado de tabla
+      // Encabezado de tabla (usar ancho dinámico basado en el tamaño de la página)
       pdf.setFillColor(30, 64, 175);
-      const tableWidth = 257; // Ancho disponible en landscape (297mm - 2*20mm margen)
+      const tableWidth = getPageWidth() - margin * 2; // ancho dinámico
       pdf.rect(margin, yPosition - 5, tableWidth, 8, "F");
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(7);
       pdf.setFont(undefined, "bold");
 
-      // Definir posiciones de columnas (sin T.Pago, M.Pago más amplio)
+      // Definir posiciones de columnas usando anchura dinámica
       const col = {
         num: margin + 2,
         fechaEmision: margin + 10,
-        fechaViaje: margin + 30,
+        fechaViaje: margin + 34,
         numEmision: margin + 60,
-        cliente: margin + 80,
-        dni: margin + 105,
-        contacto: margin + 125,
-        embarcacion: margin + 145,
-        ruta: margin + 170,
-        metodoPago: margin + 195,
-        estado: margin + 235,
-        total: margin + 250,
+        cliente: margin + 86,
+        dni: margin + 120,
+        contacto: margin + 142,
+        embarcacion: margin + 162,
+        ruta: margin + 190,
+        metodoPago: margin + 220,
+        estado: margin + 250,
+        total: margin + tableWidth - 10,
       };
 
       pdf.text("N°", col.num, yPosition);
@@ -493,16 +682,27 @@ export async function POST(request: NextRequest) {
         );
 
         // Formatear método de pago (mostrar detalles si es híbrido)
-        let metodoPagoTexto = venta.metodoPago.substring(0, 20);
-        if (venta.tipoPago === "HIBRIDO" && venta.metodosPago) {
+        let metodoPagoTexto = String(venta.metodoPago || "").substring(0, 20);
+        if (
+          String(venta.tipoPago || "").toUpperCase() === "HIBRIDO" &&
+          venta.metodosPago
+        ) {
           try {
-            const metodos = Array.isArray(venta.metodosPago)
-              ? venta.metodosPago
-              : JSON.parse(venta.metodosPago as string);
-            metodoPagoTexto = metodos
-              .map((m: { metodo: string }) => m.metodo)
-              .join("+")
-              .substring(0, 20);
+            const raw = venta.metodosPago;
+            const metodos = Array.isArray(raw) ? raw : JSON.parse(String(raw));
+            const partes = (metodos || []).map((m: unknown) => {
+              if (!m) return "";
+              if (typeof m === "string") return m as string;
+              if (typeof m === "object" && m !== null) {
+                const obj = m as Record<string, unknown>;
+                return String(
+                  obj.metodo || obj.metodoPago || obj.nombre || ""
+                ).trim();
+              }
+              return String(m);
+            });
+            metodoPagoTexto =
+              partes.filter(Boolean).join(" + ").substring(0, 40) || "HIBRIDO";
           } catch {
             metodoPagoTexto = "HIBRIDO";
           }
@@ -533,13 +733,11 @@ export async function POST(request: NextRequest) {
       });
 
       // Calcular totales
-      const totalGeneral = reporte.ventasDetalladas.reduce(
-        (sum, venta) => sum + venta.total,
-        0
-      );
-      const totalValido = reporte.ventasDetalladas
-        .filter((venta) => venta.estado === "CONFIRMADA")
-        .reduce((sum, venta) => sum + venta.total, 0);
+      const totalGeneral = ventasEnRango.reduce((sum, venta) => {
+        const vv = venta as Record<string, unknown>;
+        return sum + (Number(vv.total as number | string) || 0);
+      }, 0);
+      const totalValido = totalRecaudadoConfirmadas; // ya calculado arriba a partir de ventasValidas
 
       // Agregar espacio antes de los totales
       yPosition += 10;
