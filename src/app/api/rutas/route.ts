@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar que no exista una ruta con el mismo nombre
-    const rutaExistente = await prisma.ruta.findFirst({
+    const rutaExistentePorNombre = await prisma.ruta.findFirst({
       where: {
         nombre: {
           equals: nombre.trim(),
@@ -171,9 +171,38 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (rutaExistente) {
+    if (rutaExistentePorNombre) {
       return NextResponse.json(
         { error: "Ya existe una ruta con este nombre" },
+        { status: 400 }
+      );
+    }
+
+    // CRÍTICO: Verificar que no exista una ruta con la misma combinación origen-destino
+    const rutaExistentePorTrayecto = await prisma.ruta.findFirst({
+      where: {
+        AND: [
+          {
+            puertoOrigen: {
+              equals: puertoOrigen.trim(),
+              mode: "insensitive",
+            },
+          },
+          {
+            puertoDestino: {
+              equals: puertoDestino.trim(),
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+    });
+
+    if (rutaExistentePorTrayecto) {
+      return NextResponse.json(
+        {
+          error: `Ya existe una ruta con origen "${puertoOrigen.trim()}" y destino "${puertoDestino.trim()}". No se permiten rutas duplicadas con el mismo trayecto.`,
+        },
         { status: 400 }
       );
     }

@@ -629,7 +629,7 @@ export default function NuevaRutaForm({
         </div>
 
         {/* Footer con botones de navegación */}
-        <div className="flex justify-between p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md flex-shrink-0">
+        <div className="flex justify-between p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-b-2xl flex-shrink-0">
           <div>
             {pasoActual === 2 && (
               <button
