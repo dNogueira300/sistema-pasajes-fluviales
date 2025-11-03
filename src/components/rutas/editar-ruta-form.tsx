@@ -1,7 +1,14 @@
 // components/rutas/editar-ruta-form.tsx - Versión con scroll optimizado
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { X, AlertTriangle, CheckCircle, Plus } from "lucide-react";
+import {
+  X,
+  AlertTriangle,
+  CheckCircle,
+  Plus,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 import {
   Ruta,
   ActualizarRutaConEmbarcaciones,
@@ -42,6 +49,9 @@ export default function EditarRutaForm({
   validationErrors = [],
 }: EditarRutaFormProps) {
   const { obtenerEmbarcacionesPorRuta } = useEmbarcacionRutas();
+
+  // Estado del paso actual (1 o 2)
+  const [pasoActual, setPasoActual] = useState(1);
 
   // Estados separados
   const [datosBasicos, setDatosBasicos] = useState<DatosRutaBasicos>({
@@ -144,6 +154,7 @@ export default function EditarRutaForm({
         ...prev,
         nombre: error,
       }));
+      setPasoActual(1); // Volver al paso 1 si hay error en el nombre
     }
   }, [error]);
 
@@ -161,10 +172,11 @@ export default function EditarRutaForm({
       setErroresValidacion({});
       setMostrarErroresEmbarcaciones(false);
       setErrorDetallado(null);
+      setPasoActual(1); // Resetear al paso 1
     }
   }, [isOpen, ruta]);
 
-  const validarFormulario = (): boolean => {
+  const validarPaso1 = (): boolean => {
     const errores: { [key: string]: string } = {};
 
     if (!datosBasicos.nombre.trim()) {
@@ -197,6 +209,13 @@ export default function EditarRutaForm({
       errores.precio = "El precio no puede ser mayor a 1000 soles";
     }
 
+    setErroresValidacion(errores);
+    return Object.keys(errores).length === 0;
+  };
+
+  const validarPaso2 = (): boolean => {
+    const errores: { [key: string]: string } = {};
+
     // Validar embarcaciones
     if (embarcaciones.length === 0) {
       errores.embarcaciones = "Debe asignar al menos una embarcación a la ruta";
@@ -228,17 +247,36 @@ export default function EditarRutaForm({
       }
     }
 
-    console.log("🔍 Validación de formulario:", {
-      errores,
-      datosBasicos,
-      embarcaciones,
-    });
     setErroresValidacion(errores);
     return Object.keys(errores).length === 0;
   };
 
+  const handleSiguientePaso = () => {
+    if (pasoActual === 1) {
+      if (validarPaso1()) {
+        setPasoActual(2);
+        // Limpiar errores al cambiar de paso
+        setErroresValidacion({});
+      }
+    }
+  };
+
+  const handlePasoAnterior = () => {
+    if (pasoActual === 2) {
+      setPasoActual(1);
+      // Limpiar errores al cambiar de paso
+      setErroresValidacion({});
+      setMostrarErroresEmbarcaciones(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (pasoActual === 1) {
+      handleSiguientePaso();
+      return;
+    }
 
     console.log("🚀 Iniciando submit de edición de ruta");
     setErrorDetallado(null);
@@ -249,7 +287,7 @@ export default function EditarRutaForm({
       return;
     }
 
-    if (!validarFormulario()) {
+    if (!validarPaso2()) {
       console.log("❌ Formulario no válido");
       setMostrarErroresEmbarcaciones(true);
       return;
@@ -406,10 +444,14 @@ export default function EditarRutaForm({
       <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-5xl w-full max-h-[95vh] flex flex-col shadow-2xl drop-shadow-2xl border border-slate-600/50">
         {/* Header fijo */}
         <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-xl font-semibold text-slate-100">
-              Editar Ruta
-            </h2>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-100">Editar Ruta</h2>
+            <p className="text-sm text-slate-400 mt-1">
+              Paso {pasoActual} de 2:{" "}
+              {pasoActual === 1
+                ? "Información de la Ruta"
+                : "Asignación de Embarcaciones"}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -419,15 +461,61 @@ export default function EditarRutaForm({
           </button>
         </div>
 
+        {/* Indicador de pasos */}
+        <div className="flex items-center justify-center p-4 border-b border-slate-600/30 bg-slate-700/30">
+          <div className="flex items-center space-x-4">
+            {/* Paso 1 */}
+            <div className="flex items-center">
+              <div
+                className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold transition-all duration-200 ${
+                  pasoActual === 1
+                    ? "bg-blue-600 text-white"
+                    : "bg-green-600 text-white"
+                }`}
+              >
+                {pasoActual > 1 ? <CheckCircle className="h-5 w-5" /> : "1"}
+              </div>
+              <span
+                className={`ml-2 text-sm font-medium ${
+                  pasoActual === 1 ? "text-blue-400" : "text-green-400"
+                }`}
+              >
+                Información
+              </span>
+            </div>
+
+            {/* Línea divisoria */}
+            <div className="w-16 h-0.5 bg-slate-600"></div>
+
+            {/* Paso 2 */}
+            <div className="flex items-center">
+              <div
+                className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold transition-all duration-200 ${
+                  pasoActual === 2
+                    ? "bg-blue-600 text-white"
+                    : "bg-slate-600 text-slate-400"
+                }`}
+              >
+                2
+              </div>
+              <span
+                className={`ml-2 text-sm font-medium ${
+                  pasoActual === 2 ? "text-blue-400" : "text-slate-400"
+                }`}
+              >
+                Embarcaciones
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Contenido scrolleable principal */}
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
           <div className="p-6">
-            <div className="space-y-8">
-              {/* Información básica de la ruta */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-slate-100 border-b border-slate-600/50 pb-2">
-                  Información de la Ruta
-                </h3>
+            <form id="editar-ruta-form" onSubmit={handleSubmit}>
+              {/* PASO 1: Información de la Ruta */}
+              {pasoActual === 1 && (
+                <div className="space-y-6">
 
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -580,15 +668,17 @@ export default function EditarRutaForm({
                     las ventas
                   </p>
                 </div>
-              </div>
+                </div>
+              )}
 
-              {/* Selección de embarcaciones con botón fijo */}
-              <div className="space-y-6">
-                {/* Header con botón fijo */}
-                <div className="flex items-center justify-between sticky top-0 bg-slate-800/95 backdrop-blur-md z-10 py-2 -mx-6 px-6 border-b border-slate-600/50">
-                  <h3 className="text-lg font-medium text-slate-100">
-                    Asignación de Embarcaciones
-                  </h3>
+              {/* PASO 2: Asignación de Embarcaciones */}
+              {pasoActual === 2 && (
+                <div className="space-y-6">
+                  {/* Header con botón fijo */}
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-slate-100">
+                      Embarcaciones para la Ruta
+                    </h3>
                   <button
                     type="button"
                     onClick={handleAgregarEmbarcacion}
@@ -674,52 +764,75 @@ export default function EditarRutaForm({
                     )}
                 </div>
               )}
-
-              {/* Espaciado adicional */}
-              <div className="h-6"></div>
-            </div>
+            </form>
           </div>
         </div>
 
-        {/* Footer fijo */}
-        <div className="flex justify-end space-x-4 p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md flex-shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={
-              loading ||
-              !datosBasicos.nombre.trim() ||
-              datosBasicos.precio <= 0 ||
-              embarcaciones.length === 0 ||
-              hayErroresValidacion
-            }
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg flex items-center space-x-2"
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Guardando...</span>
-              </>
-            ) : hayErroresValidacion ? (
-              <>
-                <AlertTriangle className="h-4 w-4" />
-                <span>Revisar errores</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-4 w-4" />
-                <span>Actualizar Ruta</span>
-              </>
+        {/* Footer con botones de navegación */}
+        <div className="flex justify-between p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-b-2xl flex-shrink-0">
+          <div>
+            {pasoActual === 2 && (
+              <button
+                type="button"
+                onClick={handlePasoAnterior}
+                disabled={loading}
+                className="flex items-center space-x-2 px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Anterior</span>
+              </button>
             )}
-          </button>
+          </div>
+
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+            >
+              Cancelar
+            </button>
+
+            {pasoActual === 1 ? (
+              <button
+                type="button"
+                onClick={handleSiguientePaso}
+                disabled={
+                  loading ||
+                  !datosBasicos.nombre.trim() ||
+                  !datosBasicos.puertoOrigen.trim() ||
+                  !datosBasicos.puertoDestino.trim() ||
+                  datosBasicos.precio <= 0
+                }
+                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+              >
+                <span>Siguiente</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                form="editar-ruta-form"
+                disabled={
+                  loading || embarcaciones.length === 0 || hayErroresValidacion
+                }
+                className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Actualizar Ruta</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

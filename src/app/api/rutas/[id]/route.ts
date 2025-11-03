@@ -148,6 +148,40 @@ export async function PUT(
       );
     }
 
+    // CRÍTICO: Verificar que no exista otra ruta con la misma combinación origen-destino
+    const rutaConMismoTrayecto = await prisma.ruta.findFirst({
+      where: {
+        AND: [
+          {
+            puertoOrigen: {
+              equals: nuevoPuertoOrigen,
+              mode: "insensitive",
+            },
+          },
+          {
+            puertoDestino: {
+              equals: nuevoPuertoDestino,
+              mode: "insensitive",
+            },
+          },
+          {
+            id: {
+              not: id,
+            },
+          },
+        ],
+      },
+    });
+
+    if (rutaConMismoTrayecto) {
+      return NextResponse.json(
+        {
+          error: `Ya existe una ruta con origen "${nuevoPuertoOrigen}" y destino "${nuevoPuertoDestino}". No se permiten rutas duplicadas con el mismo trayecto.`,
+        },
+        { status: 400 }
+      );
+    }
+
     // Preparar datos de actualización con tipos explícitos de Prisma
     const datosActualizados: Prisma.RutaUpdateInput = {};
 

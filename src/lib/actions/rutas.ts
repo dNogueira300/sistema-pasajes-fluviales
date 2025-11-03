@@ -121,7 +121,7 @@ export async function getRutaById(id: string): Promise<Ruta | null> {
 // Crear nueva ruta
 export async function crearRuta(datos: CrearRutaData): Promise<Ruta> {
   // Verificar que no exista una ruta con el mismo nombre
-  const rutaExistente = await prisma.ruta.findFirst({
+  const rutaExistentePorNombre = await prisma.ruta.findFirst({
     where: {
       nombre: {
         equals: datos.nombre.trim(),
@@ -130,7 +130,7 @@ export async function crearRuta(datos: CrearRutaData): Promise<Ruta> {
     },
   });
 
-  if (rutaExistente) {
+  if (rutaExistentePorNombre) {
     throw new Error("Ya existe una ruta con este nombre");
   }
 
@@ -141,6 +141,32 @@ export async function crearRuta(datos: CrearRutaData): Promise<Ruta> {
   ) {
     throw new Error(
       "El puerto de origen debe ser diferente al puerto de destino"
+    );
+  }
+
+  // CRÍTICO: Verificar que no exista una ruta con la misma combinación origen-destino
+  const rutaExistentePorTrayecto = await prisma.ruta.findFirst({
+    where: {
+      AND: [
+        {
+          puertoOrigen: {
+            equals: datos.puertoOrigen.trim(),
+            mode: "insensitive",
+          },
+        },
+        {
+          puertoDestino: {
+            equals: datos.puertoDestino.trim(),
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+  });
+
+  if (rutaExistentePorTrayecto) {
+    throw new Error(
+      `Ya existe una ruta con origen "${datos.puertoOrigen.trim()}" y destino "${datos.puertoDestino.trim()}". No se permiten rutas duplicadas con el mismo trayecto.`
     );
   }
 
@@ -213,6 +239,37 @@ export async function actualizarRuta(
   if (puertoOrigen.toLowerCase() === puertoDestino.toLowerCase()) {
     throw new Error(
       "El puerto de origen debe ser diferente al puerto de destino"
+    );
+  }
+
+  // CRÍTICO: Verificar que no exista otra ruta con la misma combinación origen-destino
+  const rutaConMismoTrayecto = await prisma.ruta.findFirst({
+    where: {
+      AND: [
+        {
+          puertoOrigen: {
+            equals: puertoOrigen,
+            mode: "insensitive",
+          },
+        },
+        {
+          puertoDestino: {
+            equals: puertoDestino,
+            mode: "insensitive",
+          },
+        },
+        {
+          id: {
+            not: id,
+          },
+        },
+      ],
+    },
+  });
+
+  if (rutaConMismoTrayecto) {
+    throw new Error(
+      `Ya existe una ruta con origen "${puertoOrigen}" y destino "${puertoDestino}". No se permiten rutas duplicadas con el mismo trayecto.`
     );
   }
 
