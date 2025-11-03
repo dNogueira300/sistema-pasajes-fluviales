@@ -270,7 +270,7 @@ export async function DELETE(
       );
     }
 
-    // Verificar que no tenga ventas o embarcaciones asociadas
+    // Verificar que no tenga ventas asociadas
     if (ruta._count.ventas > 0) {
       return NextResponse.json(
         {
@@ -280,17 +280,19 @@ export async function DELETE(
       );
     }
 
-    if (ruta._count.embarcacionRutas > 0) {
-      return NextResponse.json(
-        {
-          error: `No se puede eliminar la ruta porque tiene ${ruta._count.embarcacionRutas} embarcaciones asociadas. Puede desactivarla en su lugar.`,
-        },
-        { status: 400 }
-      );
-    }
+    // Si tiene embarcaciones asociadas, eliminarlas primero en una transacción
+    await prisma.$transaction(async (tx) => {
+      // Eliminar las relaciones EmbarcacionRuta primero
+      if (ruta._count.embarcacionRutas > 0) {
+        await tx.embarcacionRuta.deleteMany({
+          where: { rutaId: id },
+        });
+      }
 
-    await prisma.ruta.delete({
-      where: { id },
+      // Luego eliminar la ruta
+      await tx.ruta.delete({
+        where: { id },
+      });
     });
 
     return NextResponse.json({
