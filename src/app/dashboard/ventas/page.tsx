@@ -908,18 +908,26 @@ export default function VentasPage() {
                         <div className="relative">
                           <button
                             onClick={(e) => {
-                              const target = e.currentTarget.nextElementSibling;
+                              const button = e.currentTarget;
+                              const target = button.nextElementSibling;
                               if (target) {
-                                target.classList.toggle("hidden");
-                              }
-                              // Cerrar otros menús abiertos
-                              document
-                                .querySelectorAll(".more-menu")
-                                .forEach((menu) => {
-                                  if (menu !== target) {
+                                const isHidden = target.classList.contains("hidden");
+
+                                // Cerrar otros menús abiertos
+                                document
+                                  .querySelectorAll(".more-menu")
+                                  .forEach((menu) => {
                                     menu.classList.add("hidden");
-                                  }
-                                });
+                                  });
+
+                                if (isHidden) {
+                                  // Posicionar el menú basado en la posición del botón
+                                  const rect = button.getBoundingClientRect();
+                                  (target as HTMLElement).style.top = `${rect.bottom + window.scrollY + 4}px`;
+                                  (target as HTMLElement).style.left = `${rect.right + window.scrollX - 224}px`; // 224px = w-56 (14rem)
+                                  target.classList.remove("hidden");
+                                }
+                              }
                             }}
                             className="p-2 text-slate-400 hover:bg-slate-700/50 rounded-xl transition-colors"
                             title="Opciones"
@@ -928,7 +936,7 @@ export default function VentasPage() {
                           </button>
 
                           {/* Menú desplegable unificado */}
-                          <div className="more-menu hidden absolute right-0 mt-1 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-10 w-56 backdrop-blur-sm">
+                          <div className="more-menu hidden fixed bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-[9999] w-56 backdrop-blur-sm">
                             {/* Sección: Imprimir comprobante */}
                             <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
                               Imprimir comprobante

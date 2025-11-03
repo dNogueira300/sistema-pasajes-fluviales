@@ -1,7 +1,7 @@
 // components/reportes/filtros-reporte.tsx
 "use client";
 import { useState, useEffect, Fragment } from "react";
-import { Calendar, Filter, X, ChevronDown, Check } from "lucide-react";
+import { Calendar, Filter, X, ChevronDown, Check, Ship, User, CreditCard, Wallet, CheckCircle } from "lucide-react";
 import { Listbox, Transition } from "@headlessui/react";
 import { FiltrosReporte, OpcionesReporte } from "@/types/reportes";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
@@ -231,12 +231,12 @@ export default function FiltrosReporteComponent({
         as={Fragment}
         enter="transition-all duration-300 ease-out"
         enterFrom="opacity-0 max-h-0"
-        enterTo="opacity-100 max-h-96"
+        enterTo="opacity-100 max-h-[800px]"
         leave="transition-all duration-300 ease-in"
-        leaveFrom="opacity-100 max-h-96"
+        leaveFrom="opacity-100 max-h-[800px]"
         leaveTo="opacity-0 max-h-0"
       >
-        <div className="space-y-4 pt-4 border-t border-slate-600/50 overflow-hidden">
+        <div className="space-y-4 pt-4 border-t border-slate-600/50 overflow-visible">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Filtro por ruta */}
             <div>
@@ -266,7 +266,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
@@ -335,20 +335,29 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Embarcación
               </label>
-              <select
-                value={filtros.embarcacionId || ""}
-                onChange={(e) =>
-                  handleFiltroChange("embarcacionId", e.target.value)
-                }
-                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
-              >
-                <option value="">Todas las embarcaciones</option>
-                {opciones.embarcaciones.map((embarcacion) => (
-                  <option key={embarcacion.value} value={embarcacion.value}>
-                    {embarcacion.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Ship className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                <select
+                  value={filtros.embarcacionId || ""}
+                  onChange={(e) =>
+                    handleFiltroChange("embarcacionId", e.target.value)
+                  }
+                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
+                >
+                  <option value="">Todas las embarcaciones</option>
+                  {opciones.embarcaciones.map((embarcacion) => (
+                    <option key={embarcacion.value} value={embarcacion.value}>
+                      {embarcacion.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Filtro por vendedor */}
@@ -356,20 +365,29 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Vendedor
               </label>
-              <select
-                value={filtros.vendedorId || ""}
-                onChange={(e) =>
-                  handleFiltroChange("vendedorId", e.target.value)
-                }
-                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
-              >
-                <option value="">Todos los vendedores</option>
-                {opciones.vendedores.map((vendedor) => (
-                  <option key={vendedor.value} value={vendedor.value}>
-                    {vendedor.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <User className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                <select
+                  value={filtros.vendedorId || ""}
+                  onChange={(e) =>
+                    handleFiltroChange("vendedorId", e.target.value)
+                  }
+                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
+                >
+                  <option value="">Todos los vendedores</option>
+                  {opciones.vendedores.map((vendedor) => (
+                    <option key={vendedor.value} value={vendedor.value}>
+                      {vendedor.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
@@ -380,20 +398,29 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Método de Pago
               </label>
-              <select
-                value={filtros.metodoPago || ""}
-                onChange={(e) =>
-                  handleFiltroChange("metodoPago", e.target.value)
-                }
-                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
-              >
-                <option value="">Todos los métodos</option>
-                {opciones.metodosPago.map((metodo) => (
-                  <option key={metodo.value} value={metodo.value}>
-                    {metodo.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <CreditCard className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                <select
+                  value={filtros.metodoPago || ""}
+                  onChange={(e) =>
+                    handleFiltroChange("metodoPago", e.target.value)
+                  }
+                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
+                >
+                  <option value="">Todos los métodos</option>
+                  {opciones.metodosPago.map((metodo) => (
+                    <option key={metodo.value} value={metodo.value}>
+                      {metodo.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Filtro por tipo de pago */}
@@ -401,18 +428,27 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Tipo de Pago
               </label>
-              <select
-                value={filtros.tipoPago || ""}
-                onChange={(e) => handleFiltroChange("tipoPago", e.target.value)}
-                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
-              >
-                <option value="">Todos los tipos</option>
-                {opciones.tiposPago.map((tipo) => (
-                  <option key={tipo.value} value={tipo.value}>
-                    {tipo.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Wallet className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                <select
+                  value={filtros.tipoPago || ""}
+                  onChange={(e) => handleFiltroChange("tipoPago", e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
+                >
+                  <option value="">Todos los tipos</option>
+                  {opciones.tiposPago.map((tipo) => (
+                    <option key={tipo.value} value={tipo.value}>
+                      {tipo.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Filtro por estado */}
@@ -420,20 +456,29 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Estado de Venta
               </label>
-              <select
-                value={filtros.estado || ""}
-                onChange={(e) =>
-                  handleFiltroChange(
-                    "estado",
-                    e.target.value as "CONFIRMADA" | "ANULADA" | undefined
-                  )
-                }
-                className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200"
-              >
-                <option value="">Todos los estados</option>
-                <option value="CONFIRMADA">Confirmadas</option>
-                <option value="ANULADA">Anuladas</option>
-              </select>
+              <div className="relative">
+                <CheckCircle className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
+                <select
+                  value={filtros.estado || ""}
+                  onChange={(e) =>
+                    handleFiltroChange(
+                      "estado",
+                      e.target.value as "CONFIRMADA" | "ANULADA" | undefined
+                    )
+                  }
+                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.5rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
+                >
+                  <option value="">Todos los estados</option>
+                  <option value="CONFIRMADA">Confirmadas</option>
+                  <option value="ANULADA">Anuladas</option>
+                </select>
+              </div>
             </div>
           </div>
 
