@@ -1,0 +1,74 @@
+name: Respaldo de Base de Datos Supabase a S3
+
+on:
+  workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña "Actions"
+  schedule:
+    # Se ejecuta todos los días a las 5:00 AM UTC
+    # (Ajusta la hora '0 5' según tu preferencia)
+    - cron: "0 5 * * *"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (Opcional, solo si necesitas algo del repo)
+        uses: actions/checkout@v3
+
+      - name: 1. Instalar el cliente de PostgreSQL (pg_dump)
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: 2. Instalar el CLI de AWS
+        run: |
+          sudo apt-get install -y awscli
+
+      - name: 3. Configurar credenciales de AWS
+        # Usa los secretos guardados en GitHub
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # Opcional: define tu región de S3 si es necesario
+          # aws configure set region tu-region-s3
+
+      - name: 4. Definir nombre del archivo de respaldo
+        # Crea un nombre de archivo único con la fecha
+        run: |
+          BACKUP_FILE="db_backup_$(date +'%Y-%m-%dT%H-%M-%S').sqlc"
+          echo "BACKUP_FILE=${BACKUP_FILE}" >> $GITHUB_ENV
+          # Define la ruta completa en S3
+          echo "S3_PATH=s3://${{ secrets.S3_BUCKET_NAME }}/backups/${BACKUP_FILE}" >> $GITHUB_ENV
+
+      - name: 5. Crear el respaldo de la base de datos
+        env:
+          # Usa el connection string de Supabase guardado en los secretos
+          PGPASSWORD: ${{ secrets.DB_SUPER_PASSWORD }}
+          PGHOST: ${{ secrets.DB_HOST }}
+          PGUSER: ${{ secrets.DB_USER }}
+          PGDATABASE: ${{ secrets.DB_NAME }}
+        run: |
+          echo "Creando respaldo: ${{ env.BACKUP_FILE }}..."
+          pg_dump \
+            --format=c \
+            --file="${{ env.BACKUP_FILE }}" \
+            --host="$PGHOST" \
+            --username="$PGUSER" \
+            --dbname="$PGDATABASE"
+        # Nota: He separado los datos de conexión para mayor claridad.
+        # Si prefieres usar el connection string completo, descomenta la siguiente línea
+        # y elimina las variables de entorno de arriba (excepto BACKUP_FILE)
+        # run: |
+        #   pg_dump \
+        #     --format=c \
+        #     --file="${{ env.BACKUP_FILE }}" \
+        #     "${{ secrets.DB_CONNECTION_STRING }}"
+
+      - name: 6. Subir el respaldo a S3
+        run: |
+          echo "Subiendo respaldo a ${{ env.S3_PATH }}..."
+          aws s3 cp "${{ env.BACKUP_FILE }}" "${{ env.S3_PATH }}"
+          echo "Subida completada."
+
+      - name: 7. Limpiar el archivo local (opcional)
+        run: |
+          rm "${{ env.BACKUP_FILE }}"
+          echo "Archivo local eliminado."
