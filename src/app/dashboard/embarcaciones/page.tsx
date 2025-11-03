@@ -8,7 +8,7 @@ import {
   Search,
   Filter,
   Edit,
-  Trash2,
+  //Trash2,
   Ship,
   Users,
   Settings,
@@ -199,10 +199,10 @@ export default function GestionEmbarcaciones() {
   };
 
   // Manejar eliminar embarcación
-  const abrirModalEliminar = (embarcacion: Embarcacion) => {
-    setEmbarcacionSeleccionada(embarcacion);
-    setModalConfirmarEliminar(true);
-  };
+  // const abrirModalEliminar = (embarcacion: Embarcacion) => {
+  //   setEmbarcacionSeleccionada(embarcacion);
+  //   setModalConfirmarEliminar(true);
+  // };
 
   // Manejar eliminación de embarcación
   const handleEliminarEmbarcacion = async () => {
@@ -617,13 +617,13 @@ export default function GestionEmbarcaciones() {
                         >
                           <Edit className="h-5 w-5" />
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => abrirModalEliminar(embarcacion)}
                           className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-xl transition-all duration-200"
                           title="Eliminar embarcación"
                         >
                           <Trash2 className="h-5 w-5" />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
