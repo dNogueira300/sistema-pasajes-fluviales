@@ -190,7 +190,7 @@ export async function generarComprobanteA4(
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
 
-  doc.text(`Ruta: ${venta.ruta.nombre}`, margin, yPos);
+  doc.text(`Ruta: ${venta.puertoOrigen} - ${venta.puertoDestino}`, margin, yPos);
   yPos += 5;
   doc.text(`Embarcación: ${venta.embarcacion.nombre}`, margin, yPos);
   yPos += 5;

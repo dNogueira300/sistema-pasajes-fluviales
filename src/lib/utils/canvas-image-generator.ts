@@ -212,7 +212,7 @@ export async function generarComprobanteImagen(
   yPos += 15;
 
   ctx.font = "10px Arial";
-  drawInfoRow(ctx, "Ruta:", venta.ruta.nombre, 30, yPos, grayText, darkText);
+  drawInfoRow(ctx, "Ruta:", `${venta.puertoOrigen} - ${venta.puertoDestino}`, 30, yPos, grayText, darkText);
   yPos += 15;
 
   drawInfoRow(

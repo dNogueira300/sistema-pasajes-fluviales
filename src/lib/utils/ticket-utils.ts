@@ -309,7 +309,7 @@ export async function generarTicketTermico(
         <!-- Información del viaje -->
         <div class="bold center">DETALLES DEL VIAJE</div>
         <div class="fila-cliente">
-          <strong>Ruta:</strong> ${venta.ruta.nombre}
+          <strong>Ruta:</strong> ${venta.puertoOrigen} - ${venta.puertoDestino}
         </div>
         <div class="fila-cliente">
           <strong>Embarcacion:</strong> ${venta.embarcacion.nombre}
