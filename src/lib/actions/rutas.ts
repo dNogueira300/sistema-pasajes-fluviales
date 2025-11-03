@@ -343,19 +343,22 @@ export async function eliminarRuta(id: string): Promise<void> {
     throw new Error("Ruta no encontrada");
   }
 
-  // Verificar que no tenga ventas o embarcaciones asociadas
+  // SOLO verificar que no tenga ventas asociadas
+  // Si tiene embarcaciones, se eliminan automáticamente al eliminar la ruta
   if (ruta._count.ventas > 0) {
     throw new Error(
       `No se puede eliminar la ruta porque tiene ${ruta._count.ventas} ventas asociadas`
     );
   }
 
+  // Si la ruta tiene embarcaciones asignadas, las eliminamos primero
   if (ruta._count.embarcacionRutas > 0) {
-    throw new Error(
-      `No se puede eliminar la ruta porque tiene ${ruta._count.embarcacionRutas} embarcaciones asociadas`
-    );
+    await prisma.embarcacionRuta.deleteMany({
+      where: { rutaId: id },
+    });
   }
 
+  // Ahora eliminamos la ruta
   await prisma.ruta.delete({
     where: { id },
   });
