@@ -885,7 +885,7 @@ export default function GestionRutas() {
                         Esta ruta tiene{" "}
                         {rutaSeleccionada._count.embarcacionRutas}{" "}
                         embarcación(es) asignada(s). Al eliminar la ruta,
-                        también se eliminarán estas asignaciones.
+                        estas embarcaciones se liberarán y quedarán disponibles para otras rutas.
                       </p>
                     </div>
                   </div>

@@ -10,7 +10,23 @@ export function crearFechaViaje(fechaString: string): Date {
 }
 
 export function formatearFechaViaje(fecha: Date | string): string {
-  const fechaObj = typeof fecha === "string" ? new Date(fecha) : fecha;
+  let fechaObj: Date;
+
+  if (typeof fecha === "string") {
+    // Si es un string ISO (ej: "2025-11-06T00:00:00.000Z")
+    // Extraer solo la parte de la fecha sin considerar la zona horaria
+    if (fecha.includes("T") || fecha.includes("Z")) {
+      const fechaSoloPartes = fecha.split("T")[0];
+      const [year, month, day] = fechaSoloPartes.split("-").map(Number);
+      fechaObj = new Date(year, month - 1, day);
+    } else {
+      // Para strings con formato YYYY-MM-DD
+      const [year, month, day] = fecha.split("-").map(Number);
+      fechaObj = new Date(year, month - 1, day);
+    }
+  } else {
+    fechaObj = fecha;
+  }
 
   return fechaObj.toLocaleDateString("es-PE", {
     timeZone: TIMEZONE_PERU,
@@ -18,7 +34,23 @@ export function formatearFechaViaje(fecha: Date | string): string {
 }
 
 export function formatearFechaViajeCompleta(fecha: Date | string): string {
-  const fechaObj = typeof fecha === "string" ? new Date(fecha) : fecha;
+  let fechaObj: Date;
+
+  if (typeof fecha === "string") {
+    // Si es un string ISO (ej: "2025-11-06T00:00:00.000Z")
+    // Extraer solo la parte de la fecha sin considerar la zona horaria
+    if (fecha.includes("T") || fecha.includes("Z")) {
+      const fechaSoloPartes = fecha.split("T")[0];
+      const [year, month, day] = fechaSoloPartes.split("-").map(Number);
+      fechaObj = new Date(year, month - 1, day);
+    } else {
+      // Para strings con formato YYYY-MM-DD
+      const [year, month, day] = fecha.split("-").map(Number);
+      fechaObj = new Date(year, month - 1, day);
+    }
+  } else {
+    fechaObj = fecha;
+  }
 
   return fechaObj.toLocaleDateString("es-PE", {
     timeZone: TIMEZONE_PERU,
@@ -107,7 +139,23 @@ export function validarFechaViaje(fechaString: string): {
 
 // Para reportes, usar formateo consistente
 export function formatearFechaParaReporte(fecha: Date | string): string {
-  const fechaObj = typeof fecha === "string" ? new Date(fecha) : fecha;
+  let fechaObj: Date;
+
+  if (typeof fecha === "string") {
+    // Si es un string ISO (ej: "2025-11-06T00:00:00.000Z")
+    // Extraer solo la parte de la fecha sin considerar la zona horaria
+    if (fecha.includes("T") || fecha.includes("Z")) {
+      const fechaSoloPartes = fecha.split("T")[0];
+      const [year, month, day] = fechaSoloPartes.split("-").map(Number);
+      fechaObj = new Date(year, month - 1, day);
+    } else {
+      // Para strings con formato YYYY-MM-DD
+      const [year, month, day] = fecha.split("-").map(Number);
+      fechaObj = new Date(year, month - 1, day);
+    }
+  } else {
+    fechaObj = fecha;
+  }
 
   // Formato para reportes: DD/MM/YYYY
   return fechaObj.toLocaleDateString("es-PE", {
