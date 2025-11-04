@@ -77,35 +77,35 @@ export default function EditarRutaForm({
   const [mostrarErroresEmbarcaciones, setMostrarErroresEmbarcaciones] =
     useState(false);
   const [errorDetallado, setErrorDetallado] = useState<string | null>(null);
-  const [debugMode] = useState(false);
+  //const [debugMode] = useState(false);
 
   // Refs para el control de scroll
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const embarcacionesContainerRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log de props recibidas
-  useEffect(() => {
-    if (debugMode) {
-      console.log("📊 EditarRutaForm Props:", {
-        isOpen,
-        ruta: ruta ? { id: ruta.id, nombre: ruta.nombre } : null,
-        loading,
-        error,
-        validationErrors,
-      });
-    }
-  }, [isOpen, ruta, loading, error, validationErrors, debugMode]);
+  // useEffect(() => {
+  //   if (debugMode) {
+  //     console.log("📊 EditarRutaForm Props:", {
+  //       isOpen,
+  //       ruta: ruta ? { id: ruta.id, nombre: ruta.nombre } : null,
+  //       loading,
+  //       error,
+  //       validationErrors,
+  //     });
+  //   }
+  // }, [isOpen, ruta, loading, error, validationErrors, debugMode]);
 
   // Cargar embarcaciones existentes cuando se abre el modal
   useEffect(() => {
     const cargarEmbarcacionesExistentes = async () => {
       if (ruta?.id) {
         try {
-          console.log("🔄 Cargando embarcaciones para ruta:", ruta.id);
+          //console.log("🔄 Cargando embarcaciones para ruta:", ruta.id);
           const embarcacionesRuta = await obtenerEmbarcacionesPorRuta(ruta.id);
 
           if (embarcacionesRuta) {
-            console.log("✅ Embarcaciones cargadas:", embarcacionesRuta.length);
+            //console.log("✅ Embarcaciones cargadas:", embarcacionesRuta.length);
             setEmbarcacionesOriginales(embarcacionesRuta);
 
             // Convertir a formato del formulario
@@ -123,14 +123,14 @@ export default function EditarRutaForm({
 
             // Si no hay embarcaciones, mostrar mensaje informativo
             if (embarcacionesFormulario.length === 0) {
-              console.log(
-                "ℹ️ Esta ruta no tiene embarcaciones asignadas actualmente"
-              );
+              // console.log(
+              //   "ℹ️ Esta ruta no tiene embarcaciones asignadas actualmente"
+              // );
             }
           } else {
-            console.log(
-              "⚠️ No se pudieron cargar embarcaciones - La función devolvió null"
-            );
+            // console.log(
+            //   "⚠️ No se pudieron cargar embarcaciones - La función devolvió null"
+            // );
             // Inicializar con array vacío para permitir agregar nuevas embarcaciones
             setEmbarcaciones([]);
             setEmbarcacionesOriginales([]);
@@ -153,10 +153,10 @@ export default function EditarRutaForm({
   // Efecto para mostrar errores de validación automáticamente
   useEffect(() => {
     if (validationErrors && validationErrors.length > 0) {
-      console.log(
-        "🚨 Detectados errores de validación, mostrando automáticamente:",
-        validationErrors
-      );
+      // console.log(
+      //   "🚨 Detectados errores de validación, mostrando automáticamente:",
+      //   validationErrors
+      // );
       setMostrarErroresEmbarcaciones(true);
     }
   }, [validationErrors]);
@@ -176,7 +176,7 @@ export default function EditarRutaForm({
   // Efecto para cargar datos de la ruta cuando se abre el modal
   useEffect(() => {
     if (isOpen && ruta) {
-      console.log("📝 Cargando datos básicos de ruta:", ruta.nombre);
+      //console.log("📝 Cargando datos básicos de ruta:", ruta.nombre);
       setDatosBasicos({
         nombre: ruta.nombre,
         puertoOrigen: ruta.puertoOrigen,
@@ -188,9 +188,9 @@ export default function EditarRutaForm({
       setMostrarErroresEmbarcaciones(false);
       setErrorDetallado(null);
       setPasoActual(1); // Resetear al paso 1
-      console.log(
-        "✅ Datos básicos cargados, esperando carga de embarcaciones..."
-      );
+      // console.log(
+      //   "✅ Datos básicos cargados, esperando carga de embarcaciones..."
+      // );
     }
   }, [isOpen, ruta]);
 
@@ -278,8 +278,8 @@ export default function EditarRutaForm({
 
     if (pasoActual === 1) {
       if (validarPaso1()) {
-        console.log("✅ Paso 1 validado, cambiando a paso 2");
-        console.log("📊 Embarcaciones cargadas:", embarcaciones.length);
+        // console.log("✅ Paso 1 validado, cambiando a paso 2");
+        // console.log("📊 Embarcaciones cargadas:", embarcaciones.length);
         setPasoActual(2);
         // Limpiar errores al cambiar de paso
         setErroresValidacion({});
@@ -289,7 +289,7 @@ export default function EditarRutaForm({
           console.warn("⚠️ No hay embarcaciones cargadas para esta ruta");
         }
       } else {
-        console.log("❌ Validación del paso 1 falló");
+        //console.log("❌ Validación del paso 1 falló");
       }
     }
   };
@@ -309,15 +309,15 @@ export default function EditarRutaForm({
 
     // IMPORTANTE: Solo permitir submit si estamos en paso 2
     if (pasoActual !== 2) {
-      console.log(
-        "⚠️ Submit bloqueado - debe estar en paso 2, actual:",
-        pasoActual
-      );
-      console.log("🚫 El formulario NO se enviará hasta completar el paso 2");
+      // console.log(
+      //   "⚠️ Submit bloqueado - debe estar en paso 2, actual:",
+      //   pasoActual
+      // );
+      // console.log("🚫 El formulario NO se enviará hasta completar el paso 2");
       return;
     }
 
-    console.log("🚀 Iniciando submit de edición de ruta");
+    //console.log("🚀 Iniciando submit de edición de ruta");
     setErrorDetallado(null);
 
     if (!ruta) {
@@ -327,7 +327,7 @@ export default function EditarRutaForm({
     }
 
     if (!validarPaso2()) {
-      console.log("❌ Formulario no válido");
+      //console.log("❌ Formulario no válido");
       setMostrarErroresEmbarcaciones(true);
       return;
     }
@@ -354,36 +354,36 @@ export default function EditarRutaForm({
       },
     };
 
-    console.log("📤 Datos a enviar:", datosActualizacion);
-    console.log(
-      "📊 Embarcaciones originales a eliminar:",
-      datosActualizacion.embarcaciones?.eliminar?.length || 0
-    );
-    console.log(
-      "📊 Embarcaciones nuevas a crear:",
-      datosActualizacion.embarcaciones?.crear?.length || 0
-    );
+    // console.log("📤 Datos a enviar:", datosActualizacion);
+    // console.log(
+    //   "📊 Embarcaciones originales a eliminar:",
+    //   datosActualizacion.embarcaciones?.eliminar?.length || 0
+    // );
+    // console.log(
+    //   "📊 Embarcaciones nuevas a crear:",
+    //   datosActualizacion.embarcaciones?.crear?.length || 0
+    // );
 
     try {
       const resultado = await onSubmit(ruta.id, datosActualizacion);
-      console.log("📥 Resultado del submit:", resultado);
+      //console.log("📥 Resultado del submit:", resultado);
 
       if (resultado) {
-        console.log("✅ Edición exitosa, cerrando modal");
+        //console.log("✅ Edición exitosa, cerrando modal");
         onClose();
       } else {
-        console.log("❌ Edición falló");
+        //console.log("❌ Edición falló");
         if (validationErrors && validationErrors.length > 0) {
           setMostrarErroresEmbarcaciones(true);
-          console.log("🔍 Errores de validación:", validationErrors);
+          //console.log("🔍 Errores de validación:", validationErrors);
         }
         if (error) {
           setErrorDetallado(error);
-          console.log("🔍 Error general:", error);
+          //console.log("🔍 Error general:", error);
         }
       }
     } catch (err) {
-      console.error("💥 Error durante submit:", err);
+      //console.error("💥 Error durante submit:", err);
       setErrorDetallado(`Error durante la actualización: ${err}`);
     }
   };
@@ -418,7 +418,7 @@ export default function EditarRutaForm({
 
   const handleEmbarcacionesChange = useCallback(
     (nuevasEmbarcaciones: CrearEmbarcacionRutaData[]) => {
-      console.log("🔄 Embarcaciones cambiadas:", nuevasEmbarcaciones);
+      //console.log("🔄 Embarcaciones cambiadas:", nuevasEmbarcaciones);
       setEmbarcaciones(nuevasEmbarcaciones);
 
       // Limpiar error de embarcaciones si hay al menos una
@@ -452,9 +452,9 @@ export default function EditarRutaForm({
         validationErrors &&
         validationErrors.length > 0
       ) {
-        console.log(
-          "🧹 Limpiando errores de validación del servidor - problemas aparentemente solucionados"
-        );
+        // console.log(
+        //   "🧹 Limpiando errores de validación del servidor - problemas aparentemente solucionados"
+        // );
       }
     },
     [erroresValidacion.embarcaciones, validationErrors]
