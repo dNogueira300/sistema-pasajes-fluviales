@@ -123,10 +123,14 @@ export default function EditarRutaForm({
 
             // Si no hay embarcaciones, mostrar mensaje informativo
             if (embarcacionesFormulario.length === 0) {
-              console.log("ℹ️ Esta ruta no tiene embarcaciones asignadas actualmente");
+              console.log(
+                "ℹ️ Esta ruta no tiene embarcaciones asignadas actualmente"
+              );
             }
           } else {
-            console.log("⚠️ No se pudieron cargar embarcaciones - La función devolvió null");
+            console.log(
+              "⚠️ No se pudieron cargar embarcaciones - La función devolvió null"
+            );
             // Inicializar con array vacío para permitir agregar nuevas embarcaciones
             setEmbarcaciones([]);
             setEmbarcacionesOriginales([]);
@@ -184,7 +188,9 @@ export default function EditarRutaForm({
       setMostrarErroresEmbarcaciones(false);
       setErrorDetallado(null);
       setPasoActual(1); // Resetear al paso 1
-      console.log("✅ Datos básicos cargados, esperando carga de embarcaciones...");
+      console.log(
+        "✅ Datos básicos cargados, esperando carga de embarcaciones..."
+      );
     }
   }, [isOpen, ruta]);
 
@@ -296,7 +302,10 @@ export default function EditarRutaForm({
 
     // IMPORTANTE: Solo permitir submit si estamos en paso 2
     if (pasoActual !== 2) {
-      console.log("⚠️ Submit bloqueado - debe estar en paso 2, actual:", pasoActual);
+      console.log(
+        "⚠️ Submit bloqueado - debe estar en paso 2, actual:",
+        pasoActual
+      );
       handleSiguientePaso();
       return;
     }
@@ -339,8 +348,14 @@ export default function EditarRutaForm({
     };
 
     console.log("📤 Datos a enviar:", datosActualizacion);
-    console.log("📊 Embarcaciones originales a eliminar:", datosActualizacion.embarcaciones?.eliminar?.length || 0);
-    console.log("📊 Embarcaciones nuevas a crear:", datosActualizacion.embarcaciones?.crear?.length || 0);
+    console.log(
+      "📊 Embarcaciones originales a eliminar:",
+      datosActualizacion.embarcaciones?.eliminar?.length || 0
+    );
+    console.log(
+      "📊 Embarcaciones nuevas a crear:",
+      datosActualizacion.embarcaciones?.crear?.length || 0
+    );
 
     try {
       const resultado = await onSubmit(ruta.id, datosActualizacion);
