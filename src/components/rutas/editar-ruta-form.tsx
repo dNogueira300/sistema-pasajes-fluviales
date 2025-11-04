@@ -339,8 +339,8 @@ export default function EditarRutaForm({
     };
 
     console.log("📤 Datos a enviar:", datosActualizacion);
-    console.log("📊 Embarcaciones originales a eliminar:", datosActualizacion.embarcaciones?.eliminar.length);
-    console.log("📊 Embarcaciones nuevas a crear:", datosActualizacion.embarcaciones?.crear.length);
+    console.log("📊 Embarcaciones originales a eliminar:", datosActualizacion.embarcaciones?.eliminar?.length || 0);
+    console.log("📊 Embarcaciones nuevas a crear:", datosActualizacion.embarcaciones?.crear?.length || 0);
 
     try {
       const resultado = await onSubmit(ruta.id, datosActualizacion);
