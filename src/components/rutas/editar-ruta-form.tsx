@@ -263,7 +263,13 @@ export default function EditarRutaForm({
     return Object.keys(errores).length === 0;
   };
 
-  const handleSiguientePaso = () => {
+  const handleSiguientePaso = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevenir comportamiento por defecto y propagación del evento
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (pasoActual === 1) {
       if (validarPaso1()) {
         console.log("✅ Paso 1 validado, cambiando a paso 2");
@@ -293,11 +299,12 @@ export default function EditarRutaForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     // IMPORTANTE: Solo permitir submit si estamos en paso 2
     if (pasoActual !== 2) {
       console.log("⚠️ Submit bloqueado - debe estar en paso 2, actual:", pasoActual);
-      handleSiguientePaso();
+      console.log("🚫 El formulario NO se enviará hasta completar el paso 2");
       return;
     }
 
@@ -842,7 +849,7 @@ export default function EditarRutaForm({
             {pasoActual === 1 ? (
               <button
                 type="button"
-                onClick={handleSiguientePaso}
+                onClick={(e) => handleSiguientePaso(e)}
                 disabled={
                   loading ||
                   !datosBasicos.nombre.trim() ||
