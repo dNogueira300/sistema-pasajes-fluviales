@@ -1,0 +1,25 @@
+root: ./
+
+​structure:
+  readme: README.md
+  summary: SUMMARY.md
+
+redirects:
+
+title: Manual del Sistema de Gestión de Pasajes Fluviales
+
+description: Manual completo de usuario para el sistema de gestión de pasajes fluviales de Alto Impacto Travel.
+
+public: true
+
+pdf:
+  fontSize: 12
+  headerTemplate: null
+  footerTemplate: null
+  displayHeaderFooter: false
+  paperSize: a4
+  margin:
+    top: 56
+    bottom: 56
+    right: 62
+    left: 62
