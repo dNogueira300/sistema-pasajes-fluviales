@@ -77,12 +77,17 @@ export default function NuevaEmbarcacionForm({
       errores.nombre = "El nombre de la embarcación es obligatorio";
     }
 
+    // VALIDACIÓN ACTUALIZADA DE CAPACIDAD
     if (!formulario.capacidad || formulario.capacidad < 10) {
       errores.capacidad = "La capacidad debe ser al menos 10 pasajeros";
-    }
-
-    if (formulario.capacidad > 200) {
+    } else if (formulario.capacidad > 200) {
       errores.capacidad = "La capacidad no puede ser mayor a 200 pasajeros";
+    } else {
+      // Validar máximo 3 dígitos
+      const capacidadString = formulario.capacidad.toString();
+      if (capacidadString.length > 3) {
+        errores.capacidad = "La capacidad debe tener máximo 3 dígitos";
+      }
     }
 
     setErroresValidacion(errores);
@@ -123,7 +128,24 @@ export default function NuevaEmbarcacionForm({
   };
 
   const handleCapacidadChange = (value: string) => {
+    // Validar que solo tenga números
+    const regex = /^\d*$/;
+
+    if (!regex.test(value) && value !== "") {
+      return; // No permitir caracteres no numéricos
+    }
+
+    // Validar máximo 3 dígitos
+    if (value.length > 3 && value !== "") {
+      return;
+    }
+
+    // Validar que no sea mayor a 200
     const numValue = parseInt(value) || 0;
+    if (numValue > 200) {
+      return;
+    }
+
     handleInputChange("capacidad", numValue);
   };
 
@@ -193,8 +215,17 @@ export default function NuevaEmbarcacionForm({
                   min="10"
                   max="200"
                   required
-                  value={formulario.capacidad}
+                  value={formulario.capacidad || ""}
                   onChange={(e) => handleCapacidadChange(e.target.value)}
+                  onBlur={(e) => {
+                    // Validación adicional al perder foco
+                    if (e.target.value && parseInt(e.target.value) < 10) {
+                      setErroresValidacion((prev) => ({
+                        ...prev,
+                        capacidad: "La capacidad mínima es 10 pasajeros",
+                      }));
+                    }
+                  }}
                   className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
                     erroresValidacion.capacidad
                       ? "border-red-500/50 focus:border-red-500"
@@ -208,7 +239,7 @@ export default function NuevaEmbarcacionForm({
                   </p>
                 )}
                 <p className="mt-1 text-sm text-slate-400">
-                  Entre 10 y 200 pasajeros
+                  Entre 10 y 200 pasajeros (máximo 3 dígitos)
                 </p>
               </div>
 
@@ -405,7 +436,8 @@ export default function NuevaEmbarcacionForm({
                   loading ||
                   !formulario.nombre.trim() ||
                   formulario.capacidad < 10 ||
-                  formulario.capacidad > 200
+                  formulario.capacidad > 200 ||
+                  formulario.capacidad.toString().length > 3 // Nueva validación
                 }
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
