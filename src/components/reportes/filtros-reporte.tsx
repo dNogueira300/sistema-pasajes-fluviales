@@ -259,7 +259,7 @@ export default function FiltrosReporteComponent({
                 onChange={(value) => handleFiltroChange("rutaId", value)}
               >
                 <div className="relative">
-                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-4 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 z-10">
+                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-4 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 z-20">
                     <span className="block truncate text-slate-100">
                       {filtros.rutaId
                         ? opciones.rutas.find((r) => r.value === filtros.rutaId)
