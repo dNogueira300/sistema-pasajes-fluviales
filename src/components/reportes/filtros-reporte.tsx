@@ -206,7 +206,7 @@ export default function FiltrosReporteComponent({
               Fecha inicio
             </label>
             <div className="relative">
-              <Calendar className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+              <Calendar className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 z-20" />
               <input
                 type="date"
                 value={filtros.fechaInicio || ""}
@@ -223,7 +223,7 @@ export default function FiltrosReporteComponent({
               Fecha fin
             </label>
             <div className="relative">
-              <Calendar className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+              <Calendar className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 z-20" />
               <input
                 type="date"
                 value={filtros.fechaFin || ""}
