@@ -277,7 +277,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
@@ -346,29 +346,92 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Embarcación
               </label>
-              <div className="relative">
-                <Ship className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-                <select
-                  value={filtros.embarcacionId || ""}
-                  onChange={(e) =>
-                    handleFiltroChange("embarcacionId", e.target.value)
-                  }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: "right 0.5rem center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "1.5em 1.5em",
-                  }}
-                >
-                  <option value="">Todas las embarcaciones</option>
-                  {opciones.embarcaciones.map((embarcacion) => (
-                    <option key={embarcacion.value} value={embarcacion.value}>
-                      {embarcacion.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Listbox
+                value={filtros.embarcacionId || ""}
+                onChange={(value) => handleFiltroChange("embarcacionId", value)}
+              >
+                <div className="relative">
+                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                    <Ship className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <span className="block truncate text-slate-100">
+                      {filtros.embarcacionId
+                        ? opciones.embarcaciones.find((e) => e.value === filtros.embarcacionId)
+                            ?.label || "Embarcación no encontrada"
+                        : "Todas las embarcaciones"}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <ChevronDown className="h-5 w-5 text-slate-400" />
+                    </span>
+                  </Listbox.Button>
+
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                      <Listbox.Option
+                        value=""
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                            active ? "bg-slate-700/50" : ""
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${
+                                selected
+                                  ? "font-semibold text-blue-400"
+                                  : "font-normal text-slate-200"
+                              }`}
+                            >
+                              Todas las embarcaciones
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                <Check className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                      {opciones.embarcaciones.map((embarcacion) => (
+                        <Listbox.Option
+                          key={embarcacion.value}
+                          value={embarcacion.value}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                              active ? "bg-slate-700/50" : ""
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={`block truncate ${
+                                  selected
+                                    ? "font-semibold text-blue-400"
+                                    : "font-normal text-slate-200"
+                                }`}
+                              >
+                                {embarcacion.label}
+                              </span>
+                              {selected && (
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                  <Check className="h-5 w-5" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
 
             {/* Filtro por vendedor */}
@@ -376,29 +439,92 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Vendedor
               </label>
-              <div className="relative">
-                <User className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-                <select
-                  value={filtros.vendedorId || ""}
-                  onChange={(e) =>
-                    handleFiltroChange("vendedorId", e.target.value)
-                  }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: "right 0.5rem center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "1.5em 1.5em",
-                  }}
-                >
-                  <option value="">Todos los vendedores</option>
-                  {opciones.vendedores.map((vendedor) => (
-                    <option key={vendedor.value} value={vendedor.value}>
-                      {vendedor.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Listbox
+                value={filtros.vendedorId || ""}
+                onChange={(value) => handleFiltroChange("vendedorId", value)}
+              >
+                <div className="relative">
+                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                    <User className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <span className="block truncate text-slate-100">
+                      {filtros.vendedorId
+                        ? opciones.vendedores.find((v) => v.value === filtros.vendedorId)
+                            ?.label || "Vendedor no encontrado"
+                        : "Todos los vendedores"}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <ChevronDown className="h-5 w-5 text-slate-400" />
+                    </span>
+                  </Listbox.Button>
+
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                      <Listbox.Option
+                        value=""
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                            active ? "bg-slate-700/50" : ""
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${
+                                selected
+                                  ? "font-semibold text-blue-400"
+                                  : "font-normal text-slate-200"
+                              }`}
+                            >
+                              Todos los vendedores
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                <Check className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                      {opciones.vendedores.map((vendedor) => (
+                        <Listbox.Option
+                          key={vendedor.value}
+                          value={vendedor.value}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                              active ? "bg-slate-700/50" : ""
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={`block truncate ${
+                                  selected
+                                    ? "font-semibold text-blue-400"
+                                    : "font-normal text-slate-200"
+                                }`}
+                              >
+                                {vendedor.label}
+                              </span>
+                              {selected && (
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                  <Check className="h-5 w-5" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
           </div>
 
@@ -409,29 +535,92 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Método de Pago
               </label>
-              <div className="relative">
-                <CreditCard className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-                <select
-                  value={filtros.metodoPago || ""}
-                  onChange={(e) =>
-                    handleFiltroChange("metodoPago", e.target.value)
-                  }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer z-10"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: "right 0.5rem center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "1.5em 1.5em",
-                  }}
-                >
-                  <option value="">Todos los métodos</option>
-                  {opciones.metodosPago.map((metodo) => (
-                    <option key={metodo.value} value={metodo.value}>
-                      {metodo.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Listbox
+                value={filtros.metodoPago || ""}
+                onChange={(value) => handleFiltroChange("metodoPago", value)}
+              >
+                <div className="relative">
+                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                    <CreditCard className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <span className="block truncate text-slate-100">
+                      {filtros.metodoPago
+                        ? opciones.metodosPago.find((m) => m.value === filtros.metodoPago)
+                            ?.label || "Método no encontrado"
+                        : "Todos los métodos"}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <ChevronDown className="h-5 w-5 text-slate-400" />
+                    </span>
+                  </Listbox.Button>
+
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                      <Listbox.Option
+                        value=""
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                            active ? "bg-slate-700/50" : ""
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${
+                                selected
+                                  ? "font-semibold text-blue-400"
+                                  : "font-normal text-slate-200"
+                              }`}
+                            >
+                              Todos los métodos
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                <Check className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                      {opciones.metodosPago.map((metodo) => (
+                        <Listbox.Option
+                          key={metodo.value}
+                          value={metodo.value}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                              active ? "bg-slate-700/50" : ""
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={`block truncate ${
+                                  selected
+                                    ? "font-semibold text-blue-400"
+                                    : "font-normal text-slate-200"
+                                }`}
+                              >
+                                {metodo.label}
+                              </span>
+                              {selected && (
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                  <Check className="h-5 w-5" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
 
             {/* Filtro por tipo de pago */}
@@ -439,29 +628,92 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Tipo de Pago
               </label>
-              <div className="relative">
-                <Wallet className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-                <select
-                  value={filtros.tipoPago || ""}
-                  onChange={(e) =>
-                    handleFiltroChange("tipoPago", e.target.value)
-                  }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: "right 0.5rem center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "1.5em 1.5em",
-                  }}
-                >
-                  <option value="">Todos los tipos</option>
-                  {opciones.tiposPago.map((tipo) => (
-                    <option key={tipo.value} value={tipo.value}>
-                      {tipo.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Listbox
+                value={filtros.tipoPago || ""}
+                onChange={(value) => handleFiltroChange("tipoPago", value)}
+              >
+                <div className="relative">
+                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                    <Wallet className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <span className="block truncate text-slate-100">
+                      {filtros.tipoPago
+                        ? opciones.tiposPago.find((t) => t.value === filtros.tipoPago)
+                            ?.label || "Tipo no encontrado"
+                        : "Todos los tipos"}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <ChevronDown className="h-5 w-5 text-slate-400" />
+                    </span>
+                  </Listbox.Button>
+
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                      <Listbox.Option
+                        value=""
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                            active ? "bg-slate-700/50" : ""
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${
+                                selected
+                                  ? "font-semibold text-blue-400"
+                                  : "font-normal text-slate-200"
+                              }`}
+                            >
+                              Todos los tipos
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                <Check className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                      {opciones.tiposPago.map((tipo) => (
+                        <Listbox.Option
+                          key={tipo.value}
+                          value={tipo.value}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                              active ? "bg-slate-700/50" : ""
+                            }`
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={`block truncate ${
+                                  selected
+                                    ? "font-semibold text-blue-400"
+                                    : "font-normal text-slate-200"
+                                }`}
+                              >
+                                {tipo.label}
+                              </span>
+                              {selected && (
+                                <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                  <Check className="h-5 w-5" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
 
             {/* Filtro por estado */}
@@ -469,29 +721,122 @@ export default function FiltrosReporteComponent({
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Estado de Venta
               </label>
-              <div className="relative">
-                <CheckCircle className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-                <select
-                  value={filtros.estado || ""}
-                  onChange={(e) =>
-                    handleFiltroChange(
-                      "estado",
-                      e.target.value as "CONFIRMADA" | "ANULADA" | undefined
-                    )
-                  }
-                  className="w-full pl-10 pr-4 py-3 border border-slate-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: "right 0.5rem center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "1.5em 1.5em",
-                  }}
-                >
-                  <option value="">Todos los estados</option>
-                  <option value="CONFIRMADA">Confirmadas</option>
-                  <option value="ANULADA">Anuladas</option>
-                </select>
-              </div>
+              <Listbox
+                value={filtros.estado || ""}
+                onChange={(value) =>
+                  handleFiltroChange(
+                    "estado",
+                    value as "CONFIRMADA" | "ANULADA" | undefined
+                  )
+                }
+              >
+                <div className="relative">
+                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
+                    <CheckCircle className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <span className="block truncate text-slate-100">
+                      {filtros.estado === "CONFIRMADA"
+                        ? "Confirmadas"
+                        : filtros.estado === "ANULADA"
+                        ? "Anuladas"
+                        : "Todos los estados"}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                      <ChevronDown className="h-5 w-5 text-slate-400" />
+                    </span>
+                  </Listbox.Button>
+
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                      <Listbox.Option
+                        value=""
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                            active ? "bg-slate-700/50" : ""
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${
+                                selected
+                                  ? "font-semibold text-blue-400"
+                                  : "font-normal text-slate-200"
+                              }`}
+                            >
+                              Todos los estados
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                <Check className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                      <Listbox.Option
+                        value="CONFIRMADA"
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                            active ? "bg-slate-700/50" : ""
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${
+                                selected
+                                  ? "font-semibold text-blue-400"
+                                  : "font-normal text-slate-200"
+                              }`}
+                            >
+                              Confirmadas
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                <Check className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                      <Listbox.Option
+                        value="ANULADA"
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-3 pl-4 pr-10 ${
+                            active ? "bg-slate-700/50" : ""
+                          }`
+                        }
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${
+                                selected
+                                  ? "font-semibold text-blue-400"
+                                  : "font-normal text-slate-200"
+                              }`}
+                            >
+                              Anuladas
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-400">
+                                <Check className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    </Listbox.Options>
+                  </Transition>
+                </div>
+              </Listbox>
             </div>
           </div>
 
