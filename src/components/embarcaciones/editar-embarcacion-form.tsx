@@ -86,12 +86,17 @@ export default function EditarEmbarcacionForm({
       errores.nombre = "El nombre de la embarcación es obligatorio";
     }
 
+    // VALIDACIÓN ACTUALIZADA DE CAPACIDAD
     if (!formulario.capacidad || formulario.capacidad < 10) {
-      errores.capacidad = "La capacidad debe ser entre 10 y 200 pasajeros";
-    }
-
-    if (formulario.capacidad && formulario.capacidad > 200) {
-      errores.capacidad = "La capacidad debe ser entre 10 y 200 pasajeros";
+      errores.capacidad = "La capacidad debe ser al menos 10 pasajeros";
+    } else if (formulario.capacidad > 200) {
+      errores.capacidad = "La capacidad no puede ser mayor a 200 pasajeros";
+    } else {
+      // Validar máximo 3 dígitos
+      const capacidadString = formulario.capacidad.toString();
+      if (capacidadString.length > 3) {
+        errores.capacidad = "La capacidad debe tener máximo 3 dígitos";
+      }
     }
 
     setErroresValidacion(errores);
@@ -129,7 +134,24 @@ export default function EditarEmbarcacionForm({
   };
 
   const handleCapacidadChange = (value: string) => {
+    // Validar que solo tenga números
+    const regex = /^\d*$/;
+
+    if (!regex.test(value) && value !== "") {
+      return; // No permitir caracteres no numéricos
+    }
+
+    // Validar máximo 3 dígitos
+    if (value.length > 3 && value !== "") {
+      return;
+    }
+
+    // Validar que no sea mayor a 200
     const numValue = parseInt(value) || 0;
+    if (numValue > 200) {
+      return;
+    }
+
     handleInputChange("capacidad", numValue);
   };
 
@@ -192,8 +214,17 @@ export default function EditarEmbarcacionForm({
                   min="10"
                   max="200"
                   required
-                  value={formulario.capacidad}
+                  value={formulario.capacidad || ""}
                   onChange={(e) => handleCapacidadChange(e.target.value)}
+                  onBlur={(e) => {
+                    // Validación adicional al perder foco
+                    if (e.target.value && parseInt(e.target.value) < 10) {
+                      setErroresValidacion((prev) => ({
+                        ...prev,
+                        capacidad: "La capacidad mínima es 10 pasajeros",
+                      }));
+                    }
+                  }}
                   className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
                     erroresValidacion.capacidad
                       ? "border-red-500/50 focus:border-red-500"
@@ -207,7 +238,7 @@ export default function EditarEmbarcacionForm({
                   </p>
                 )}
                 <p className="mt-1 text-xs text-slate-400">
-                  Capacidad entre 10 y 200 pasajeros
+                  Capacidad entre 10 y 200 pasajeros (máximo 3 dígitos)
                 </p>
               </div>
 
