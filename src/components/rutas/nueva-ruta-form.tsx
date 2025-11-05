@@ -103,12 +103,18 @@ export default function NuevaRutaForm({
         "El puerto de destino debe ser diferente al puerto de origen";
     }
 
+    // VALIDACIÓN ACTUALIZADA DEL PRECIO
     if (!datosBasicos.precio || datosBasicos.precio <= 0) {
       errores.precio = "El precio debe ser mayor a 0";
-    }
-
-    if (datosBasicos.precio > 1000) {
+    } else if (datosBasicos.precio > 1000) {
       errores.precio = "El precio no puede ser mayor a 1000 soles";
+    } else {
+      // Validar máximo 4 dígitos
+      const precioString = datosBasicos.precio.toString();
+      const digitosTotales = precioString.replace(".", "").length;
+      if (digitosTotales > 4) {
+        errores.precio = "El precio debe tener máximo 4 dígitos en total";
+      }
     }
 
     setErroresValidacion(errores);
@@ -253,7 +259,25 @@ export default function NuevaRutaForm({
   );
 
   const handlePrecioChange = (value: string) => {
+    // Validar que solo tenga números y máximo un punto decimal
+    const regex = /^\d*\.?\d*$/;
+
+    if (!regex.test(value) && value !== "") {
+      return; // No permitir caracteres no numéricos
+    }
+
+    // Validar máximo 4 dígitos en total (enteros + decimales)
+    const digitosTotales = value.replace(".", "").length;
+    if (digitosTotales > 4 && value !== "") {
+      return;
+    }
+
+    // Validar que no sea mayor a 1000
     const numValue = parseFloat(value) || 0;
+    if (numValue > 1000) {
+      return;
+    }
+
     handleInputChange("precio", numValue);
   };
 
@@ -467,11 +491,23 @@ export default function NuevaRutaForm({
                       <input
                         type="number"
                         step="0.01"
-                        min="0"
+                        min="0.01"
                         max="1000"
                         required
-                        value={datosBasicos.precio}
+                        value={datosBasicos.precio || ""}
                         onChange={(e) => handlePrecioChange(e.target.value)}
+                        onBlur={(e) => {
+                          // Validación adicional al perder foco
+                          if (
+                            e.target.value &&
+                            parseFloat(e.target.value) < 0.01
+                          ) {
+                            setErroresValidacion((prev) => ({
+                              ...prev,
+                              precio: "El precio mínimo es 0.01 soles",
+                            }));
+                          }
+                        }}
                         className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
                           erroresValidacion.precio
                             ? "border-red-500/50 focus:border-red-500"
@@ -486,7 +522,8 @@ export default function NuevaRutaForm({
                       </p>
                     )}
                     <p className="mt-1 text-xs text-slate-400">
-                      Precio entre 0.01 y 1000 soles peruanos
+                      Precio entre 0.01 y 1000 soles peruanos (máximo 4 dígitos
+                      en total)
                     </p>
                   </div>
 
@@ -663,7 +700,9 @@ export default function NuevaRutaForm({
                   !datosBasicos.nombre.trim() ||
                   !datosBasicos.puertoOrigen.trim() ||
                   !datosBasicos.puertoDestino.trim() ||
-                  datosBasicos.precio <= 0
+                  datosBasicos.precio <= 0 ||
+                  datosBasicos.precio > 1000 ||
+                  datosBasicos.precio.toString().replace(".", "").length > 4
                 }
                 className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
