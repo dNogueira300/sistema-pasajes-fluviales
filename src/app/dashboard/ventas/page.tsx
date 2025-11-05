@@ -192,6 +192,13 @@ export default function VentasPage() {
 
   // Función para imprimir ticket
   const imprimirTicket = async (ventaId: string) => {
+    // Mostrar notificación de carga
+    const notificacionCarga = mostrarNotificacion(
+      "descargando",
+      "Preparando ticket...",
+      "Por favor espera"
+    );
+
     try {
       const response = await fetch(`/api/ventas/${ventaId}/ticket`);
       if (response.ok) {
@@ -205,6 +212,9 @@ export default function VentasPage() {
           printWindow.document.close();
 
           printWindow.onload = () => {
+            // Remover notificación de carga
+            removerNotificacion(notificacionCarga);
+
             printWindow.focus();
             printWindow.print();
 
@@ -215,15 +225,43 @@ export default function VentasPage() {
               }
             }, 800); // 800ms es suficiente para que aparezca el diálogo
           };
+        } else {
+          // Si no se pudo abrir la ventana
+          removerNotificacion(notificacionCarga);
+          mostrarNotificacion(
+            "error",
+            "No se pudo abrir la ventana de impresión",
+            "Verifica que los pop-ups no estén bloqueados"
+          );
         }
+      } else {
+        removerNotificacion(notificacionCarga);
+        mostrarNotificacion(
+          "error",
+          "Error al generar el ticket",
+          "Por favor, intenta nuevamente"
+        );
       }
     } catch (error) {
       console.error("Error imprimiendo ticket:", error);
+      removerNotificacion(notificacionCarga);
+      mostrarNotificacion(
+        "error",
+        "Error de conexión",
+        "No se pudo generar el ticket"
+      );
     }
   };
 
   // Función para imprimir comprobante A4
   const imprimirComprobanteA4 = async (ventaId: string) => {
+    // Mostrar notificación de carga
+    const notificacionCarga = mostrarNotificacion(
+      "descargando",
+      "Preparando comprobante A4...",
+      "Por favor espera"
+    );
+
     try {
       const response = await fetch(`/api/ventas/${ventaId}/comprobante`);
       if (response.ok) {
@@ -236,6 +274,8 @@ export default function VentasPage() {
         if (printWindow) {
           // Esperar a que se cargue el PDF y mostrar el diálogo de impresión
           printWindow.onload = () => {
+            // Remover notificación de carga
+            removerNotificacion(notificacionCarga);
             printWindow.print();
           };
 
@@ -244,12 +284,31 @@ export default function VentasPage() {
             printWindow.close();
             URL.revokeObjectURL(url);
           };
+        } else {
+          // Si no se pudo abrir la ventana
+          removerNotificacion(notificacionCarga);
+          mostrarNotificacion(
+            "error",
+            "No se pudo abrir la ventana de impresión",
+            "Verifica que los pop-ups no estén bloqueados"
+          );
         }
       } else {
-        console.error("Error al generar comprobante A4");
+        removerNotificacion(notificacionCarga);
+        mostrarNotificacion(
+          "error",
+          "Error al generar comprobante A4",
+          "Por favor, intenta nuevamente"
+        );
       }
     } catch (error) {
       console.error("Error imprimiendo comprobante A4:", error);
+      removerNotificacion(notificacionCarga);
+      mostrarNotificacion(
+        "error",
+        "Error de conexión",
+        "No se pudo generar el comprobante A4"
+      );
     }
   };
 
