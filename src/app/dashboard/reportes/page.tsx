@@ -277,7 +277,7 @@ export default function PaginaReportes() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6 max-w-full">
+    <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6 max-w-full overflow-visible">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Título y descripción */}
@@ -346,7 +346,7 @@ export default function PaginaReportes() {
 
       {/* Barra de progreso */}
       {estado.generando && estado.progreso > 0 && (
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 border border-slate-600/50">
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 border border-slate-600/50 relative z-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-slate-300">Generando reporte...</span>
             <span className="text-sm text-blue-400">{estado.progreso}%</span>
@@ -374,7 +374,7 @@ export default function PaginaReportes() {
       {reporte && (
         <>
           {/* Navegación de vistas */}
-          <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50 p-6">
+          <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50 p-6 relative z-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               {/* Navegación de vistas - responsive */}
               <div className="flex justify-center sm:justify-start">
@@ -865,7 +865,7 @@ export default function PaginaReportes() {
 
       {/* Estado vacío */}
       {!reporte && !estado.generando && (
-        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50 p-12 text-center">
+        <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50 p-12 text-center relative z-0">
           <div className="bg-slate-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <BarChart className="h-8 w-8 text-slate-400" />
           </div>
