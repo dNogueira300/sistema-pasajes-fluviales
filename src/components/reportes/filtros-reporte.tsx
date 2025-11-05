@@ -247,8 +247,8 @@ export default function FiltrosReporteComponent({
         leaveFrom="opacity-100 max-h-[800px]"
         leaveTo="opacity-0 max-h-0"
       >
-        <div className="space-y-4 pt-4 border-t border-slate-600/50 overflow-visible">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 z-10">
+        <div className="space-y-4 pt-4 border-t border-slate-600/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Filtro por ruta */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -258,8 +258,8 @@ export default function FiltrosReporteComponent({
                 value={filtros.rutaId || ""}
                 onChange={(value) => handleFiltroChange("rutaId", value)}
               >
-                <div className="relative">
-                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-4 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 z-50">
+                <div className="relative z-50">
+                  <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-4 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
                     <span className="block truncate text-slate-100">
                       {filtros.rutaId
                         ? opciones.rutas.find((r) => r.value === filtros.rutaId)
@@ -277,7 +277,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
@@ -350,7 +350,7 @@ export default function FiltrosReporteComponent({
                 value={filtros.embarcacionId || ""}
                 onChange={(value) => handleFiltroChange("embarcacionId", value)}
               >
-                <div className="relative">
+                <div className="relative z-50">
                   <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
                     <Ship className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <span className="block truncate text-slate-100">
@@ -370,7 +370,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
@@ -443,7 +443,7 @@ export default function FiltrosReporteComponent({
                 value={filtros.vendedorId || ""}
                 onChange={(value) => handleFiltroChange("vendedorId", value)}
               >
-                <div className="relative">
+                <div className="relative z-50">
                   <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
                     <User className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <span className="block truncate text-slate-100">
@@ -463,7 +463,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
@@ -539,7 +539,7 @@ export default function FiltrosReporteComponent({
                 value={filtros.metodoPago || ""}
                 onChange={(value) => handleFiltroChange("metodoPago", value)}
               >
-                <div className="relative">
+                <div className="relative z-50">
                   <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
                     <CreditCard className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <span className="block truncate text-slate-100">
@@ -559,7 +559,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
@@ -632,7 +632,7 @@ export default function FiltrosReporteComponent({
                 value={filtros.tipoPago || ""}
                 onChange={(value) => handleFiltroChange("tipoPago", value)}
               >
-                <div className="relative">
+                <div className="relative z-50">
                   <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
                     <Wallet className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <span className="block truncate text-slate-100">
@@ -652,7 +652,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
@@ -730,7 +730,7 @@ export default function FiltrosReporteComponent({
                   )
                 }
               >
-                <div className="relative">
+                <div className="relative z-50">
                   <Listbox.Button className="relative w-full cursor-pointer rounded-xl bg-slate-700/50 border border-slate-600/50 py-3 pl-10 pr-10 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
                     <CheckCircle className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
                     <span className="block truncate text-slate-100">
@@ -751,7 +751,7 @@ export default function FiltrosReporteComponent({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
+                    <Listbox.Options className="absolute z-[9999] mt-1 max-h-60 w-full overflow-auto rounded-xl bg-slate-800 border border-slate-600/50 shadow-2xl backdrop-blur-md">
                       <Listbox.Option
                         value=""
                         className={({ active }) =>
