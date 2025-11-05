@@ -146,7 +146,7 @@ export default function FiltrosReporteComponent({
   };
 
   return (
-    <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50 p-6 space-y-6">
+    <div className="bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-600/50 p-6 space-y-6 overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -247,10 +247,10 @@ export default function FiltrosReporteComponent({
         leaveFrom="opacity-100 max-h-[800px]"
         leaveTo="opacity-0 max-h-0"
       >
-        <div className="space-y-4 pt-4 border-t border-slate-600/50">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-4 pt-4 border-t border-slate-600/50 overflow-visible">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-visible">
             {/* Filtro por ruta */}
-            <div>
+            <div className="overflow-visible">
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Ruta
               </label>
@@ -342,7 +342,7 @@ export default function FiltrosReporteComponent({
             </div>
 
             {/* Filtro por embarcación */}
-            <div>
+            <div className="overflow-visible">
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Embarcación
               </label>
@@ -435,7 +435,7 @@ export default function FiltrosReporteComponent({
             </div>
 
             {/* Filtro por vendedor */}
-            <div>
+            <div className="overflow-visible">
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Vendedor
               </label>
@@ -529,9 +529,9 @@ export default function FiltrosReporteComponent({
           </div>
 
           {/* Segunda fila de filtros avanzados */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-visible">
             {/* Filtro por método de pago */}
-            <div>
+            <div className="overflow-visible">
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Método de Pago
               </label>
@@ -624,7 +624,7 @@ export default function FiltrosReporteComponent({
             </div>
 
             {/* Filtro por tipo de pago */}
-            <div>
+            <div className="overflow-visible">
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Tipo de Pago
               </label>
@@ -717,7 +717,7 @@ export default function FiltrosReporteComponent({
             </div>
 
             {/* Filtro por estado */}
-            <div>
+            <div className="overflow-visible">
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Estado de Venta
               </label>
