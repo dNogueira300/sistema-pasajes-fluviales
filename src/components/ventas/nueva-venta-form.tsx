@@ -2059,7 +2059,7 @@ export default function NuevaVentaForm({
                   <div className="space-y-2 text-sm text-slate-200">
                     <p>
                       <span className="text-slate-400">Ruta:</span>{" "}
-                      {rutaSeleccionada?.nombre}
+                      {formData.origenSeleccionado} - {formData.destinoSeleccionado}
                     </p>
                     <p>
                       <span className="text-slate-400">Embarcación:</span>{" "}
