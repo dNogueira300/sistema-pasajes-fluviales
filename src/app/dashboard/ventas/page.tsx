@@ -13,7 +13,6 @@ import {
   Search,
   Filter,
   Download,
-  Eye,
   X,
   Calendar,
   MapPin,
@@ -854,7 +853,11 @@ export default function VentasPage() {
                 {ventas.map((venta) => (
                   <tr
                     key={venta.id}
-                    className="hover:bg-slate-700/30 transition-colors align-top"
+                    onClick={() => {
+                      setSelectedVenta(venta);
+                      setShowDetalles(true);
+                    }}
+                    className="hover:bg-slate-700/30 transition-colors align-top cursor-pointer"
                   >
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-100">
@@ -961,22 +964,11 @@ export default function VentasPage() {
                     {/* Columna de acciones actualizada */}
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end space-x-3">
-                        {/* Botón Ver detalles */}
-                        <button
-                          onClick={() => {
-                            setSelectedVenta(venta);
-                            setShowDetalles(true);
-                          }}
-                          className="p-2 text-blue-400 hover:bg-blue-900/30 rounded-xl transition-colors"
-                          title="Ver detalles"
-                        >
-                          <Eye className="h-5 w-5" />
-                        </button>
-
                         {/* Menú unificado de acciones (3 puntos) */}
                         <div className="relative">
                           <button
                             onClick={(e) => {
+                              e.stopPropagation();
                               const button = e.currentTarget;
                               const target =
                                 button.nextElementSibling as HTMLElement | null;
@@ -1004,13 +996,17 @@ export default function VentasPage() {
                           </button>
 
                           {/* Menú desplegable unificado */}
-                          <div className="more-menu hidden absolute right-0 mt-2 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-50 w-56 backdrop-blur-sm">
+                          <div
+                            className="more-menu hidden absolute right-0 mt-2 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl py-1 z-50 w-56 backdrop-blur-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             {/* Sección: Imprimir comprobante */}
                             <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
                               Imprimir comprobante
                             </div>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 imprimirComprobanteA4(venta.id);
                                 document
                                   .querySelectorAll(".more-menu")
@@ -1024,7 +1020,8 @@ export default function VentasPage() {
                               A4
                             </button>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 imprimirTicket(venta.id);
                                 document
                                   .querySelectorAll(".more-menu")
@@ -1046,7 +1043,8 @@ export default function VentasPage() {
                               Descargar comprobante
                             </div>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 descargarComprobanteA4(venta);
                                 document
                                   .querySelectorAll(".more-menu")
@@ -1060,7 +1058,8 @@ export default function VentasPage() {
                               PDF
                             </button>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 descargarComprobanteImagen(venta);
                                 document
                                   .querySelectorAll(".more-menu")
@@ -1079,7 +1078,10 @@ export default function VentasPage() {
                               <>
                                 <div className="border-t border-slate-600/50 my-1"></div>
                                 <button
-                                  onClick={() => handleAnularVenta(venta)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAnularVenta(venta);
+                                  }}
                                   className="w-full px-4 py-3 text-sm text-left text-red-400 hover:bg-red-900/30 flex items-center transition-colors"
                                 >
                                   <Trash2 className="h-5 w-5 mr-2" />
