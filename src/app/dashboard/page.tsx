@@ -368,35 +368,84 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 p-3 sm:p-4 lg:p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-100">
-          ¡Bienvenido Administrador!
-        </h1>
-        <p className="text-slate-300 mt-1">
-          Panel principal del sistema de ventas fluviales
-        </p>
-        <div className="flex items-center mt-2 text-sm text-slate-400">
-          <Calendar className="h-4 w-4 mr-2" />
-          {new Date().toLocaleDateString("es-PE", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-100">
+            ¡Bienvenido Administrador!
+          </h1>
+          <p className="text-slate-300 mt-1">
+            Panel principal del sistema de ventas fluviales
+          </p>
+          <div className="flex items-center mt-2 text-sm text-slate-400">
+            <Calendar className="h-4 w-4 mr-2" />
+            {new Date().toLocaleDateString("es-PE", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </div>
         </div>
+        <button
+          onClick={() => setShowNuevaVenta(true)}
+          className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl flex items-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-lg hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-800"
+        >
+          <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-lg transition-colors duration-200">
+            <Plus className="h-4 w-4" />
+          </div>
+          <span>Nueva Venta</span>
+          <div className="hidden sm:block w-2 h-2 bg-blue-300 rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-200"></div>
+        </button>
       </div>
 
-      {/* Botón flotante de Nueva Venta */}
+      {/* Botón flotante de Nueva Venta con efecto de borde animado */}
       <button
         onClick={() => setShowNuevaVenta(true)}
-        className="group fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 ease-out border-2 border-blue-600 hover:border-blue-500 z-50 hover:scale-110 active:scale-95 hover:ring-4 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-900"
+        className="fab-button group fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 ease-out z-50 hover:scale-110 active:scale-95"
         title="Nueva Venta"
       >
-        <Plus className="h-6 w-6" />
+        <div className="fab-spinner"></div>
+        <Plus className="h-6 w-6 relative z-10" />
         <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-800 text-slate-100 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-slate-600">
           Nueva Venta
         </span>
       </button>
+
+      <style jsx>{`
+        .fab-button {
+          position: relative;
+          overflow: visible;
+        }
+
+        .fab-spinner {
+          position: absolute;
+          inset: -3px;
+          border-radius: 50%;
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 270deg,
+            #60a5fa 270deg,
+            #3b82f6 360deg
+          );
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .fab-button:hover .fab-spinner {
+          opacity: 1;
+          animation: spin-border 1.5s linear infinite;
+        }
+
+        @keyframes spin-border {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
 
       {estadisticas && (
         <>
