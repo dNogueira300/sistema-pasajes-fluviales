@@ -418,7 +418,6 @@ export default function GestionRutas() {
 
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        {/* Título y descripción */}
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-slate-100">
             Gestión de Rutas
@@ -427,8 +426,6 @@ export default function GestionRutas() {
             Administra las rutas y sus embarcaciones asignadas
           </p>
         </div>
-
-        {/* Botón Nueva Ruta - responsive */}
         <div className="w-full lg:w-auto">
           <button
             onClick={() => setModalNuevo(true)}
@@ -442,6 +439,55 @@ export default function GestionRutas() {
           </button>
         </div>
       </div>
+
+      {/* Botón flotante de Nueva Ruta con efecto de borde animado */}
+      <button
+        onClick={() => setModalNuevo(true)}
+        className="fab-button group fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 ease-out z-50 hover:scale-110 active:scale-95"
+        title="Nueva Ruta"
+      >
+        <div className="fab-spinner"></div>
+        <Plus className="h-6 w-6 relative z-10" />
+        <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-800 text-slate-100 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-slate-600">
+          Nueva Ruta
+        </span>
+      </button>
+
+      <style jsx>{`
+        .fab-button {
+          position: relative;
+          overflow: visible;
+        }
+
+        .fab-spinner {
+          position: absolute;
+          inset: -3px;
+          border-radius: 50%;
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 270deg,
+            #60a5fa 270deg,
+            #3b82f6 360deg
+          );
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .fab-button:hover .fab-spinner {
+          opacity: 1;
+          animation: spin-border 1.5s linear infinite;
+        }
+
+        @keyframes spin-border {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
 
       {/* Estadísticas */}
       {estadisticas && (
