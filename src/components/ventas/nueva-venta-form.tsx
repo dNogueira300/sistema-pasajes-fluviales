@@ -2550,7 +2550,7 @@ export default function NuevaVentaForm({
                 <div className="flex justify-between text-sm border-t border-slate-600 pt-2 mt-2">
                   <span className="text-slate-400">Total:</span>
                   <span className="text-green-400 font-bold text-lg">
-                    S/ {ventaCreada.total.toFixed(2)}
+                    S/ {parseFloat(ventaCreada.total.toString()).toFixed(2)}
                   </span>
                 </div>
               </div>
