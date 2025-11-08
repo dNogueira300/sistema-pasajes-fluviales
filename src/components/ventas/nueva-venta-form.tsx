@@ -92,6 +92,7 @@ export default function NuevaVentaForm({
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [puertosEmbarque, setPuertosEmbarque] = useState<PuertoEmbarque[]>([]);
@@ -741,8 +742,8 @@ export default function NuevaVentaForm({
 
   return (
     <div className="bg-transparent">
-      {/* Header con steps */}
-      <div className="p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md z-20">
+      {/* Header con steps - Sticky */}
+      <div className="sticky top-0 p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md z-20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-slate-100">Nueva Venta</h2>
           <div className="flex items-center space-x-4">
@@ -2169,7 +2170,7 @@ export default function NuevaVentaForm({
             </button>
           ) : (
             <button
-              onClick={handleSubmit}
+              onClick={() => setShowConfirmDialog(true)}
               disabled={loading}
               className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 flex items-center font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
             >
@@ -2188,6 +2189,74 @@ export default function NuevaVentaForm({
           )}
         </div>
       </div>
+
+      {/* Diálogo de Confirmación */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full shadow-2xl border border-slate-600/50">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-green-600/20 p-3 rounded-full">
+                  <CheckCircle className="h-8 w-8 text-green-400" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-slate-100 text-center mb-2">
+                ¿Confirmar Venta?
+              </h3>
+              <p className="text-slate-300 text-center mb-6">
+                Estás a punto de registrar una venta de{" "}
+                <span className="font-bold text-blue-400">
+                  {formData.cantidadPasajes} pasaje(s)
+                </span>{" "}
+                por un total de{" "}
+                <span className="font-bold text-green-400">
+                  S/ {(formData.precioFinal * formData.cantidadPasajes).toFixed(2)}
+                </span>
+                .
+              </p>
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-6 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Cliente:</span>
+                  <span className="text-slate-100 font-medium text-right">
+                    {formData.cliente.nombre} {formData.cliente.apellido}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Ruta:</span>
+                  <span className="text-slate-100 font-medium text-right">
+                    {formData.origenSeleccionado} → {formData.destinoSeleccionado}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Fecha:</span>
+                  <span className="text-slate-100 font-medium">
+                    {formatearFechaDesdeInput(formData.fechaViaje)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="flex-1 px-4 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 transition-all duration-200"
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirmDialog(false);
+                    handleSubmit();
+                  }}
+                  disabled={loading}
+                  className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 transition-all duration-200 shadow-lg font-semibold"
+                >
+                  {loading ? "Procesando..." : "Confirmar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
