@@ -378,72 +378,17 @@ export default function GestionUsuarios() {
         </div>
       </div>
 
-      {/* Botón flotante de Nuevo Usuario con efecto de borde animado */}
+      {/* Botón flotante de Nuevo Usuario */}
       <button
         onClick={() => setModalNuevo(true)}
-        className="fab-button group fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 ease-out z-50 hover:scale-110 active:scale-95"
+        className="group fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-200 z-50 hover:scale-105 active:scale-95 hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-900"
         title="Nuevo Usuario"
       >
-        <svg className="fab-progress-ring" width="64" height="64" viewBox="0 0 64 64">
-          <circle
-            className="fab-progress-circle"
-            cx="32"
-            cy="32"
-            r="30"
-            fill="none"
-            stroke="#60a5fa"
-            strokeWidth="3"
-          />
-        </svg>
-        <Plus className="h-6 w-6 relative z-10" />
+        <Plus className="h-6 w-6" />
         <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-800 text-slate-100 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-slate-600">
           Nuevo Usuario
         </span>
       </button>
-
-      <style jsx>{`
-        .fab-button {
-          position: relative;
-          overflow: visible;
-        }
-
-        .fab-progress-ring {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          opacity: 0;
-          transition: opacity 0.3s ease;
-          pointer-events: none;
-        }
-
-        .fab-progress-circle {
-          stroke-dasharray: 188.5;
-          stroke-dashoffset: 188.5;
-          transform-origin: center;
-          transform: rotate(-90deg);
-        }
-
-        .fab-button:hover .fab-progress-ring {
-          opacity: 1;
-        }
-
-        .fab-button:hover .fab-progress-circle {
-          animation: progress-animation 2s ease-in-out infinite;
-        }
-
-        @keyframes progress-animation {
-          0% {
-            stroke-dashoffset: 188.5;
-          }
-          50% {
-            stroke-dashoffset: 0;
-          }
-          100% {
-            stroke-dashoffset: -188.5;
-          }
-        }
-      `}</style>
 
       {/* Estadísticas */}
       {estadisticas && (
