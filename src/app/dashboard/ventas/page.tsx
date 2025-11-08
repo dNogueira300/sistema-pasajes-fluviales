@@ -585,7 +585,17 @@ export default function VentasPage() {
         className="fab-button group fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 ease-out z-50 hover:scale-110 active:scale-95"
         title="Nueva Venta"
       >
-        <div className="fab-spinner"></div>
+        <svg className="fab-progress-ring" width="64" height="64" viewBox="0 0 64 64">
+          <circle
+            className="fab-progress-circle"
+            cx="32"
+            cy="32"
+            r="30"
+            fill="none"
+            stroke="#60a5fa"
+            strokeWidth="3"
+          />
+        </svg>
         <Plus className="h-6 w-6 relative z-10" />
         <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-800 text-slate-100 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-slate-600">
           Nueva Venta
@@ -598,32 +608,40 @@ export default function VentasPage() {
           overflow: visible;
         }
 
-        .fab-spinner {
+        .fab-progress-ring {
           position: absolute;
-          inset: -3px;
-          border-radius: 50%;
-          background: conic-gradient(
-            from 0deg,
-            transparent 0deg,
-            transparent 270deg,
-            #60a5fa 270deg,
-            #3b82f6 360deg
-          );
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           opacity: 0;
           transition: opacity 0.3s ease;
+          pointer-events: none;
         }
 
-        .fab-button:hover .fab-spinner {
+        .fab-progress-circle {
+          stroke-dasharray: 188.5;
+          stroke-dashoffset: 188.5;
+          transform-origin: center;
+          transform: rotate(-90deg);
+        }
+
+        .fab-button:hover .fab-progress-ring {
           opacity: 1;
-          animation: spin-border 1.5s linear infinite;
         }
 
-        @keyframes spin-border {
-          from {
-            transform: rotate(0deg);
+        .fab-button:hover .fab-progress-circle {
+          animation: progress-animation 2s ease-in-out infinite;
+        }
+
+        @keyframes progress-animation {
+          0% {
+            stroke-dashoffset: 188.5;
           }
-          to {
-            transform: rotate(360deg);
+          50% {
+            stroke-dashoffset: 0;
+          }
+          100% {
+            stroke-dashoffset: -188.5;
           }
         }
       `}</style>
