@@ -92,6 +92,7 @@ export default function NuevaVentaForm({
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [puertosEmbarque, setPuertosEmbarque] = useState<PuertoEmbarque[]>([]);
@@ -740,13 +741,13 @@ export default function NuevaVentaForm({
   }, [formData.rutaId, formData.embarcacionId]);
 
   return (
-    <div className="max-w-4xl mx-auto bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-600/50">
-      {/* Header con steps */}
-      <div className="p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl z-20">
+    <div className="bg-transparent">
+      {/* Header con steps - Sticky */}
+      <div className="sticky top-0 p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md z-20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-slate-100">Nueva Venta</h2>
           <div className="flex items-center space-x-4">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-all duration-200 ${
@@ -762,19 +763,23 @@ export default function NuevaVentaForm({
             ))}
           </div>
         </div>
-        <div className="flex justify-between text-sm text-slate-400">
-          <span className={step === 1 ? "font-semibold text-blue-400" : ""}>
+        <div className="grid grid-cols-4 gap-2 text-xs text-slate-400">
+          <span className={step === 1 ? "font-semibold text-blue-400 text-center" : "text-center"}>
             1. Datos del Cliente
           </span>
-          <span className={step === 2 ? "font-semibold text-blue-400" : ""}>
+          <span className={step === 2 ? "font-semibold text-blue-400 text-center" : "text-center"}>
             2. Detalles del Viaje
           </span>
-          <span className={step === 3 ? "font-semibold text-blue-400" : ""}>
-            3. Confirmación
+          <span className={step === 3 ? "font-semibold text-blue-400 text-center" : "text-center"}>
+            3. Realizar Pago
+          </span>
+          <span className={step === 4 ? "font-semibold text-blue-400 text-center" : "text-center"}>
+            4. Confirmación
           </span>
         </div>
       </div>
 
+      {/* Contenedor de contenido */}
       <div className="p-6">
         {/* STEP 1: Datos del Cliente */}
         {step === 1 && (
@@ -1002,21 +1007,6 @@ export default function NuevaVentaForm({
                   placeholder="cliente@email.com"
                 />
               </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => setStep(2)}
-                disabled={
-                  !formData.cliente.dni ||
-                  !formData.cliente.nombre ||
-                  !formData.cliente.apellido ||
-                  buscandoAutoCliente
-                }
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Continuar
-              </button>
             </div>
           </div>
         )}
@@ -1548,276 +1538,6 @@ export default function NuevaVentaForm({
                 />
               </div>
 
-              <div className="md:col-span-2 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Tipo de Pago
-                  </label>
-                  <select
-                    value={formData.tipoPago}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        tipoPago: e.target.value as "UNICO" | "HIBRIDO",
-                        metodosPago: [],
-                      }))
-                    }
-                    className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
-                  >
-                    <option
-                      value="UNICO"
-                      className="bg-slate-800 text-slate-100"
-                    >
-                      Pago Único
-                    </option>
-                    <option
-                      value="HIBRIDO"
-                      className="bg-slate-800 text-slate-100"
-                    >
-                      Pago Híbrido
-                    </option>
-                  </select>
-                </div>
-
-                {formData.tipoPago === "UNICO" ? (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Método de Pago
-                    </label>
-                    <select
-                      value={formData.metodoPago}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          metodoPago: e.target.value,
-                        }))
-                      }
-                      className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
-                    >
-                      <option
-                        value="EFECTIVO"
-                        className="bg-slate-800 text-slate-100"
-                      >
-                        Efectivo
-                      </option>
-                      <option
-                        value="TARJETA"
-                        className="bg-slate-800 text-slate-100"
-                      >
-                        Tarjeta
-                      </option>
-                      <option
-                        value="TRANSFERENCIA"
-                        className="bg-slate-800 text-slate-100"
-                      >
-                        Transferencia
-                      </option>
-                      <option
-                        value="YAPE"
-                        className="bg-slate-800 text-slate-100"
-                      >
-                        Yape
-                      </option>
-                      <option
-                        value="PLIN"
-                        className="bg-slate-800 text-slate-100"
-                      >
-                        Plin
-                      </option>
-                    </select>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-sm font-medium text-slate-300">
-                        Métodos de Pago
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const { faltaPagar } = calcularTotales();
-                          setFormData((prev) => ({
-                            ...prev,
-                            metodosPago: [
-                              ...prev.metodosPago,
-                              {
-                                tipo: "EFECTIVO",
-                                monto:
-                                  prev.metodosPago.length === 0
-                                    ? 0
-                                    : Math.max(0, faltaPagar),
-                              },
-                            ],
-                          }));
-                        }}
-                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
-                      >
-                        + Agregar método
-                      </button>
-                    </div>
-
-                    {formData.metodosPago.map((metodo, index) => (
-                      <div key={index} className="flex gap-4 items-start">
-                        {/* SELECT para el tipo de método */}
-                        <div className="flex-1">
-                          <select
-                            value={metodo.tipo}
-                            onChange={(e) => {
-                              const newMetodosPago = [...formData.metodosPago];
-                              newMetodosPago[index].tipo = e.target.value;
-                              setFormData((prev) => ({
-                                ...prev,
-                                metodosPago: newMetodosPago,
-                              }));
-                            }}
-                            className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
-                          >
-                            <option
-                              value="EFECTIVO"
-                              className="bg-slate-800 text-slate-100"
-                            >
-                              Efectivo
-                            </option>
-                            <option
-                              value="TARJETA"
-                              className="bg-slate-800 text-slate-100"
-                            >
-                              Tarjeta
-                            </option>
-                            <option
-                              value="TRANSFERENCIA"
-                              className="bg-slate-800 text-slate-100"
-                            >
-                              Transferencia
-                            </option>
-                            <option
-                              value="YAPE"
-                              className="bg-slate-800 text-slate-100"
-                            >
-                              Yape
-                            </option>
-                            <option
-                              value="PLIN"
-                              className="bg-slate-800 text-slate-100"
-                            >
-                              Plin
-                            </option>
-                          </select>
-                        </div>
-
-                        {/* INPUT para el monto */}
-                        <div className="flex-1">
-                          <input
-                            type="number"
-                            value={metodo.monto}
-                            onChange={(e) => {
-                              const newMetodosPago = [...formData.metodosPago];
-                              newMetodosPago[index].monto =
-                                parseFloat(e.target.value) || 0;
-                              setFormData((prev) => ({
-                                ...prev,
-                                metodosPago: newMetodosPago,
-                              }));
-                            }}
-                            step="0.01"
-                            min="0"
-                            placeholder="Monto (S/)"
-                            className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
-                          />
-                        </div>
-
-                        {/* Botón eliminar */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newMetodosPago = formData.metodosPago.filter(
-                              (_, i) => i !== index
-                            );
-                            setFormData((prev) => ({
-                              ...prev,
-                              metodosPago: newMetodosPago,
-                            }));
-                          }}
-                          className="px-2 py-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
-                          title="Eliminar método"
-                        >
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border-2 border-red-400">
-                            <span className="text-lg font-medium leading-none relative -top-0.5">
-                              -
-                            </span>
-                          </span>
-                        </button>
-                      </div>
-                    ))}
-
-                    {/* Resumen de pago híbrido */}
-                    {formData.metodosPago.length > 0 && (
-                      <div className="mt-4 p-4 bg-slate-700/30 border border-slate-600/50 rounded-xl">
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-slate-400">
-                              Total de la venta:
-                            </span>
-                            <span className="font-medium text-slate-200">
-                              S/ {calcularTotales().totalVenta.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-slate-400">
-                              Total pagado:
-                            </span>
-                            <span className="font-medium text-slate-200">
-                              S/ {calcularTotales().totalPagado.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="border-t border-slate-600/50 pt-2">
-                            <div className="flex justify-between">
-                              <span className="text-slate-400">
-                                {calcularTotales().faltaPagar > 0
-                                  ? "Falta pagar:"
-                                  : "Diferencia:"}
-                              </span>
-                              <span
-                                className={`font-bold ${
-                                  Math.abs(calcularTotales().faltaPagar) < 0.01
-                                    ? "text-green-400"
-                                    : calcularTotales().faltaPagar > 0
-                                    ? "text-red-400"
-                                    : "text-yellow-400"
-                                }`}
-                              >
-                                S/{" "}
-                                {Math.abs(calcularTotales().faltaPagar).toFixed(
-                                  2
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Mensaje de validación */}
-                        {Math.abs(calcularTotales().faltaPagar) < 0.01 ? (
-                          <div className="mt-3 flex items-center text-green-400 text-sm">
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            El pago está completo
-                          </div>
-                        ) : calcularTotales().faltaPagar > 0 ? (
-                          <div className="mt-3 flex items-center text-red-400 text-sm">
-                            <AlertCircle className="h-4 w-4 mr-2" />
-                            Falta completar el pago
-                          </div>
-                        ) : (
-                          <div className="mt-3 flex items-center text-yellow-400 text-sm">
-                            <AlertCircle className="h-4 w-4 mr-2" />
-                            El total pagado excede el monto de la venta
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Observaciones
@@ -1975,46 +1695,291 @@ export default function NuevaVentaForm({
               </div>
             )}
 
-            {/* Error al verificar disponibilidad */}
-            {/* {error && (
-              <div className="bg-red-900/30 border border-red-600/50 rounded-xl p-4 backdrop-blur-md">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-3" />
-                  <span className="text-sm text-red-200">{error}</span>
-                </div>
-              </div>
-            )} */}
+          </div>
+        )}
 
-            <div className="flex justify-between">
-              <button
-                onClick={() => setStep(1)}
-                className="px-6 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 backdrop-blur-sm transition-all duration-200"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={() => setStep(3)}
-                disabled={
-                  !disponibilidad?.puedeVender ||
-                  !formData.rutaId ||
-                  !formData.embarcacionId ||
-                  !formData.puertoEmbarqueId ||
-                  !formData.fechaViaje ||
-                  !formData.horaViaje ||
-                  !formData.horaEmbarque ||
-                  !!errorHorarios || // Usar el nuevo estado de error
-                  !!(error && error.includes("no opera"))
-                }
-                className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Continuar
-              </button>
+        {/* STEP 3: Realizar Pago */}
+        {step === 3 && (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-slate-100 flex items-center">
+              <CreditCard className="h-5 w-5 mr-2" />
+              Realizar Pago
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Tipo de Pago
+                </label>
+                <select
+                  value={formData.tipoPago}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      tipoPago: e.target.value as "UNICO" | "HIBRIDO",
+                      metodosPago: [],
+                    }))
+                  }
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                >
+                  <option
+                    value="UNICO"
+                    className="bg-slate-800 text-slate-100"
+                  >
+                    Pago Único
+                  </option>
+                  <option
+                    value="HIBRIDO"
+                    className="bg-slate-800 text-slate-100"
+                  >
+                    Pago Híbrido
+                  </option>
+                </select>
+              </div>
+
+              {formData.tipoPago === "UNICO" ? (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Método de Pago
+                  </label>
+                  <select
+                    value={formData.metodoPago}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        metodoPago: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                  >
+                    <option
+                      value="EFECTIVO"
+                      className="bg-slate-800 text-slate-100"
+                    >
+                      Efectivo
+                    </option>
+                    <option
+                      value="TARJETA"
+                      className="bg-slate-800 text-slate-100"
+                    >
+                      Tarjeta
+                    </option>
+                    <option
+                      value="TRANSFERENCIA"
+                      className="bg-slate-800 text-slate-100"
+                    >
+                      Transferencia
+                    </option>
+                    <option
+                      value="YAPE"
+                      className="bg-slate-800 text-slate-100"
+                    >
+                      Yape
+                    </option>
+                    <option
+                      value="PLIN"
+                      className="bg-slate-800 text-slate-100"
+                    >
+                      Plin
+                    </option>
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-medium text-slate-300">
+                      Métodos de Pago
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const { faltaPagar } = calcularTotales();
+                        setFormData((prev) => ({
+                          ...prev,
+                          metodosPago: [
+                            ...prev.metodosPago,
+                            {
+                              tipo: "EFECTIVO",
+                              monto:
+                                prev.metodosPago.length === 0
+                                  ? 0
+                                  : Math.max(0, faltaPagar),
+                            },
+                          ],
+                        }));
+                      }}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
+                    >
+                      + Agregar método
+                    </button>
+                  </div>
+
+                  {formData.metodosPago.map((metodo, index) => (
+                    <div key={index} className="flex gap-4 items-start">
+                      {/* SELECT para el tipo de método */}
+                      <div className="flex-1">
+                        <select
+                          value={metodo.tipo}
+                          onChange={(e) => {
+                            const newMetodosPago = [...formData.metodosPago];
+                            newMetodosPago[index].tipo = e.target.value;
+                            setFormData((prev) => ({
+                              ...prev,
+                              metodosPago: newMetodosPago,
+                            }));
+                          }}
+                          className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                        >
+                          <option
+                            value="EFECTIVO"
+                            className="bg-slate-800 text-slate-100"
+                          >
+                            Efectivo
+                          </option>
+                          <option
+                            value="TARJETA"
+                            className="bg-slate-800 text-slate-100"
+                          >
+                            Tarjeta
+                          </option>
+                          <option
+                            value="TRANSFERENCIA"
+                            className="bg-slate-800 text-slate-100"
+                          >
+                            Transferencia
+                          </option>
+                          <option
+                            value="YAPE"
+                            className="bg-slate-800 text-slate-100"
+                          >
+                            Yape
+                          </option>
+                          <option
+                            value="PLIN"
+                            className="bg-slate-800 text-slate-100"
+                          >
+                            Plin
+                          </option>
+                        </select>
+                      </div>
+
+                      {/* INPUT para el monto */}
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          value={metodo.monto}
+                          onChange={(e) => {
+                            const newMetodosPago = [...formData.metodosPago];
+                            newMetodosPago[index].monto =
+                              parseFloat(e.target.value) || 0;
+                            setFormData((prev) => ({
+                              ...prev,
+                              metodosPago: newMetodosPago,
+                            }));
+                          }}
+                          step="0.01"
+                          min="0"
+                          placeholder="Monto (S/)"
+                          className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                        />
+                      </div>
+
+                      {/* Botón eliminar */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newMetodosPago = formData.metodosPago.filter(
+                            (_, i) => i !== index
+                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            metodosPago: newMetodosPago,
+                          }));
+                        }}
+                        className="px-2 py-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
+                        title="Eliminar método"
+                      >
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full border-2 border-red-400">
+                          <span className="text-lg font-medium leading-none relative -top-0.5">
+                            -
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Resumen de pago híbrido */}
+                  {formData.metodosPago.length > 0 && (
+                    <div className="mt-4 p-4 bg-slate-700/30 border border-slate-600/50 rounded-xl">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">
+                            Total de la venta:
+                          </span>
+                          <span className="font-medium text-slate-200">
+                            S/ {calcularTotales().totalVenta.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">
+                            Total pagado:
+                          </span>
+                          <span className="font-medium text-slate-200">
+                            S/ {calcularTotales().totalPagado.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="border-t border-slate-600/50 pt-2">
+                          <div className="flex justify-between">
+                            <span className="text-slate-400">
+                              {calcularTotales().faltaPagar > 0
+                                ? "Falta pagar:"
+                                : "Diferencia:"}
+                            </span>
+                            <span
+                              className={`font-bold ${
+                                Math.abs(calcularTotales().faltaPagar) < 0.01
+                                  ? "text-green-400"
+                                  : calcularTotales().faltaPagar > 0
+                                  ? "text-red-400"
+                                  : "text-yellow-400"
+                              }`}
+                            >
+                              S/{" "}
+                              {Math.abs(calcularTotales().faltaPagar).toFixed(
+                                2
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mensaje de validación */}
+                      {Math.abs(calcularTotales().faltaPagar) < 0.01 ? (
+                        <div className="mt-3 flex items-center text-green-400 text-sm">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          El pago está completo
+                        </div>
+                      ) : calcularTotales().faltaPagar > 0 ? (
+                        <div className="mt-3 flex items-center text-red-400 text-sm">
+                          <AlertCircle className="h-4 w-4 mr-2" />
+                          Falta completar el pago
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex items-center text-yellow-400 text-sm">
+                          <AlertCircle className="h-4 w-4 mr-2" />
+                          El total pagado excede el monto de la venta
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* STEP 3: Confirmación */}
-        {step === 3 && (
+        {/* STEP 4: Confirmación */}
+        {step === 4 && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-100 flex items-center">
               <CheckCircle className="h-5 w-5 mr-2" />
@@ -2170,35 +2135,128 @@ export default function NuevaVentaForm({
                 </div>
               </div>
             </div>
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => setStep(2)}
-                className="px-6 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 backdrop-blur-sm transition-all duration-200"
-              >
-                Anterior
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 flex items-center font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Procesando...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-5 w-5 mr-2" />
-                    Confirmar Venta
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         )}
       </div>
+
+      {/* Footer estático con botones de navegación */}
+      <div className="sticky bottom-0 p-4 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md">
+        <div className="flex justify-between">
+          {/* Botón Anterior */}
+          {step > 1 && (
+            <button
+              onClick={() => setStep(step - 1)}
+              className="px-6 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 backdrop-blur-sm transition-all duration-200"
+            >
+              Anterior
+            </button>
+          )}
+
+          {/* Espaciador cuando no hay botón Anterior */}
+          {step === 1 && <div></div>}
+
+          {/* Botón Continuar o Confirmar */}
+          {step < 4 ? (
+            <button
+              onClick={() => setStep(step + 1)}
+              disabled={
+                (step === 1 && (!formData.cliente.dni || !formData.cliente.nombre || !formData.cliente.apellido || buscandoAutoCliente)) ||
+                (step === 2 && (!disponibilidad?.puedeVender || !formData.rutaId || !formData.embarcacionId || !formData.puertoEmbarqueId || !formData.fechaViaje || !formData.horaViaje || !formData.horaEmbarque || !!errorHorarios || !!(error && error.includes("no opera")))) ||
+                (step === 3 && formData.tipoPago === "HIBRIDO" && Math.abs(calcularTotales().faltaPagar) >= 0.01)
+              }
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Continuar
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowConfirmDialog(true)}
+              disabled={loading}
+              className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 flex items-center font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-5 w-5 mr-2" />
+                  Confirmar Venta
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Diálogo de Confirmación */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full shadow-2xl border border-slate-600/50">
+            <div className="p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-green-600/20 p-3 rounded-full">
+                  <CheckCircle className="h-8 w-8 text-green-400" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-slate-100 text-center mb-2">
+                ¿Confirmar Venta?
+              </h3>
+              <p className="text-slate-300 text-center mb-6">
+                Estás a punto de registrar una venta de{" "}
+                <span className="font-bold text-blue-400">
+                  {formData.cantidadPasajes} pasaje(s)
+                </span>{" "}
+                por un total de{" "}
+                <span className="font-bold text-green-400">
+                  S/ {(formData.precioFinal * formData.cantidadPasajes).toFixed(2)}
+                </span>
+                .
+              </p>
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-6 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Cliente:</span>
+                  <span className="text-slate-100 font-medium text-right">
+                    {formData.cliente.nombre} {formData.cliente.apellido}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Ruta:</span>
+                  <span className="text-slate-100 font-medium text-right">
+                    {formData.origenSeleccionado} → {formData.destinoSeleccionado}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Fecha:</span>
+                  <span className="text-slate-100 font-medium">
+                    {formatearFechaDesdeInput(formData.fechaViaje)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="flex-1 px-4 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 transition-all duration-200"
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirmDialog(false);
+                    handleSubmit();
+                  }}
+                  disabled={loading}
+                  className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 transition-all duration-200 shadow-lg font-semibold"
+                >
+                  {loading ? "Procesando..." : "Confirmar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
