@@ -302,21 +302,21 @@ export async function generarComprobanteImagen(
   ctx.textAlign = "left";
   ctx.fillText("Precio unitario:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(`S/. ${venta.precioUnitario!.toFixed(2)}`, 749, yPos);
+  ctx.fillText(`S/. ${parseFloat(venta.precioUnitario!.toString()).toFixed(2)}`, 749, yPos);
   yPos += 18;
 
   // Subtotal
   ctx.textAlign = "left";
   ctx.fillText("Subtotal:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(`S/. ${venta.subtotal!.toFixed(2)}`, 749, yPos);
+  ctx.fillText(`S/. ${parseFloat(venta.subtotal!.toString()).toFixed(2)}`, 749, yPos);
   yPos += 18;
 
   // Impuestos
   ctx.textAlign = "left";
   ctx.fillText("Impuestos:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(`S/. ${venta.impuestos!.toFixed(2)}`, 749, yPos);
+  ctx.fillText(`S/. ${parseFloat(venta.impuestos!.toString()).toFixed(2)}`, 749, yPos);
   yPos += 15;
 
   // Separador
@@ -334,7 +334,7 @@ export async function generarComprobanteImagen(
   ctx.textAlign = "left";
   ctx.fillText("TOTAL PAGADO:", 45, yPos);
   ctx.textAlign = "right";
-  ctx.fillText(`S/. ${venta.total.toFixed(2)}`, 749, yPos);
+  ctx.fillText(`S/. ${parseFloat(venta.total.toString()).toFixed(2)}`, 749, yPos);
   yPos += 18;
 
   // Métodos de pago (DENTRO del recuadro)
@@ -348,7 +348,7 @@ export async function generarComprobanteImagen(
   if (venta.tipoPago === "HIBRIDO" && metodosPago && metodosPago.length > 0) {
     metodosPago.forEach((metodo) => {
       ctx.fillText(
-        `• ${metodo.tipo}: S/. ${metodo.monto.toFixed(2)}`,
+        `• ${metodo.tipo}: S/. ${parseFloat(metodo.monto.toString()).toFixed(2)}`,
         50,
         yPos
       );

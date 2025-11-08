@@ -476,7 +476,7 @@ export default function NuevaVentaForm({
       error: "bg-red-900/80 border-red-600/50 text-red-100",
       descargando: "bg-blue-900/80 border-blue-600/50 text-blue-100",
     };
-    notification.className = `fixed top-4 right-4 ${colores[tipo]} border px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 backdrop-blur-md`;
+    notification.className = `fixed top-4 right-4 ${colores[tipo]} border px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 backdrop-blur-md transition-opacity duration-300`;
     notification.innerHTML = `
       ${iconos[tipo]}
       <div>
@@ -484,9 +484,18 @@ export default function NuevaVentaForm({
         <p class="text-sm opacity-90">${mensaje}</p>
       </div>
     `;
-    notification.setAttribute("data-notification-id", Date.now().toString());
+    const notificationId = Date.now().toString();
+    notification.setAttribute("data-notification-id", notificationId);
     document.body.appendChild(notification);
-    return notification.getAttribute("data-notification-id");
+
+    // Auto-desvanecer las notificaciones de éxito y error después de 5 segundos
+    if (tipo === "exito" || tipo === "error") {
+      setTimeout(() => {
+        removerNotificacion(notificationId);
+      }, 5000);
+    }
+
+    return notificationId;
   };
 
   const removerNotificacion = (notificationId: string | null) => {
@@ -2561,43 +2570,23 @@ export default function NuevaVentaForm({
                   Opciones de comprobante:
                 </p>
 
-                {/* Botones de descarga */}
-                <div className="space-y-2">
-                  <button
-                    onClick={() => descargarComprobanteImagen(ventaCreada)}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg font-medium"
-                  >
-                    <FileImage className="h-5 w-5" />
-                    <span>Descargar Imagen (por defecto)</span>
-                  </button>
+                {/* Botón de descarga */}
+                <button
+                  onClick={() => descargarComprobanteImagen(ventaCreada)}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg font-medium"
+                >
+                  <FileImage className="h-5 w-5" />
+                  <span>Descargar Imagen</span>
+                </button>
 
-                  <button
-                    onClick={() => descargarComprobanteA4(ventaCreada)}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium"
-                  >
-                    <FileText className="h-5 w-5" />
-                    <span>Descargar PDF</span>
-                  </button>
-                </div>
-
-                {/* Botones de impresión */}
-                <div className="space-y-2">
-                  <button
-                    onClick={() => imprimirTicket(ventaCreada.id)}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all duration-200 shadow-lg font-medium"
-                  >
-                    <Printer className="h-5 w-5" />
-                    <span>Imprimir Ticket (por defecto)</span>
-                  </button>
-
-                  <button
-                    onClick={() => imprimirComprobanteA4(ventaCreada.id)}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium"
-                  >
-                    <Printer className="h-5 w-5" />
-                    <span>Imprimir A4</span>
-                  </button>
-                </div>
+                {/* Botón de impresión */}
+                <button
+                  onClick={() => imprimirTicket(ventaCreada.id)}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium"
+                >
+                  <Printer className="h-5 w-5" />
+                  <span>Imprimir Ticket</span>
+                </button>
 
                 {/* Botón de cerrar */}
                 <button
