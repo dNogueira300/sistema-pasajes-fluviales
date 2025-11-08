@@ -740,9 +740,9 @@ export default function NuevaVentaForm({
   }, [formData.rutaId, formData.embarcacionId]);
 
   return (
-    <div className="max-w-4xl mx-auto bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-600/50 flex flex-col max-h-[85vh]">
+    <div className="bg-transparent">
       {/* Header con steps */}
-      <div className="p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl z-20">
+      <div className="p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md z-20">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-slate-100">Nueva Venta</h2>
           <div className="flex items-center space-x-4">
@@ -778,8 +778,8 @@ export default function NuevaVentaForm({
         </div>
       </div>
 
-      {/* Contenedor de contenido con scroll */}
-      <div className="p-6 overflow-y-auto flex-1">
+      {/* Contenedor de contenido */}
+      <div className="p-6">
         {/* STEP 1: Datos del Cliente */}
         {step === 1 && (
           <div className="space-y-6">
@@ -1536,6 +1536,24 @@ export default function NuevaVentaForm({
                   required
                 />
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Observaciones
+                </label>
+                <textarea
+                  value={formData.observaciones}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      observaciones: e.target.value,
+                    }))
+                  }
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 resize-none backdrop-blur-sm transition-all duration-200"
+                  rows={3}
+                  placeholder="Notas adicionales sobre el viaje..."
+                />
+              </div>
             </div>
 
             {/* Información de disponibilidad */}
@@ -1955,24 +1973,6 @@ export default function NuevaVentaForm({
                   )}
                 </div>
               )}
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Observaciones
-                </label>
-                <textarea
-                  value={formData.observaciones}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      observaciones: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 resize-none backdrop-blur-sm transition-all duration-200"
-                  rows={3}
-                  placeholder="Notas adicionales sobre el viaje..."
-                />
-              </div>
             </div>
           </div>
         )}
@@ -2139,7 +2139,7 @@ export default function NuevaVentaForm({
       </div>
 
       {/* Footer estático con botones de navegación */}
-      <div className="p-4 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-b-2xl">
+      <div className="sticky bottom-0 p-4 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md">
         <div className="flex justify-between">
           {/* Botón Anterior */}
           {step > 1 && (
