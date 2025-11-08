@@ -4,6 +4,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { formatearFechaDesdeInput } from "@/lib/utils/fecha-utils";
+import { generarComprobanteImagen } from "@/lib/utils/canvas-image-generator";
+import type { Venta } from "@/types";
 import {
   User,
   MapPin,
@@ -14,6 +16,10 @@ import {
   Search,
   ChevronDown,
   X,
+  Download,
+  Printer,
+  FileImage,
+  FileText,
 } from "lucide-react";
 
 interface Cliente {
@@ -93,6 +99,9 @@ export default function NuevaVentaForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [ventaCreada, setVentaCreada] = useState<Venta | null>(null);
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
+  const [showCloseConfirmDialog, setShowCloseConfirmDialog] = useState(false);
 
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [puertosEmbarque, setPuertosEmbarque] = useState<PuertoEmbarque[]>([]);
@@ -428,52 +437,10 @@ export default function NuevaVentaForm({
 
       if (response.ok) {
         const venta = await response.json();
-        onSuccess?.();
-
-        setStep(1);
-        setFormData({
-          cliente: {
-            dni: "",
-            nombre: "",
-            apellido: "",
-            telefono: "",
-            email: "",
-            nacionalidad: "Peruana",
-          },
-          rutaId: "",
-          embarcacionId: "",
-          puertoEmbarqueId: "",
-          origenSeleccionado: "",
-          destinoSeleccionado: "",
-          precioFinal: 0,
-          fechaViaje: "",
-          horaViaje: "",
-          horaEmbarque: "",
-          cantidadPasajes: 1,
-          tipoPago: "UNICO",
-          metodoPago: "EFECTIVO",
-          metodosPago: [],
-          observaciones: "",
-        });
-
-        const notification = document.createElement("div");
-        notification.className =
-          "fixed top-4 right-4 bg-green-900/80 border border-green-600/50 text-green-100 px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 backdrop-blur-md";
-        notification.innerHTML = `
-          <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-          <div>
-            <p class="font-medium">¡Venta creada exitosamente!</p>
-            <p class="text-sm text-green-300">Número de venta: ${venta.numeroVenta}</p>
-          </div>
-        `;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-          notification.classList.add("opacity-0", "transition-opacity");
-          setTimeout(() => notification.remove(), 300);
-        }, 5000);
+        // Guardar la venta creada y mostrar pantalla de éxito
+        setVentaCreada(venta);
+        setShowSuccessScreen(true);
+        setShowConfirmDialog(false);
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Error al crear la venta");
@@ -484,6 +451,286 @@ export default function NuevaVentaForm({
     } finally {
       setLoading(false);
     }
+  };
+
+  // Funciones de notificación
+  const mostrarNotificacion = (
+    tipo: "exito" | "error" | "descargando",
+    titulo: string,
+    mensaje: string
+  ) => {
+    const notification = document.createElement("div");
+    const iconos = {
+      exito: `<svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>`,
+      error: `<svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>`,
+      descargando: `<svg class="h-5 w-5 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>`,
+    };
+    const colores = {
+      exito: "bg-green-900/80 border-green-600/50 text-green-100",
+      error: "bg-red-900/80 border-red-600/50 text-red-100",
+      descargando: "bg-blue-900/80 border-blue-600/50 text-blue-100",
+    };
+    notification.className = `fixed top-4 right-4 ${colores[tipo]} border px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 z-50 backdrop-blur-md`;
+    notification.innerHTML = `
+      ${iconos[tipo]}
+      <div>
+        <p class="font-medium">${titulo}</p>
+        <p class="text-sm opacity-90">${mensaje}</p>
+      </div>
+    `;
+    notification.setAttribute("data-notification-id", Date.now().toString());
+    document.body.appendChild(notification);
+    return notification.getAttribute("data-notification-id");
+  };
+
+  const removerNotificacion = (notificationId: string | null) => {
+    if (!notificationId) return;
+    const notification = document.querySelector(
+      `[data-notification-id="${notificationId}"]`
+    );
+    if (notification) {
+      notification.classList.add("opacity-0", "transition-opacity");
+      setTimeout(() => notification.remove(), 300);
+    }
+  };
+
+  // Función para imprimir ticket
+  const imprimirTicket = async (ventaId: string) => {
+    const notificacionCarga = mostrarNotificacion(
+      "descargando",
+      "Preparando ticket...",
+      "Por favor espera"
+    );
+
+    try {
+      const response = await fetch(`/api/ventas/${ventaId}/ticket`);
+      if (response.ok) {
+        const html = await response.text();
+        const printWindow = window.open("", "_blank");
+
+        if (printWindow) {
+          printWindow.document.open();
+          printWindow.document.write(html);
+          printWindow.document.close();
+
+          printWindow.onload = () => {
+            removerNotificacion(notificacionCarga);
+            printWindow.focus();
+            printWindow.print();
+            setTimeout(() => {
+              if (!printWindow.closed) {
+                printWindow.close();
+              }
+            }, 800);
+          };
+        } else {
+          removerNotificacion(notificacionCarga);
+          mostrarNotificacion(
+            "error",
+            "No se pudo abrir la ventana de impresión",
+            "Verifica que los pop-ups no estén bloqueados"
+          );
+        }
+      } else {
+        removerNotificacion(notificacionCarga);
+        mostrarNotificacion(
+          "error",
+          "Error al generar el ticket",
+          "Por favor, intenta nuevamente"
+        );
+      }
+    } catch (error) {
+      console.error("Error imprimiendo ticket:", error);
+      removerNotificacion(notificacionCarga);
+      mostrarNotificacion(
+        "error",
+        "Error de conexión",
+        "No se pudo generar el ticket"
+      );
+    }
+  };
+
+  // Función para imprimir comprobante A4
+  const imprimirComprobanteA4 = async (ventaId: string) => {
+    const notificacionCarga = mostrarNotificacion(
+      "descargando",
+      "Preparando comprobante A4...",
+      "Por favor espera"
+    );
+
+    try {
+      const response = await fetch(`/api/ventas/${ventaId}/comprobante`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const printWindow = window.open(url, "_blank");
+
+        if (printWindow) {
+          printWindow.onload = () => {
+            removerNotificacion(notificacionCarga);
+            printWindow.print();
+          };
+
+          printWindow.onafterprint = () => {
+            printWindow.close();
+            URL.revokeObjectURL(url);
+          };
+        } else {
+          removerNotificacion(notificacionCarga);
+          mostrarNotificacion(
+            "error",
+            "No se pudo abrir la ventana de impresión",
+            "Verifica que los pop-ups no estén bloqueados"
+          );
+        }
+      } else {
+        removerNotificacion(notificacionCarga);
+        mostrarNotificacion(
+          "error",
+          "Error al generar comprobante A4",
+          "Por favor, intenta nuevamente"
+        );
+      }
+    } catch (error) {
+      console.error("Error imprimiendo comprobante A4:", error);
+      removerNotificacion(notificacionCarga);
+      mostrarNotificacion(
+        "error",
+        "Error de conexión",
+        "No se pudo generar el comprobante A4"
+      );
+    }
+  };
+
+  // Función para descargar comprobante A4 como PDF
+  const descargarComprobanteA4 = async (venta: Venta) => {
+    const nombreCliente = `${venta.cliente.nombre} ${venta.cliente.apellido}`;
+    const nombreArchivo = `${nombreCliente} - ${venta.numeroVenta}.pdf`;
+
+    const notificacionDescarga = mostrarNotificacion(
+      "descargando",
+      "Preparando descarga...",
+      `Comprobante PDF: ${venta.numeroVenta}`
+    );
+
+    try {
+      const response = await fetch(`/api/ventas/${venta.id}/comprobante`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nombreArchivo;
+        document.body.appendChild(a);
+        a.click();
+
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        removerNotificacion(notificacionDescarga);
+        mostrarNotificacion(
+          "exito",
+          "PDF descargado correctamente",
+          nombreArchivo
+        );
+      } else {
+        removerNotificacion(notificacionDescarga);
+        mostrarNotificacion(
+          "error",
+          "Error al generar PDF",
+          "Por favor, intenta nuevamente"
+        );
+      }
+    } catch (error) {
+      console.error("Error descargando comprobante A4:", error);
+      removerNotificacion(notificacionDescarga);
+      mostrarNotificacion(
+        "error",
+        "Error de conexión",
+        "No se pudo descargar el PDF"
+      );
+    }
+  };
+
+  // Función para descargar comprobante como imagen PNG
+  const descargarComprobanteImagen = async (venta: Venta) => {
+    const nombreCliente = `${venta.cliente.nombre} ${venta.cliente.apellido}`;
+    const nombreArchivo = `${nombreCliente} - ${venta.numeroVenta}.png`;
+
+    const notificacionDescarga = mostrarNotificacion(
+      "descargando",
+      "Generando imagen...",
+      `Comprobante PNG: ${venta.numeroVenta}`
+    );
+
+    try {
+      const blob = await generarComprobanteImagen(venta);
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = nombreArchivo;
+      document.body.appendChild(a);
+      a.click();
+
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      removerNotificacion(notificacionDescarga);
+      mostrarNotificacion(
+        "exito",
+        "Imagen descargada correctamente",
+        nombreArchivo
+      );
+    } catch (error) {
+      console.error("Error generando imagen del comprobante:", error);
+      removerNotificacion(notificacionDescarga);
+      mostrarNotificacion(
+        "error",
+        "Error al generar imagen",
+        "Por favor, intenta nuevamente"
+      );
+    }
+  };
+
+  // Función para cerrar y resetear el modal
+  const handleCerrarModal = () => {
+    setShowCloseConfirmDialog(false);
+    setShowSuccessScreen(false);
+    setVentaCreada(null);
+    setStep(1);
+    setFormData({
+      cliente: {
+        dni: "",
+        nombre: "",
+        apellido: "",
+        telefono: "",
+        email: "",
+        nacionalidad: "Peruana",
+      },
+      rutaId: "",
+      embarcacionId: "",
+      puertoEmbarqueId: "",
+      origenSeleccionado: "",
+      destinoSeleccionado: "",
+      precioFinal: 0,
+      fechaViaje: "",
+      horaViaje: "",
+      horaEmbarque: "",
+      cantidadPasajes: 1,
+      tipoPago: "UNICO",
+      metodoPago: "EFECTIVO",
+      metodosPago: [],
+      observaciones: "",
+    });
+    onSuccess?.(); // Cerrar el modal y recargar la lista
   };
 
   const rutaSeleccionada = rutas.find((r) => r.id === formData.rutaId);
@@ -2251,6 +2498,152 @@ export default function NuevaVentaForm({
                   className="flex-1 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 transition-all duration-200 shadow-lg font-semibold"
                 >
                   {loading ? "Procesando..." : "Confirmar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pantalla de éxito con opciones */}
+      {showSuccessScreen && ventaCreada && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md border border-slate-600/50">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-600/50 bg-green-900/20">
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0 w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-100">
+                    ¡Venta Confirmada!
+                  </h3>
+                  <p className="text-sm text-green-400">
+                    {ventaCreada.numeroVenta}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Información de la venta */}
+            <div className="p-6 space-y-4">
+              <div className="bg-slate-700/50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Cliente:</span>
+                  <span className="text-slate-200 font-medium">
+                    {ventaCreada.cliente.nombre} {ventaCreada.cliente.apellido}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Ruta:</span>
+                  <span className="text-slate-200 font-medium">
+                    {ventaCreada.puertoOrigen} → {ventaCreada.puertoDestino}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400">Fecha:</span>
+                  <span className="text-slate-200 font-medium">
+                    {formatearFechaDesdeInput(ventaCreada.fechaViaje)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm border-t border-slate-600 pt-2 mt-2">
+                  <span className="text-slate-400">Total:</span>
+                  <span className="text-green-400 font-bold text-lg">
+                    S/ {ventaCreada.total.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Opciones */}
+              <div className="space-y-3">
+                <p className="text-sm text-slate-400 font-medium">
+                  Opciones de comprobante:
+                </p>
+
+                {/* Botones de descarga */}
+                <div className="space-y-2">
+                  <button
+                    onClick={() => descargarComprobanteImagen(ventaCreada)}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg font-medium"
+                  >
+                    <FileImage className="h-5 w-5" />
+                    <span>Descargar Imagen (por defecto)</span>
+                  </button>
+
+                  <button
+                    onClick={() => descargarComprobanteA4(ventaCreada)}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium"
+                  >
+                    <FileText className="h-5 w-5" />
+                    <span>Descargar PDF</span>
+                  </button>
+                </div>
+
+                {/* Botones de impresión */}
+                <div className="space-y-2">
+                  <button
+                    onClick={() => imprimirTicket(ventaCreada.id)}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all duration-200 shadow-lg font-medium"
+                  >
+                    <Printer className="h-5 w-5" />
+                    <span>Imprimir Ticket (por defecto)</span>
+                  </button>
+
+                  <button
+                    onClick={() => imprimirComprobanteA4(ventaCreada.id)}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-slate-600 text-white rounded-xl hover:bg-slate-700 transition-all duration-200 font-medium"
+                  >
+                    <Printer className="h-5 w-5" />
+                    <span>Imprimir A4</span>
+                  </button>
+                </div>
+
+                {/* Botón de cerrar */}
+                <button
+                  onClick={() => setShowCloseConfirmDialog(true)}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 transition-all duration-200 font-medium mt-4"
+                >
+                  <X className="h-5 w-5" />
+                  <span>Cerrar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Diálogo de confirmación para cerrar */}
+      {showCloseConfirmDialog && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md border border-slate-600/50">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-yellow-600/20 rounded-full flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-yellow-500" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-100">
+                    ¿Cerrar ventana?
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    Volverás a la pantalla principal
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowCloseConfirmDialog(false)}
+                  className="flex-1 px-4 py-3 border border-slate-600/50 text-slate-300 rounded-xl hover:bg-slate-700/50 transition-all duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCerrarModal}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-lg font-semibold"
+                >
+                  Confirmar
                 </button>
               </div>
             </div>
