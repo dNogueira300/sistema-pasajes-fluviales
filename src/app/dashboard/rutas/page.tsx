@@ -417,31 +417,26 @@ export default function GestionRutas() {
       {notificacion && <Notificacion {...notificacion} />}
 
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        {/* Título y descripción */}
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-100">
-            Gestión de Rutas
-          </h1>
-          <p className="text-slate-300 mt-1">
-            Administra las rutas y sus embarcaciones asignadas
-          </p>
-        </div>
-
-        {/* Botón Nueva Ruta - responsive */}
-        <div className="w-full lg:w-auto">
-          <button
-            onClick={() => setModalNuevo(true)}
-            className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-4 sm:px-6 py-3 rounded-xl flex items-center justify-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full lg:w-auto touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-lg hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-800"
-          >
-            <div className="bg-blue-500 group-hover:bg-blue-600 group-active:bg-blue-700 p-1.5 rounded-lg transition-colors duration-200">
-              <Plus className="h-4 w-4" />
-            </div>
-            <span className="whitespace-nowrap">Nueva Ruta</span>
-            <div className="hidden sm:block w-2 h-2 bg-blue-300 rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-200"></div>
-          </button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-100">
+          Gestión de Rutas
+        </h1>
+        <p className="text-slate-300 mt-1">
+          Administra las rutas y sus embarcaciones asignadas
+        </p>
       </div>
+
+      {/* Botón flotante de Nueva Ruta */}
+      <button
+        onClick={() => setModalNuevo(true)}
+        className="group fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 ease-out border-2 border-blue-600 hover:border-blue-500 z-50 hover:scale-110 active:scale-95 hover:ring-4 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-900"
+        title="Nueva Ruta"
+      >
+        <Plus className="h-6 w-6" />
+        <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-800 text-slate-100 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl border border-slate-600">
+          Nueva Ruta
+        </span>
+      </button>
 
       {/* Estadísticas */}
       {estadisticas && (
