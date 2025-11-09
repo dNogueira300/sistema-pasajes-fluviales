@@ -30,6 +30,7 @@ export default function CambiarContrasenaForm({
   }>({});
 
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
+  const [passwordsCoinciden, setPasswordsCoinciden] = useState(true);
 
   const resetFormulario = () => {
     setFormulario({
@@ -38,6 +39,7 @@ export default function CambiarContrasenaForm({
     });
     setErroresValidacion({});
     setMostrarContrasena(false);
+    setPasswordsCoinciden(true);
   };
 
   const validarFormulario = (): boolean => {
@@ -96,6 +98,17 @@ export default function CambiarContrasenaForm({
       }));
     }
   };
+
+  // Validación en tiempo real de coincidencia de contraseñas
+  useEffect(() => {
+    if (formulario.confirmarPassword.length > 0) {
+      setPasswordsCoinciden(
+        formulario.password === formulario.confirmarPassword
+      );
+    } else {
+      setPasswordsCoinciden(true);
+    }
+  }, [formulario.password, formulario.confirmarPassword]);
 
   // Resetear formulario cuando se cierra el modal
   useEffect(() => {
@@ -204,6 +217,46 @@ export default function CambiarContrasenaForm({
                 <p className="mt-1 text-sm text-red-400">
                   {erroresValidacion.confirmarPassword}
                 </p>
+              )}
+              {!passwordsCoinciden && formulario.confirmarPassword.length > 0 && (
+                <div className="mt-2 flex items-center space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
+                  <svg
+                    className="h-4 w-4 text-red-400 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                  <p className="text-xs text-red-300">
+                    Las contraseñas no coinciden
+                  </p>
+                </div>
+              )}
+              {passwordsCoinciden && formulario.confirmarPassword.length > 0 && (
+                <div className="mt-2 flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
+                  <svg
+                    className="h-4 w-4 text-green-400 flex-shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <p className="text-xs text-green-300">
+                    Las contraseñas coinciden
+                  </p>
+                </div>
               )}
             </div>
 

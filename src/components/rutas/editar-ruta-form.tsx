@@ -79,6 +79,11 @@ export default function EditarRutaForm({
   const [errorDetallado, setErrorDetallado] = useState<string | null>(null);
   //const [debugMode] = useState(false);
 
+  // Estados para validación de trayecto en tiempo real
+  const [validandoTrayecto, setValidandoTrayecto] = useState(false);
+  const [trayectoExiste, setTrayectoExiste] = useState(false);
+  const [mensajeTrayecto, setMensajeTrayecto] = useState("");
+
   // Refs para el control de scroll
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const embarcacionesContainerRef = useRef<HTMLDivElement>(null);
@@ -188,11 +193,75 @@ export default function EditarRutaForm({
       setMostrarErroresEmbarcaciones(false);
       setErrorDetallado(null);
       setPasoActual(1); // Resetear al paso 1
+      setValidandoTrayecto(false);
+      setTrayectoExiste(false);
+      setMensajeTrayecto("");
       // console.log(
       //   "✅ Datos básicos cargados, esperando carga de embarcaciones..."
       // );
     }
   }, [isOpen, ruta]);
+
+  // Validación en tiempo real de combinación origen-destino
+  useEffect(() => {
+    const validarTrayecto = async () => {
+      if (!ruta) return;
+
+      const origen = datosBasicos.puertoOrigen.trim();
+      const destino = datosBasicos.puertoDestino.trim();
+
+      // Solo validar si ambos campos tienen contenido
+      if (!origen || !destino) {
+        setTrayectoExiste(false);
+        setMensajeTrayecto("");
+        return;
+      }
+
+      // No validar si origen y destino son iguales (ya hay otra validación para eso)
+      if (origen.toLowerCase() === destino.toLowerCase()) {
+        setTrayectoExiste(false);
+        setMensajeTrayecto("");
+        return;
+      }
+
+      // No validar si los puertos no han cambiado respecto a la ruta original
+      if (
+        origen === ruta.puertoOrigen &&
+        destino === ruta.puertoDestino
+      ) {
+        setTrayectoExiste(false);
+        setMensajeTrayecto("");
+        return;
+      }
+
+      setValidandoTrayecto(true);
+
+      try {
+        const response = await fetch(
+          `/api/rutas/validar-trayecto?origen=${encodeURIComponent(
+            origen
+          )}&destino=${encodeURIComponent(destino)}&rutaId=${ruta.id}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setTrayectoExiste(data.existe);
+          setMensajeTrayecto(data.mensaje || "");
+        }
+      } catch (error) {
+        console.error("Error validando trayecto:", error);
+      } finally {
+        setValidandoTrayecto(false);
+      }
+    };
+
+    // Debounce: esperar 500ms después de que el usuario deje de escribir
+    const timer = setTimeout(() => {
+      validarTrayecto();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [datosBasicos.puertoOrigen, datosBasicos.puertoDestino, ruta]);
 
   const validarPaso1 = (): boolean => {
     const errores: { [key: string]: string } = {};
@@ -673,6 +742,71 @@ export default function EditarRutaForm({
                     </div>
                   </div>
 
+                  {/* Validación en tiempo real de trayecto */}
+                  {validandoTrayecto && (
+                    <div className="flex items-center space-x-2 bg-blue-900/30 border border-blue-700/50 rounded-lg p-3">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                      <p className="text-xs text-blue-300">
+                        Validando combinación origen-destino...
+                      </p>
+                    </div>
+                  )}
+                  {!validandoTrayecto &&
+                    trayectoExiste &&
+                    datosBasicos.puertoOrigen.trim() &&
+                    datosBasicos.puertoDestino.trim() && (
+                      <div className="flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-3">
+                        <svg
+                          className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-red-300">
+                            Ruta duplicada
+                          </p>
+                          <p className="text-xs text-red-200 mt-1">
+                            {mensajeTrayecto}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  {!validandoTrayecto &&
+                    !trayectoExiste &&
+                    datosBasicos.puertoOrigen.trim() &&
+                    datosBasicos.puertoDestino.trim() &&
+                    datosBasicos.puertoOrigen.trim().toLowerCase() !==
+                      datosBasicos.puertoDestino.trim().toLowerCase() &&
+                    (datosBasicos.puertoOrigen !== ruta?.puertoOrigen ||
+                      datosBasicos.puertoDestino !== ruta?.puertoDestino) && (
+                      <div className="flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-3">
+                        <svg
+                          className="h-4 w-4 text-green-400 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <p className="text-xs text-green-300">
+                          Combinación origen-destino disponible
+                        </p>
+                      </div>
+                    )}
+
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                       Precio *
@@ -908,7 +1042,9 @@ export default function EditarRutaForm({
                   !datosBasicos.puertoDestino.trim() ||
                   datosBasicos.precio <= 0 ||
                   datosBasicos.precio > 1000 ||
-                  datosBasicos.precio.toString().replace(".", "").length > 4
+                  datosBasicos.precio.toString().replace(".", "").length > 4 ||
+                  trayectoExiste ||
+                  validandoTrayecto
                 }
                 className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
