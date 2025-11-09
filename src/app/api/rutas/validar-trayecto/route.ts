@@ -1,0 +1,84 @@
+// app/api/rutas/validar-trayecto/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+// GET - Validar si existe una ruta con la combinación origen-destino
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const origen = searchParams.get("origen");
+    const destino = searchParams.get("destino");
+    const rutaId = searchParams.get("rutaId"); // ID de la ruta actual (para edición)
+
+    if (!origen || !destino) {
+      return NextResponse.json(
+        { error: "Origen y destino son requeridos" },
+        { status: 400 }
+      );
+    }
+
+    // Verificar que no exista una ruta con la misma combinación origen-destino
+    const rutaExistente = await prisma.ruta.findFirst({
+      where: {
+        AND: [
+          {
+            puertoOrigen: {
+              equals: origen.trim(),
+              mode: "insensitive",
+            },
+          },
+          {
+            puertoDestino: {
+              equals: destino.trim(),
+              mode: "insensitive",
+            },
+          },
+          // Si se proporciona rutaId, excluir esa ruta (para el caso de edición)
+          ...(rutaId
+            ? [
+                {
+                  id: {
+                    not: rutaId,
+                  },
+                },
+              ]
+            : []),
+        ],
+      },
+      select: {
+        id: true,
+        nombre: true,
+        puertoOrigen: true,
+        puertoDestino: true,
+      },
+    });
+
+    if (rutaExistente) {
+      return NextResponse.json({
+        existe: true,
+        ruta: rutaExistente,
+        mensaje: `Ya existe una ruta con origen "${origen.trim()}" y destino "${destino.trim()}"`,
+      });
+    }
+
+    return NextResponse.json({
+      existe: false,
+      mensaje: "La combinación origen-destino está disponible",
+    });
+  } catch (error) {
+    console.error("Error validando trayecto:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+}
