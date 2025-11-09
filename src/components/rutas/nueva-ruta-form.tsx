@@ -60,6 +60,9 @@ export default function NuevaRutaForm({
   const [mostrarErroresEmbarcaciones, setMostrarErroresEmbarcaciones] =
     useState(false);
 
+  // Estado para rastrear si hubo cambios desde el último error del servidor
+  const [cambiosDesdeError, setCambiosDesdeError] = useState(false);
+
   // Estados para validación de trayecto en tiempo real
   const [trayectoExiste, setTrayectoExiste] = useState(false);
   const [mensajeTrayecto, setMensajeTrayecto] = useState("");
@@ -88,6 +91,7 @@ export default function NuevaRutaForm({
     setMensajeTrayecto("");
     setNombreExiste(false);
     setMensajeNombre("");
+    setCambiosDesdeError(false);
   }, []);
 
   const validarPaso1 = (): boolean => {
@@ -209,6 +213,9 @@ export default function NuevaRutaForm({
       embarcaciones,
     };
 
+    // Resetear el flag antes de enviar
+    setCambiosDesdeError(false);
+
     const resultado = await onSubmit(datosCompletos);
 
     if (resultado) {
@@ -253,6 +260,9 @@ export default function NuevaRutaForm({
   const handleEmbarcacionesChange = useCallback(
     (nuevasEmbarcaciones: CrearEmbarcacionRutaData[]) => {
       setEmbarcaciones(nuevasEmbarcaciones);
+
+      // Marcar que hubo cambios desde el último error del servidor
+      setCambiosDesdeError(true);
 
       // Limpiar errores si corresponde
       if (erroresValidacion.embarcaciones && nuevasEmbarcaciones.length > 0) {
@@ -415,7 +425,7 @@ export default function NuevaRutaForm({
   if (!isOpen) return null;
 
   const hayErroresValidacion =
-    (validationErrors && validationErrors.length > 0) ||
+    (validationErrors && validationErrors.length > 0 && !cambiosDesdeError) ||
     Object.keys(erroresValidacion).length > 0;
 
   return (

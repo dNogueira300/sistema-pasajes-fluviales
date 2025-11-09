@@ -79,6 +79,9 @@ export default function EditarRutaForm({
   const [errorDetallado, setErrorDetallado] = useState<string | null>(null);
   //const [debugMode] = useState(false);
 
+  // Estado para rastrear si hubo cambios desde el último error del servidor
+  const [cambiosDesdeError, setCambiosDesdeError] = useState(false);
+
   // Estados para validación de trayecto en tiempo real
   const [trayectoExiste, setTrayectoExiste] = useState(false);
   const [mensajeTrayecto, setMensajeTrayecto] = useState("");
@@ -200,6 +203,7 @@ export default function EditarRutaForm({
       setMensajeTrayecto("");
       setNombreExiste(false);
       setMensajeNombre("");
+      setCambiosDesdeError(false);
       // console.log(
       //   "✅ Datos básicos cargados, esperando carga de embarcaciones..."
       // );
@@ -453,6 +457,9 @@ export default function EditarRutaForm({
       return;
     }
 
+    // Resetear el flag antes de enviar
+    setCambiosDesdeError(false);
+
     // Validación adicional: asegurar que haya embarcaciones
     if (embarcaciones.length === 0) {
       console.error("❌ No hay embarcaciones para asignar");
@@ -542,6 +549,9 @@ export default function EditarRutaForm({
       //console.log("🔄 Embarcaciones cambiadas:", nuevasEmbarcaciones);
       setEmbarcaciones(nuevasEmbarcaciones);
 
+      // Marcar que hubo cambios desde el último error del servidor
+      setCambiosDesdeError(true);
+
       // Limpiar error de embarcaciones si hay al menos una
       if (erroresValidacion.embarcaciones && nuevasEmbarcaciones.length > 0) {
         setErroresValidacion((prev) => ({
@@ -629,7 +639,7 @@ export default function EditarRutaForm({
   if (!isOpen || !ruta) return null;
 
   const hayErroresValidacion =
-    (validationErrors && validationErrors.length > 0) ||
+    (validationErrors && validationErrors.length > 0 && !cambiosDesdeError) ||
     Object.keys(erroresValidacion).length > 0;
 
   return (

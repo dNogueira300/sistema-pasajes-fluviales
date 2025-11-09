@@ -1,7 +1,7 @@
 // components/rutas/seleccionar-embarcaciones.tsx - Versión optimizada
 "use client";
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Ship, Clock, Calendar } from "lucide-react";
+import { Plus, Trash2, Ship, Clock, Calendar, AlertTriangle } from "lucide-react";
 import { useEmbarcaciones } from "@/hooks/use-embarcaciones";
 import {
   Embarcacion,
@@ -21,6 +21,17 @@ interface EmbarcacionFormulario extends CrearEmbarcacionRutaData {
   tempId: string; // ID temporal para el formulario
 }
 
+interface ErrorValidacion {
+  tempId: string;
+  disponible: boolean;
+  mensaje: string;
+  rutasAsignadas?: Array<{
+    id: string;
+    nombre: string;
+    trayecto: string;
+  }>;
+}
+
 export default function SeleccionarEmbarcaciones({
   embarcacionesSeleccionadas,
   onChange,
@@ -34,6 +45,7 @@ export default function SeleccionarEmbarcaciones({
   const [embarcacionesFormulario, setEmbarcacionesFormulario] = useState<
     EmbarcacionFormulario[]
   >([]);
+  const [erroresValidacion, setErroresValidacion] = useState<ErrorValidacion[]>([]);
 
   // Cargar embarcaciones disponibles
   useEffect(() => {
@@ -55,6 +67,52 @@ export default function SeleccionarEmbarcaciones({
     }));
     setEmbarcacionesFormulario(embarcacionesConId);
   }, [embarcacionesSeleccionadas]);
+
+  // Validar disponibilidad de embarcaciones en tiempo real
+  useEffect(() => {
+    const validarDisponibilidad = async () => {
+      const errores: ErrorValidacion[] = [];
+
+      for (const embForm of embarcacionesFormulario) {
+        if (!embForm.embarcacionId) continue;
+
+        try {
+          const params = new URLSearchParams({
+            embarcacionId: embForm.embarcacionId,
+          });
+
+          if (rutaId) {
+            params.append("rutaId", rutaId);
+          }
+
+          const response = await fetch(
+            `/api/embarcacion-rutas/validar-disponibilidad?${params.toString()}`
+          );
+          const data = await response.json();
+
+          if (!data.disponible) {
+            errores.push({
+              tempId: embForm.tempId,
+              disponible: false,
+              mensaje: data.detalles || "Embarcación no disponible",
+              rutasAsignadas: data.rutasAsignadas || [],
+            });
+          }
+        } catch (error) {
+          console.error("Error validando disponibilidad:", error);
+        }
+      }
+
+      setErroresValidacion(errores);
+    };
+
+    // Debounce: esperar 500ms después de que el usuario deje de seleccionar
+    const timer = setTimeout(() => {
+      validarDisponibilidad();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [embarcacionesFormulario, rutaId]);
 
   const agregarEmbarcacion = () => {
     const nuevaEmbarcacion: EmbarcacionFormulario = {
@@ -145,6 +203,10 @@ export default function SeleccionarEmbarcaciones({
   const obtenerNombreEmbarcacion = (id: string) => {
     const embarcacion = embarcacionesDisponibles.find((emb) => emb.id === id);
     return embarcacion?.nombre || "Embarcación no encontrada";
+  };
+
+  const obtenerErrorValidacion = (tempId: string): ErrorValidacion | undefined => {
+    return erroresValidacion.find((error) => error.tempId === tempId);
   };
 
   return (
@@ -239,43 +301,38 @@ export default function SeleccionarEmbarcaciones({
                         </svg>
                       </div>
                     </div>
+
+                    {/* Mensaje de error de validación de disponibilidad */}
+                    {embarcacionForm.embarcacionId && obtenerErrorValidacion(embarcacionForm.tempId) && (
+                      <div className="mt-2 bg-red-900/30 border border-red-700/50 rounded-lg p-3">
+                        <div className="flex items-start space-x-2">
+                          <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs text-red-300 font-medium">
+                              {obtenerErrorValidacion(embarcacionForm.tempId)?.mensaje}
+                            </p>
+                            {obtenerErrorValidacion(embarcacionForm.tempId)?.rutasAsignadas &&
+                             obtenerErrorValidacion(embarcacionForm.tempId)!.rutasAsignadas!.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs text-red-400 font-medium mb-1">
+                                  Asignada a:
+                                </p>
+                                <ul className="space-y-1">
+                                  {obtenerErrorValidacion(embarcacionForm.tempId)!.rutasAsignadas!.map((ruta) => (
+                                    <li key={ruta.id} className="text-xs text-red-200">
+                                      • {ruta.nombre} ({ruta.trayecto})
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center space-x-4">
-                    {/* Toggle Activo */}
-                    <div className="flex items-center space-x-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          actualizarEmbarcacion(embarcacionForm.tempId, {
-                            activa: !embarcacionForm.activa,
-                          })
-                        }
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          embarcacionForm.activa
-                            ? "bg-green-600"
-                            : "bg-slate-600"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            embarcacionForm.activa
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                          }`}
-                        />
-                      </button>
-                      <span
-                        className={`text-sm ${
-                          embarcacionForm.activa
-                            ? "text-green-400"
-                            : "text-slate-400"
-                        }`}
-                      >
-                        {embarcacionForm.activa ? "Activa" : "Inactiva"}
-                      </span>
-                    </div>
-
+                  <div className="flex items-center">
                     {/* Botón eliminar */}
                     <button
                       type="button"
@@ -292,19 +349,11 @@ export default function SeleccionarEmbarcaciones({
 
                 {/* Horarios de salida */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="mb-3">
                     <label className="block text-sm font-medium text-slate-300">
                       <Clock className="inline h-4 w-4 mr-2" />
                       Horarios de Salida *
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => agregarHora(embarcacionForm.tempId)}
-                      className="text-sm text-blue-400 hover:text-blue-300 flex items-center space-x-1"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Agregar horario</span>
-                    </button>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {embarcacionForm.horasSalida.map((hora, index) => (
@@ -322,17 +371,6 @@ export default function SeleccionarEmbarcaciones({
                           className="flex-1 px-3 py-2 border border-slate-600/50 rounded-lg focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 text-sm"
                           required
                         />
-                        {embarcacionForm.horasSalida.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              eliminarHora(embarcacionForm.tempId, index)
-                            }
-                            className="p-1 text-red-400 hover:bg-red-900/30 rounded"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -410,10 +448,6 @@ export default function SeleccionarEmbarcaciones({
             <p>
               <strong>Total de embarcaciones:</strong>{" "}
               {embarcacionesFormulario.length}
-            </p>
-            <p>
-              <strong>Embarcaciones activas:</strong>{" "}
-              {embarcacionesFormulario.filter((emb) => emb.activa).length}
             </p>
             <p>
               <strong>Capacidad total:</strong>{" "}
