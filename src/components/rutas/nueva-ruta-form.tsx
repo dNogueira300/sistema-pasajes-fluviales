@@ -61,9 +61,12 @@ export default function NuevaRutaForm({
     useState(false);
 
   // Estados para validación de trayecto en tiempo real
-  const [validandoTrayecto, setValidandoTrayecto] = useState(false);
   const [trayectoExiste, setTrayectoExiste] = useState(false);
   const [mensajeTrayecto, setMensajeTrayecto] = useState("");
+
+  // Estados para validación de nombre en tiempo real
+  const [nombreExiste, setNombreExiste] = useState(false);
+  const [mensajeNombre, setMensajeNombre] = useState("");
 
   // Refs para el control de scroll
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -81,9 +84,10 @@ export default function NuevaRutaForm({
     setErroresValidacion({});
     setMostrarErroresEmbarcaciones(false);
     setPasoActual(1);
-    setValidandoTrayecto(false);
     setTrayectoExiste(false);
     setMensajeTrayecto("");
+    setNombreExiste(false);
+    setMensajeNombre("");
   }, []);
 
   const validarPaso1 = (): boolean => {
@@ -319,6 +323,41 @@ export default function NuevaRutaForm({
     }
   }, [error]);
 
+  // Validación en tiempo real del nombre de la ruta
+  useEffect(() => {
+    const validarNombre = async () => {
+      const nombre = datosBasicos.nombre.trim();
+
+      // Solo validar si el campo tiene contenido
+      if (!nombre) {
+        setNombreExiste(false);
+        setMensajeNombre("");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/rutas/validar-nombre?nombre=${encodeURIComponent(nombre)}`
+        );
+        const data = await response.json();
+
+        if (response.ok) {
+          setNombreExiste(data.existe);
+          setMensajeNombre(data.mensaje || "");
+        }
+      } catch (error) {
+        console.error("Error validando nombre:", error);
+      }
+    };
+
+    // Debounce: esperar 500ms después de que el usuario deje de escribir
+    const timer = setTimeout(() => {
+      validarNombre();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [datosBasicos.nombre]);
+
   // Validación en tiempo real de combinación origen-destino
   useEffect(() => {
     const validarTrayecto = async () => {
@@ -339,8 +378,6 @@ export default function NuevaRutaForm({
         return;
       }
 
-      setValidandoTrayecto(true);
-
       try {
         const response = await fetch(
           `/api/rutas/validar-trayecto?origen=${encodeURIComponent(
@@ -355,8 +392,6 @@ export default function NuevaRutaForm({
         }
       } catch (error) {
         console.error("Error validando trayecto:", error);
-      } finally {
-        setValidandoTrayecto(false);
       }
     };
 
@@ -483,6 +518,44 @@ export default function NuevaRutaForm({
                         {erroresValidacion.nombre}
                       </p>
                     )}
+                    {nombreExiste && datosBasicos.nombre.trim() && (
+                      <div className="mt-2 flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
+                        <svg
+                          className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
+                        </svg>
+                        <p className="text-xs text-red-300">{mensajeNombre}</p>
+                      </div>
+                    )}
+                    {!nombreExiste && datosBasicos.nombre.trim().length > 0 && (
+                      <div className="mt-2 flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
+                        <svg
+                          className="h-4 w-4 text-green-400 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <p className="text-xs text-green-300">
+                          Nombre disponible
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -538,21 +611,12 @@ export default function NuevaRutaForm({
                   </div>
 
                   {/* Validación en tiempo real de trayecto */}
-                  {validandoTrayecto && (
-                    <div className="flex items-center space-x-2 bg-blue-900/30 border border-blue-700/50 rounded-lg p-3">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                      <p className="text-xs text-blue-300">
-                        Validando combinación origen-destino...
-                      </p>
-                    </div>
-                  )}
-                  {!validandoTrayecto &&
-                    trayectoExiste &&
+                  {trayectoExiste &&
                     datosBasicos.puertoOrigen.trim() &&
                     datosBasicos.puertoDestino.trim() && (
-                      <div className="flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-3">
+                      <div className="flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
                         <svg
-                          className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5"
+                          className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -564,23 +628,15 @@ export default function NuevaRutaForm({
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                           />
                         </svg>
-                        <div>
-                          <p className="text-sm font-medium text-red-300">
-                            Ruta duplicada
-                          </p>
-                          <p className="text-xs text-red-200 mt-1">
-                            {mensajeTrayecto}
-                          </p>
-                        </div>
+                        <p className="text-xs text-red-300">{mensajeTrayecto}</p>
                       </div>
                     )}
-                  {!validandoTrayecto &&
-                    !trayectoExiste &&
+                  {!trayectoExiste &&
                     datosBasicos.puertoOrigen.trim() &&
                     datosBasicos.puertoDestino.trim() &&
                     datosBasicos.puertoOrigen.trim().toLowerCase() !==
                       datosBasicos.puertoDestino.trim().toLowerCase() && (
-                      <div className="flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-3">
+                      <div className="flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
                         <svg
                           className="h-4 w-4 text-green-400 flex-shrink-0"
                           fill="none"
@@ -823,8 +879,8 @@ export default function NuevaRutaForm({
                   datosBasicos.precio <= 0 ||
                   datosBasicos.precio > 1000 ||
                   datosBasicos.precio.toString().replace(".", "").length > 4 ||
-                  trayectoExiste ||
-                  validandoTrayecto
+                  nombreExiste ||
+                  trayectoExiste
                 }
                 className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
