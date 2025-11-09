@@ -60,6 +60,12 @@ export default function NuevaRutaForm({
   const [mostrarErroresEmbarcaciones, setMostrarErroresEmbarcaciones] =
     useState(false);
 
+  // Estado para rastrear si hubo cambios desde el último error del servidor
+  const [cambiosDesdeError, setCambiosDesdeError] = useState(false);
+
+  // Estado para rastrear errores de disponibilidad de embarcaciones
+  const [hayErroresDisponibilidad, setHayErroresDisponibilidad] = useState(false);
+
   // Estados para validación de trayecto en tiempo real
   const [trayectoExiste, setTrayectoExiste] = useState(false);
   const [mensajeTrayecto, setMensajeTrayecto] = useState("");
@@ -88,6 +94,8 @@ export default function NuevaRutaForm({
     setMensajeTrayecto("");
     setNombreExiste(false);
     setMensajeNombre("");
+    setCambiosDesdeError(false);
+    setHayErroresDisponibilidad(false);
   }, []);
 
   const validarPaso1 = (): boolean => {
@@ -209,6 +217,9 @@ export default function NuevaRutaForm({
       embarcaciones,
     };
 
+    // Resetear el flag antes de enviar
+    setCambiosDesdeError(false);
+
     const resultado = await onSubmit(datosCompletos);
 
     if (resultado) {
@@ -253,6 +264,9 @@ export default function NuevaRutaForm({
   const handleEmbarcacionesChange = useCallback(
     (nuevasEmbarcaciones: CrearEmbarcacionRutaData[]) => {
       setEmbarcaciones(nuevasEmbarcaciones);
+
+      // Marcar que hubo cambios desde el último error del servidor
+      setCambiosDesdeError(true);
 
       // Limpiar errores si corresponde
       if (erroresValidacion.embarcaciones && nuevasEmbarcaciones.length > 0) {
@@ -415,7 +429,7 @@ export default function NuevaRutaForm({
   if (!isOpen) return null;
 
   const hayErroresValidacion =
-    (validationErrors && validationErrors.length > 0) ||
+    (validationErrors && validationErrors.length > 0 && !cambiosDesdeError) ||
     Object.keys(erroresValidacion).length > 0;
 
   return (
@@ -774,6 +788,7 @@ export default function NuevaRutaForm({
                       embarcacionesSeleccionadas={embarcaciones}
                       onChange={handleEmbarcacionesChange}
                       mostrarBotonAgregar={false}
+                      onErroresDisponibilidad={setHayErroresDisponibilidad}
                     />
                   </div>
 
@@ -892,7 +907,7 @@ export default function NuevaRutaForm({
                 type="submit"
                 form="nueva-ruta-form"
                 disabled={
-                  loading || embarcaciones.length === 0 || hayErroresValidacion
+                  loading || embarcaciones.length === 0 || hayErroresValidacion || hayErroresDisponibilidad
                 }
                 className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
