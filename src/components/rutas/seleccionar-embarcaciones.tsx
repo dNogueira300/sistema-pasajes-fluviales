@@ -15,6 +15,7 @@ interface SeleccionarEmbarcacionesProps {
   onChange: (embarcaciones: CrearEmbarcacionRutaData[]) => void;
   rutaId?: string; // Para modo edición
   mostrarBotonAgregar?: boolean; // Nueva prop para ocultar/mostrar botón
+  onErroresDisponibilidad?: (hayErrores: boolean) => void; // Callback para informar errores de disponibilidad
 }
 
 interface EmbarcacionFormulario extends CrearEmbarcacionRutaData {
@@ -37,6 +38,7 @@ export default function SeleccionarEmbarcaciones({
   onChange,
   rutaId,
   mostrarBotonAgregar = true, // Por defecto se muestra
+  onErroresDisponibilidad,
 }: SeleccionarEmbarcacionesProps) {
   const { obtenerEmbarcacionesActivas, loading } = useEmbarcaciones();
   const [embarcacionesDisponibles, setEmbarcacionesDisponibles] = useState<
@@ -104,6 +106,11 @@ export default function SeleccionarEmbarcaciones({
       }
 
       setErroresValidacion(errores);
+
+      // Notificar al componente padre si hay errores de disponibilidad
+      if (onErroresDisponibilidad) {
+        onErroresDisponibilidad(errores.length > 0);
+      }
     };
 
     // Debounce: esperar 500ms después de que el usuario deje de seleccionar
@@ -112,7 +119,7 @@ export default function SeleccionarEmbarcaciones({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [embarcacionesFormulario, rutaId]);
+  }, [embarcacionesFormulario, rutaId, onErroresDisponibilidad]);
 
   const agregarEmbarcacion = () => {
     const nuevaEmbarcacion: EmbarcacionFormulario = {

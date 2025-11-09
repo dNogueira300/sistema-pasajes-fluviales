@@ -82,6 +82,9 @@ export default function EditarRutaForm({
   // Estado para rastrear si hubo cambios desde el último error del servidor
   const [cambiosDesdeError, setCambiosDesdeError] = useState(false);
 
+  // Estado para rastrear errores de disponibilidad de embarcaciones
+  const [hayErroresDisponibilidad, setHayErroresDisponibilidad] = useState(false);
+
   // Estados para validación de trayecto en tiempo real
   const [trayectoExiste, setTrayectoExiste] = useState(false);
   const [mensajeTrayecto, setMensajeTrayecto] = useState("");
@@ -204,6 +207,7 @@ export default function EditarRutaForm({
       setNombreExiste(false);
       setMensajeNombre("");
       setCambiosDesdeError(false);
+      setHayErroresDisponibilidad(false);
       // console.log(
       //   "✅ Datos básicos cargados, esperando carga de embarcaciones..."
       // );
@@ -1006,6 +1010,7 @@ export default function EditarRutaForm({
                       onChange={handleEmbarcacionesChange}
                       rutaId={ruta.id}
                       mostrarBotonAgregar={false} // Ocultamos el botón interno
+                      onErroresDisponibilidad={setHayErroresDisponibilidad}
                     />
                   </div>
 
@@ -1135,7 +1140,7 @@ export default function EditarRutaForm({
                 type="submit"
                 form="editar-ruta-form"
                 disabled={
-                  loading || embarcaciones.length === 0 || hayErroresValidacion
+                  loading || embarcaciones.length === 0 || hayErroresValidacion || hayErroresDisponibilidad
                 }
                 className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
               >
