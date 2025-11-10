@@ -1130,7 +1130,8 @@ export default function NuevaVentaForm({
                       },
                     }))
                   }
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                  disabled={dniValido}
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option
                     value="Peruana"
@@ -1175,7 +1176,8 @@ export default function NuevaVentaForm({
                       cliente: { ...prev.cliente, nombre: e.target.value },
                     }))
                   }
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  disabled={dniValido}
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Juan Carlos"
                   required
                 />
@@ -1194,7 +1196,8 @@ export default function NuevaVentaForm({
                       cliente: { ...prev.cliente, apellido: e.target.value },
                     }))
                   }
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  disabled={dniValido}
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Pérez García"
                   required
                 />
@@ -1208,7 +1211,8 @@ export default function NuevaVentaForm({
                   <select
                     value={codigoPais}
                     onChange={(e) => setCodigoPais(e.target.value)}
-                    className="w-32 px-3 py-3 border border-slate-600/50 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 border-r-0 text-sm backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                    disabled={dniValido}
+                    className="w-32 px-3 py-3 border border-slate-600/50 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 border-r-0 text-sm backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {codigosPaises.map((item) => (
                       <option
@@ -1231,7 +1235,8 @@ export default function NuevaVentaForm({
                         cliente: { ...prev.cliente, telefono: value },
                       }));
                     }}
-                    className="flex-1 px-4 py-3 border border-slate-600/50 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
+                    disabled={dniValido}
+                    className="flex-1 px-4 py-3 border border-slate-600/50 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="987654321"
                     maxLength={9}
                   />
@@ -1259,7 +1264,8 @@ export default function NuevaVentaForm({
                       cliente: { ...prev.cliente, email: e.target.value },
                     }))
                   }
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  disabled={dniValido}
+                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="cliente@email.com"
                 />
               </div>
