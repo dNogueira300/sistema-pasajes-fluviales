@@ -45,6 +45,7 @@ const navigation: NavItem[] = [
     name: "Anulaciones",
     href: "/dashboard/anulaciones",
     icon: Ban,
+    roles: ["ADMINISTRADOR"],
     description: "Gestionar anulaciones y reembolsos",
   },
   {
