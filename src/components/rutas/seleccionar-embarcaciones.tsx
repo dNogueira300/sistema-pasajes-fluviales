@@ -22,7 +22,7 @@ interface EmbarcacionFormulario extends CrearEmbarcacionRutaData {
   tempId: string; // ID temporal para el formulario
 }
 
-interface ErrorValidacion {
+interface InfoValidacion {
   tempId: string;
   disponible: boolean;
   mensaje: string;
@@ -31,6 +31,7 @@ interface ErrorValidacion {
     nombre: string;
     trayecto: string;
   }>;
+  infoAdicional?: string;
 }
 
 export default function SeleccionarEmbarcaciones({
@@ -47,7 +48,7 @@ export default function SeleccionarEmbarcaciones({
   const [embarcacionesFormulario, setEmbarcacionesFormulario] = useState<
     EmbarcacionFormulario[]
   >([]);
-  const [erroresValidacion, setErroresValidacion] = useState<ErrorValidacion[]>([]);
+  const [infoValidacion, setInfoValidacion] = useState<InfoValidacion[]>([]);
 
   // Cargar embarcaciones disponibles
   useEffect(() => {
@@ -73,7 +74,8 @@ export default function SeleccionarEmbarcaciones({
   // Validar disponibilidad de embarcaciones en tiempo real
   useEffect(() => {
     const validarDisponibilidad = async () => {
-      const errores: ErrorValidacion[] = [];
+      const info: InfoValidacion[] = [];
+      const errores: InfoValidacion[] = [];
 
       for (const embForm of embarcacionesFormulario) {
         if (!embForm.embarcacionId) continue;
@@ -92,12 +94,23 @@ export default function SeleccionarEmbarcaciones({
           );
           const data = await response.json();
 
+          // Solo marcamos como error si realmente NO está disponible (ej: embarcación inactiva)
           if (!data.disponible) {
             errores.push({
               tempId: embForm.tempId,
               disponible: false,
               mensaje: data.detalles || "Embarcación no disponible",
               rutasAsignadas: data.rutasAsignadas || [],
+              infoAdicional: data.infoAdicional,
+            });
+          } else if (data.rutasAsignadas && data.rutasAsignadas.length > 0) {
+            // Si está disponible pero tiene otras rutas, guardamos la info para mostrarla
+            info.push({
+              tempId: embForm.tempId,
+              disponible: true,
+              mensaje: data.detalles || "",
+              rutasAsignadas: data.rutasAsignadas,
+              infoAdicional: data.infoAdicional,
             });
           }
         } catch (error) {
@@ -105,9 +118,10 @@ export default function SeleccionarEmbarcaciones({
         }
       }
 
-      setErroresValidacion(errores);
+      // Combinamos errores e info (errores primero)
+      setInfoValidacion([...errores, ...info]);
 
-      // Notificar al componente padre si hay errores de disponibilidad
+      // Solo notificamos errores REALES (embarcaciones no disponibles)
       if (onErroresDisponibilidad) {
         onErroresDisponibilidad(errores.length > 0);
       }
@@ -212,8 +226,8 @@ export default function SeleccionarEmbarcaciones({
     return embarcacion?.nombre || "Embarcación no encontrada";
   };
 
-  const obtenerErrorValidacion = (tempId: string): ErrorValidacion | undefined => {
-    return erroresValidacion.find((error) => error.tempId === tempId);
+  const obtenerInfoValidacion = (tempId: string): InfoValidacion | undefined => {
+    return infoValidacion.find((info) => info.tempId === tempId);
   };
 
   return (
@@ -309,34 +323,48 @@ export default function SeleccionarEmbarcaciones({
                       </div>
                     </div>
 
-                    {/* Mensaje de error de validación de disponibilidad */}
-                    {embarcacionForm.embarcacionId && obtenerErrorValidacion(embarcacionForm.tempId) && (
-                      <div className="mt-2 bg-red-900/30 border border-red-700/50 rounded-lg p-3">
-                        <div className="flex items-start space-x-2">
-                          <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <p className="text-xs text-red-300 font-medium">
-                              {obtenerErrorValidacion(embarcacionForm.tempId)?.mensaje}
-                            </p>
-                            {obtenerErrorValidacion(embarcacionForm.tempId)?.rutasAsignadas &&
-                             obtenerErrorValidacion(embarcacionForm.tempId)!.rutasAsignadas!.length > 0 && (
-                              <div className="mt-2">
-                                <p className="text-xs text-red-400 font-medium mb-1">
-                                  Asignada a:
+                    {/* Mensaje de validación de disponibilidad */}
+                    {embarcacionForm.embarcacionId && obtenerInfoValidacion(embarcacionForm.tempId) && (() => {
+                      const info = obtenerInfoValidacion(embarcacionForm.tempId)!;
+                      const esError = !info.disponible;
+                      const colorClasses = esError
+                        ? "bg-red-900/30 border-red-700/50"
+                        : "bg-blue-900/30 border-blue-700/50";
+                      const textColorClasses = esError ? "text-red-300" : "text-blue-300";
+                      const iconColor = esError ? "text-red-400" : "text-blue-400";
+
+                      return (
+                        <div className={`mt-2 ${colorClasses} border rounded-lg p-3`}>
+                          <div className="flex items-start space-x-2">
+                            <AlertTriangle className={`h-4 w-4 ${iconColor} flex-shrink-0 mt-0.5`} />
+                            <div className="flex-1">
+                              <p className={`text-xs ${textColorClasses} font-medium`}>
+                                {info.mensaje}
+                              </p>
+                              {info.infoAdicional && (
+                                <p className={`text-xs ${textColorClasses} mt-1 opacity-80`}>
+                                  {info.infoAdicional}
                                 </p>
-                                <ul className="space-y-1">
-                                  {obtenerErrorValidacion(embarcacionForm.tempId)!.rutasAsignadas!.map((ruta) => (
-                                    <li key={ruta.id} className="text-xs text-red-200">
-                                      • {ruta.nombre} ({ruta.trayecto})
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                              )}
+                              {info.rutasAsignadas && info.rutasAsignadas.length > 0 && (
+                                <div className="mt-2">
+                                  <p className={`text-xs ${textColorClasses} font-medium mb-1 opacity-90`}>
+                                    {esError ? "Asignada a:" : "También opera en:"}
+                                  </p>
+                                  <ul className="space-y-1">
+                                    {info.rutasAsignadas.map((ruta) => (
+                                      <li key={ruta.id} className={`text-xs ${textColorClasses} opacity-80`}>
+                                        • {ruta.nombre} ({ruta.trayecto})
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
 
                   <div className="flex items-center">

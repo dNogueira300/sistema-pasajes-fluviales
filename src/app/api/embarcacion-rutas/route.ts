@@ -100,40 +100,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // VALIDACIÓN NUEVA: Verificar que la embarcación no esté asignada a otras rutas activas
-    const asignacionesOtrasRutas = await prisma.embarcacionRuta.findMany({
-      where: {
-        embarcacionId,
-        rutaId: { not: rutaId },
-        activa: true,
-      },
-      include: {
-        ruta: {
-          select: {
-            nombre: true,
-            puertoOrigen: true,
-            puertoDestino: true,
-          },
-        },
-      },
-    });
-
-    if (asignacionesOtrasRutas.length > 0) {
-      const rutasConflicto = asignacionesOtrasRutas
-        .map(
-          (asignacion) =>
-            `"${asignacion.ruta.nombre}" (${asignacion.ruta.puertoOrigen} → ${asignacion.ruta.puertoDestino})`
-        )
-        .join(", ");
-
-      return NextResponse.json(
-        {
-          error: "Embarcación ya asignada",
-          detalles: `La embarcación "${embarcacion.nombre}" ya está asignada a: ${rutasConflicto}. Una embarcación solo puede estar asignada a una ruta a la vez.`,
-        },
-        { status: 400 }
-      );
-    }
+    // NOTA: Una embarcación PUEDE tener múltiples rutas asignadas
+    // Esto permite manejar rutas intermedias (ej: Iquitos → Pucallpa con paradas intermedias)
+    // Solo validamos que no exista la misma combinación embarcación-ruta
 
     // Si todas las validaciones pasan, crear la asignación
     const embarcacionRuta = await prisma.embarcacionRuta.create({
