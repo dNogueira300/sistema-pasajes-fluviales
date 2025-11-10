@@ -92,40 +92,34 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (asignacionesExistentes.length > 0) {
-      const rutasAsignadas = asignacionesExistentes.map((asignacion) => ({
-        id: asignacion.ruta.id,
-        nombre: asignacion.ruta.nombre,
-        trayecto: `${asignacion.ruta.puertoOrigen} → ${asignacion.ruta.puertoDestino}`,
-        activa: asignacion.ruta.activa,
-        fechaAsignacion: asignacion.createdAt,
-      }));
+    // CAMBIO: Una embarcación PUEDE tener múltiples rutas asignadas
+    // Retornamos disponible: true pero incluimos info de rutas ya asignadas
+    const rutasAsignadas = asignacionesExistentes.map((asignacion) => ({
+      id: asignacion.ruta.id,
+      nombre: asignacion.ruta.nombre,
+      trayecto: `${asignacion.ruta.puertoOrigen} → ${asignacion.ruta.puertoDestino}`,
+      activa: asignacion.ruta.activa,
+      fechaAsignacion: asignacion.createdAt,
+    }));
 
-      return NextResponse.json({
-        disponible: false,
-        motivo: "Embarcación ya asignada",
-        detalles: `La embarcación "${embarcacion.nombre}" ya está asignada a ${asignacionesExistentes.length} ruta(s)`,
-        embarcacion: {
-          id: embarcacion.id,
-          nombre: embarcacion.nombre,
-          capacidad: embarcacion.capacidad,
-        },
-        rutasAsignadas,
-        conflictos: asignacionesExistentes.length,
-      });
-    }
-
-    // Si llegamos aquí, la embarcación está disponible
     return NextResponse.json({
       disponible: true,
-      motivo: "Embarcación disponible",
-      detalles: `La embarcación "${embarcacion.nombre}" está disponible para asignación`,
+      motivo: asignacionesExistentes.length > 0
+        ? "Embarcación disponible (tiene otras rutas asignadas)"
+        : "Embarcación disponible",
+      detalles: asignacionesExistentes.length > 0
+        ? `La embarcación "${embarcacion.nombre}" está disponible. Actualmente asignada a ${asignacionesExistentes.length} ruta(s)`
+        : `La embarcación "${embarcacion.nombre}" está disponible para asignación`,
       embarcacion: {
         id: embarcacion.id,
         nombre: embarcacion.nombre,
         capacidad: embarcacion.capacidad,
         estado: embarcacion.estado,
       },
+      rutasAsignadas: rutasAsignadas.length > 0 ? rutasAsignadas : undefined,
+      infoAdicional: asignacionesExistentes.length > 0
+        ? `Esta embarcación puede operar en múltiples rutas (ej: rutas con destinos intermedios)`
+        : undefined,
     });
   } catch (error) {
     console.error("Error verificando disponibilidad de embarcación:", error);
@@ -214,36 +208,28 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        if (asignacionesExistentes.length > 0) {
-          return {
-            embarcacionId,
-            disponible: false,
-            motivo: "Embarcación ya asignada",
-            detalles: `La embarcación "${embarcacion.nombre}" ya está asignada a otra(s) ruta(s)`,
-            embarcacion: {
-              id: embarcacion.id,
-              nombre: embarcacion.nombre,
-              capacidad: embarcacion.capacidad,
-            },
-            rutasAsignadas: asignacionesExistentes.map((asignacion) => ({
-              id: asignacion.ruta.id,
-              nombre: asignacion.ruta.nombre,
-              trayecto: `${asignacion.ruta.puertoOrigen} → ${asignacion.ruta.puertoDestino}`,
-            })),
-            conflictos: asignacionesExistentes.length,
-          };
-        }
+        // CAMBIO: Una embarcación PUEDE tener múltiples rutas asignadas
+        const rutasAsignadas = asignacionesExistentes.map((asignacion) => ({
+          id: asignacion.ruta.id,
+          nombre: asignacion.ruta.nombre,
+          trayecto: `${asignacion.ruta.puertoOrigen} → ${asignacion.ruta.puertoDestino}`,
+        }));
 
         return {
           embarcacionId,
           disponible: true,
-          motivo: "Embarcación disponible",
-          detalles: `La embarcación "${embarcacion.nombre}" está disponible`,
+          motivo: asignacionesExistentes.length > 0
+            ? "Embarcación disponible (tiene otras rutas)"
+            : "Embarcación disponible",
+          detalles: asignacionesExistentes.length > 0
+            ? `La embarcación "${embarcacion.nombre}" está disponible. Asignada a ${asignacionesExistentes.length} ruta(s)`
+            : `La embarcación "${embarcacion.nombre}" está disponible`,
           embarcacion: {
             id: embarcacion.id,
             nombre: embarcacion.nombre,
             capacidad: embarcacion.capacidad,
           },
+          rutasAsignadas: rutasAsignadas.length > 0 ? rutasAsignadas : undefined,
         };
       })
     );
