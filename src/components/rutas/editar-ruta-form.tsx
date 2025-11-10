@@ -85,6 +85,9 @@ export default function EditarRutaForm({
   // Estado para rastrear errores de disponibilidad de embarcaciones
   const [hayErroresDisponibilidad, setHayErroresDisponibilidad] = useState(false);
 
+  // Estado para rastrear si hubo cambios en las embarcaciones
+  const [huboCambiosEmbarcaciones, setHuboCambiosEmbarcaciones] = useState(false);
+
   // Estados para validación de trayecto en tiempo real
   const [trayectoExiste, setTrayectoExiste] = useState(false);
   const [mensajeTrayecto, setMensajeTrayecto] = useState("");
@@ -208,6 +211,7 @@ export default function EditarRutaForm({
       setMensajeNombre("");
       setCambiosDesdeError(false);
       setHayErroresDisponibilidad(false);
+      setHuboCambiosEmbarcaciones(false); // Resetear flag de cambios en embarcaciones
       // console.log(
       //   "✅ Datos básicos cargados, esperando carga de embarcaciones..."
       // );
@@ -479,12 +483,18 @@ export default function EditarRutaForm({
       puertoDestino: datosBasicos.puertoDestino,
       precio: datosBasicos.precio,
       activa: datosBasicos.activa,
-      embarcaciones: {
-        // Por simplicidad, eliminamos todas las existentes y creamos las nuevas
+    };
+
+    // SOLO actualizar embarcaciones si hubo cambios
+    if (huboCambiosEmbarcaciones) {
+      datosActualizacion.embarcaciones = {
+        // Eliminamos todas las existentes y creamos las nuevas
         eliminar: embarcacionesOriginales.map((er) => er.id),
         crear: embarcaciones,
-      },
-    };
+      };
+    }
+    // Si no hubo cambios, no incluimos el campo embarcaciones,
+    // así el backend no toca las embarcaciones existentes
 
     // console.log("📤 Datos a enviar:", datosActualizacion);
     // console.log(
@@ -555,6 +565,9 @@ export default function EditarRutaForm({
 
       // Marcar que hubo cambios desde el último error del servidor
       setCambiosDesdeError(true);
+
+      // Marcar que hubo cambios en las embarcaciones
+      setHuboCambiosEmbarcaciones(true);
 
       // Limpiar error de embarcaciones si hay al menos una
       if (erroresValidacion.embarcaciones && nuevasEmbarcaciones.length > 0) {
@@ -630,6 +643,9 @@ export default function EditarRutaForm({
 
     const nuevasEmbarcaciones = [...embarcaciones, nuevaEmbarcacion];
     setEmbarcaciones(nuevasEmbarcaciones);
+
+    // Marcar que hubo cambios en las embarcaciones
+    setHuboCambiosEmbarcaciones(true);
 
     // Scroll hacia abajo al agregar nueva embarcación
     setTimeout(() => {
