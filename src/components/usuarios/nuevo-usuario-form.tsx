@@ -111,6 +111,8 @@ export default function NuevoUsuarioForm({
       errores.nombre = "El nombre es obligatorio";
     } else if (formulario.nombre.trim().length < 2) {
       errores.nombre = "El nombre debe tener al menos 2 caracteres";
+    } else if (formulario.nombre.trim().length > 50) {
+      errores.nombre = "El nombre no puede tener más de 50 caracteres";
     }
 
     // Validar apellido
@@ -118,6 +120,8 @@ export default function NuevoUsuarioForm({
       errores.apellido = "El apellido es obligatorio";
     } else if (formulario.apellido.trim().length < 2) {
       errores.apellido = "El apellido debe tener al menos 2 caracteres";
+    } else if (formulario.apellido.trim().length > 50) {
+      errores.apellido = "El apellido no puede tener más de 50 caracteres";
     }
 
     setErroresValidacion(errores);

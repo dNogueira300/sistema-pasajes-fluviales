@@ -169,6 +169,30 @@ export default function EditarClienteForm({
       return;
     }
 
+    // Validar nombre
+    if (!formulario.nombre.trim()) {
+      alert("El nombre es obligatorio");
+      return;
+    } else if (formulario.nombre.trim().length < 2) {
+      alert("El nombre debe tener al menos 2 caracteres");
+      return;
+    } else if (formulario.nombre.trim().length > 50) {
+      alert("El nombre no puede tener más de 50 caracteres");
+      return;
+    }
+
+    // Validar apellido
+    if (!formulario.apellido.trim()) {
+      alert("El apellido es obligatorio");
+      return;
+    } else if (formulario.apellido.trim().length < 2) {
+      alert("El apellido debe tener al menos 2 caracteres");
+      return;
+    } else if (formulario.apellido.trim().length > 50) {
+      alert("El apellido no puede tener más de 50 caracteres");
+      return;
+    }
+
     // Preparar datos con teléfono completo
     const datosCliente = {
       ...formulario,
