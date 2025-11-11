@@ -453,6 +453,35 @@ export default function NuevaVentaForm({
     }
   };
 
+  // Función de validación del cliente
+  const validarCliente = (): boolean => {
+    // Validar nombre
+    if (!formData.cliente.nombre.trim()) {
+      alert("El nombre del cliente es obligatorio");
+      return false;
+    } else if (formData.cliente.nombre.trim().length < 2) {
+      alert("El nombre del cliente debe tener al menos 2 caracteres");
+      return false;
+    } else if (formData.cliente.nombre.trim().length > 50) {
+      alert("El nombre del cliente no puede tener más de 50 caracteres");
+      return false;
+    }
+
+    // Validar apellido
+    if (!formData.cliente.apellido.trim()) {
+      alert("El apellido del cliente es obligatorio");
+      return false;
+    } else if (formData.cliente.apellido.trim().length < 2) {
+      alert("El apellido del cliente debe tener al menos 2 caracteres");
+      return false;
+    } else if (formData.cliente.apellido.trim().length > 50) {
+      alert("El apellido del cliente no puede tener más de 50 caracteres");
+      return false;
+    }
+
+    return true;
+  };
+
   // Funciones de notificación
   const mostrarNotificacion = (
     tipo: "exito" | "error" | "descargando",
@@ -2432,7 +2461,11 @@ export default function NuevaVentaForm({
             </button>
           ) : (
             <button
-              onClick={() => setShowConfirmDialog(true)}
+              onClick={() => {
+                if (validarCliente()) {
+                  setShowConfirmDialog(true);
+                }
+              }}
               disabled={loading}
               className="px-8 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 flex items-center font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
             >
