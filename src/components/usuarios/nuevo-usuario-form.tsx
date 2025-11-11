@@ -152,12 +152,51 @@ export default function NuevoUsuarioForm({
       [field]: value,
     }));
 
-    // Limpiar error de validación cuando el usuario empiece a escribir
-    if (erroresValidacion[field]) {
-      setErroresValidacion((prev) => ({
-        ...prev,
-        [field]: "",
-      }));
+    // Validación en tiempo real para nombre y apellido
+    if (field === "nombre" && typeof value === "string") {
+      const trimmedValue = value.trim();
+      if (trimmedValue.length > 0 && trimmedValue.length < 2) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          nombre: "El nombre debe tener al menos 2 caracteres",
+        }));
+      } else if (trimmedValue.length > 50) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          nombre: "El nombre no puede tener más de 50 caracteres",
+        }));
+      } else {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          nombre: "",
+        }));
+      }
+    } else if (field === "apellido" && typeof value === "string") {
+      const trimmedValue = value.trim();
+      if (trimmedValue.length > 0 && trimmedValue.length < 2) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          apellido: "El apellido debe tener al menos 2 caracteres",
+        }));
+      } else if (trimmedValue.length > 50) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          apellido: "El apellido no puede tener más de 50 caracteres",
+        }));
+      } else {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          apellido: "",
+        }));
+      }
+    } else {
+      // Limpiar error de validación cuando el usuario empiece a escribir en otros campos
+      if (erroresValidacion[field]) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          [field]: "",
+        }));
+      }
     }
   };
 

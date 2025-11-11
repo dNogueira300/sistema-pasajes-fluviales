@@ -120,6 +120,9 @@ export default function NuevaVentaForm({
   >("ORIGEN_DESTINO");
   const [precioPersonalizado, setPrecioPersonalizado] = useState<number>(0);
   const [usarPrecioPersonalizado, setUsarPrecioPersonalizado] = useState(false);
+  const [erroresValidacion, setErroresValidacion] = useState<{
+    [key: string]: string;
+  }>({});
 
   const codigosPaises = useMemo(
     () => [
@@ -1139,7 +1142,19 @@ export default function NuevaVentaForm({
                   {!buscandoAutoCliente &&
                     formData.cliente.dni.length === 8 &&
                     !dniValido && (
-                      <span className="text-yellow-400">Cliente nuevo</span>
+                      <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-xl p-3 mt-2">
+                        <div className="flex items-start space-x-2">
+                          <AlertCircle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-yellow-300">
+                              Cliente nuevo
+                            </p>
+                            <p className="text-xs text-yellow-200 mt-1">
+                              No se encontró un cliente con este DNI. Por favor, complete los datos del nuevo cliente en los campos siguientes.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
                 </div>
               </div>
@@ -1199,17 +1214,48 @@ export default function NuevaVentaForm({
                 <input
                   type="text"
                   value={formData.cliente.nombre}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const value = e.target.value;
                     setFormData((prev) => ({
                       ...prev,
-                      cliente: { ...prev.cliente, nombre: e.target.value },
-                    }))
-                  }
+                      cliente: { ...prev.cliente, nombre: value },
+                    }));
+
+                    // Validación en tiempo real
+                    if (!dniValido) {
+                      const trimmedValue = value.trim();
+                      if (trimmedValue.length > 0 && trimmedValue.length < 2) {
+                        setErroresValidacion((prev) => ({
+                          ...prev,
+                          nombre: "El nombre debe tener al menos 2 caracteres",
+                        }));
+                      } else if (trimmedValue.length > 50) {
+                        setErroresValidacion((prev) => ({
+                          ...prev,
+                          nombre: "El nombre no puede tener más de 50 caracteres",
+                        }));
+                      } else {
+                        setErroresValidacion((prev) => ({
+                          ...prev,
+                          nombre: "",
+                        }));
+                      }
+                    }
+                  }}
                   disabled={dniValido}
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    erroresValidacion.nombre && !dniValido
+                      ? "border-red-500/50 focus:border-red-500"
+                      : "border-slate-600/50 focus:border-blue-500"
+                  }`}
                   placeholder="Juan Carlos"
                   required
                 />
+                {erroresValidacion.nombre && !dniValido && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.nombre}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -1219,17 +1265,48 @@ export default function NuevaVentaForm({
                 <input
                   type="text"
                   value={formData.cliente.apellido}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const value = e.target.value;
                     setFormData((prev) => ({
                       ...prev,
-                      cliente: { ...prev.cliente, apellido: e.target.value },
-                    }))
-                  }
+                      cliente: { ...prev.cliente, apellido: value },
+                    }));
+
+                    // Validación en tiempo real
+                    if (!dniValido) {
+                      const trimmedValue = value.trim();
+                      if (trimmedValue.length > 0 && trimmedValue.length < 2) {
+                        setErroresValidacion((prev) => ({
+                          ...prev,
+                          apellido: "El apellido debe tener al menos 2 caracteres",
+                        }));
+                      } else if (trimmedValue.length > 50) {
+                        setErroresValidacion((prev) => ({
+                          ...prev,
+                          apellido: "El apellido no puede tener más de 50 caracteres",
+                        }));
+                      } else {
+                        setErroresValidacion((prev) => ({
+                          ...prev,
+                          apellido: "",
+                        }));
+                      }
+                    }
+                  }}
                   disabled={dniValido}
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    erroresValidacion.apellido && !dniValido
+                      ? "border-red-500/50 focus:border-red-500"
+                      : "border-slate-600/50 focus:border-blue-500"
+                  }`}
                   placeholder="Pérez García"
                   required
                 />
+                {erroresValidacion.apellido && !dniValido && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.apellido}
+                  </p>
+                )}
               </div>
 
               <div>
