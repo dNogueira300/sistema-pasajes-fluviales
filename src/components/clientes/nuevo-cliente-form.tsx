@@ -107,6 +107,9 @@ export default function NuevoClienteForm({
   });
 
   const [codigoPais, setCodigoPais] = useState("+51");
+  const [erroresValidacion, setErroresValidacion] = useState<{
+    [key: string]: string;
+  }>({});
 
   const formatearTelefonoCompleto = () => {
     if (!formulario.telefono) return "";
@@ -175,6 +178,45 @@ export default function NuevoClienteForm({
       ...prev,
       [field]: value,
     }));
+
+    // Validación en tiempo real para nombre y apellido
+    if (field === "nombre") {
+      const trimmedValue = value.trim();
+      if (trimmedValue.length > 0 && trimmedValue.length < 2) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          nombre: "El nombre debe tener al menos 2 caracteres",
+        }));
+      } else if (trimmedValue.length > 50) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          nombre: "El nombre no puede tener más de 50 caracteres",
+        }));
+      } else {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          nombre: "",
+        }));
+      }
+    } else if (field === "apellido") {
+      const trimmedValue = value.trim();
+      if (trimmedValue.length > 0 && trimmedValue.length < 2) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          apellido: "El apellido debe tener al menos 2 caracteres",
+        }));
+      } else if (trimmedValue.length > 50) {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          apellido: "El apellido no puede tener más de 50 caracteres",
+        }));
+      } else {
+        setErroresValidacion((prev) => ({
+          ...prev,
+          apellido: "",
+        }));
+      }
+    }
   };
 
   // Función específica para manejar el cambio en el campo DNI
@@ -234,9 +276,18 @@ export default function NuevoClienteForm({
                   required
                   value={formulario.nombre}
                   onChange={(e) => handleInputChange("nombre", e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                    erroresValidacion.nombre
+                      ? "border-red-500/50 focus:border-red-500"
+                      : "border-slate-600/50 focus:border-blue-500"
+                  }`}
                   placeholder="Juan"
                 />
+                {erroresValidacion.nombre && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.nombre}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -249,9 +300,18 @@ export default function NuevoClienteForm({
                   onChange={(e) =>
                     handleInputChange("apellido", e.target.value)
                   }
-                  className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200"
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                    erroresValidacion.apellido
+                      ? "border-red-500/50 focus:border-red-500"
+                      : "border-slate-600/50 focus:border-blue-500"
+                  }`}
                   placeholder="Pérez"
                 />
+                {erroresValidacion.apellido && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.apellido}
+                  </p>
+                )}
               </div>
             </div>
 
