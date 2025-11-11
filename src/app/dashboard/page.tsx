@@ -386,7 +386,7 @@ export default function DashboardPage() {
             })}
           </div>
         </div>
-        <button
+        {/* <button
           onClick={() => setShowNuevaVenta(true)}
           className="group bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl flex items-center space-x-3 font-medium shadow-lg hover:shadow-2xl transition-all duration-200 ease-out border-2 border-blue-600 hover:border-blue-700 w-full sm:w-auto justify-center sm:justify-start touch-manipulation hover:-translate-y-1 active:translate-y-0 active:shadow-lg hover:ring-2 hover:ring-blue-400 hover:ring-offset-2 hover:ring-offset-slate-800"
         >
@@ -395,7 +395,7 @@ export default function DashboardPage() {
           </div>
           <span>Nueva Venta</span>
           <div className="hidden sm:block w-2 h-2 bg-blue-300 rounded-full opacity-75 group-hover:opacity-100 transition-opacity duration-200"></div>
-        </button>
+        </button> */}
       </div>
 
       {/* Botón flotante de Nueva Venta */}
