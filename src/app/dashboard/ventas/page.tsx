@@ -957,7 +957,10 @@ export default function VentasPage() {
                             ))}
                           </div>
                         ) : (
-                          <TruncatedText text={venta.metodoPago} maxLength={12} />
+                          <TruncatedText
+                            text={venta.metodoPago}
+                            maxLength={12}
+                          />
                         )}
                       </div>
                     </td>
@@ -1256,7 +1259,8 @@ export default function VentasPage() {
                     <div className="flex justify-between">
                       <span className="text-slate-300">Ruta:</span>
                       <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                        {selectedVenta.puertoOrigen} - {selectedVenta.puertoDestino}
+                        {selectedVenta.puertoOrigen} -{" "}
+                        {selectedVenta.puertoDestino}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1312,10 +1316,14 @@ export default function VentasPage() {
                     <div className="flex justify-between">
                       <span className="text-slate-300">Método de pago:</span>
                       <div className="text-right">
-                        {selectedVenta.tipoPago === "HIBRIDO" && selectedVenta.metodosPago ? (
+                        {selectedVenta.tipoPago === "HIBRIDO" &&
+                        selectedVenta.metodosPago ? (
                           <div className="space-y-1">
                             {selectedVenta.metodosPago.map((metodo, idx) => (
-                              <div key={idx} className="font-medium text-slate-100">
+                              <div
+                                key={idx}
+                                className="font-medium text-slate-100"
+                              >
                                 {metodo.tipo}: S/ {metodo.monto.toFixed(2)}
                               </div>
                             ))}
