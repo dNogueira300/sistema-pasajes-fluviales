@@ -1,14 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { TipoAnulacion } from "@/types";
-
-// Crear una sola instancia global de Prisma (igual que en ventas.ts)
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Interfaces
 interface FiltrosAnulaciones {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/providers/session-provider";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +22,18 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
-        <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <SessionProviderWrapper>
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: { background: "#1e293b", color: "#e2e8f0", border: "1px solid #334155" },
+              success: { iconTheme: { primary: "#22c55e", secondary: "#fff" } },
+              error: { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
+            }}
+          />
+        </SessionProviderWrapper>
       </body>
     </html>
   );

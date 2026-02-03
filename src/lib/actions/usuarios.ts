@@ -1,6 +1,6 @@
 // lib/actions/usuarios.ts
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import bcrypt from "bcryptjs";
 import {
   Usuario,

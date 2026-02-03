@@ -2,9 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { PrismaClient, Prisma } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { Prisma } from "@/generated/prisma/client";
+import { prisma } from "@/lib/prisma";
 
 // GET - Obtener rutas con filtros y paginación
 export async function GET(request: NextRequest) {

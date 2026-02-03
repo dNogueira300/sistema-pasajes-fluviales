@@ -150,8 +150,7 @@ export async function POST(request: NextRequest) {
     const cliente = await buscarOCrearCliente(clienteData);
 
     // Obtener información de la ruta para el precio
-    const { PrismaClient } = await import("@prisma/client");
-    const prisma = new PrismaClient();
+    const { prisma } = await import("@/lib/prisma");
 
     const ruta = await prisma.ruta.findUnique({
       where: { id: rutaId },

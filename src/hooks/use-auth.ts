@@ -31,6 +31,7 @@ export function useAuth(requireAuth = true) {
     // Helpers para roles
     isAdmin: session?.user?.role === "ADMINISTRADOR",
     isVendedor: session?.user?.role === "VENDEDOR",
+    isOperador: session?.user?.role === "OPERADOR_EMBARCACION",
 
     // Función para verificar si tiene un rol específico
     hasRole: (role: UserRole) => {

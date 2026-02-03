@@ -301,18 +301,20 @@ export default function GestionUsuarios() {
 
   // Helper para obtener el color del rol
   const getRolColor = useCallback((role: UserRole) => {
-    const colores = {
+    const colores: Record<UserRole, string> = {
       ADMINISTRADOR: "bg-purple-900/40 text-purple-300 border-purple-700/50",
       VENDEDOR: "bg-blue-900/40 text-blue-300 border-blue-700/50",
+      OPERADOR_EMBARCACION: "bg-emerald-900/40 text-emerald-300 border-emerald-700/50",
     };
     return colores[role];
   }, []);
 
   // Helper para obtener el icono del rol
   const getRolIcon = useCallback((role: UserRole) => {
-    const iconos = {
+    const iconos: Record<UserRole, React.ReactNode> = {
       ADMINISTRADOR: <Shield className="h-4 w-4" />,
       VENDEDOR: <Users className="h-4 w-4" />,
+      OPERADOR_EMBARCACION: <Users className="h-4 w-4" />,
     };
     return iconos[role];
   }, []);

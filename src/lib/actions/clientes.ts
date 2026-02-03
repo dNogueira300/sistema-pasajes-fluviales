@@ -1,14 +1,5 @@
 // lib/actions/clientes.ts
-import { PrismaClient } from "@prisma/client";
-
-// Crear una sola instancia global de Prisma (siguiendo el patrón del proyecto)
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from "@/lib/prisma";
 
 // Interfaces
 interface FiltrosClientes {

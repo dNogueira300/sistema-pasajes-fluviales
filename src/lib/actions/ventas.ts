@@ -1,20 +1,11 @@
 // src/lib/actions/ventas.ts
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { EstadoVenta } from "@/types";
 
 interface MetodoPago {
   tipo: string;
   monto: number;
 }
-
-// Crear una sola instancia global de Prisma
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // Generar número único de venta
 export async function generateVentaNumber(): Promise<string> {

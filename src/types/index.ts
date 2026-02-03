@@ -1,6 +1,6 @@
 // types/index.ts
 // Tipos de usuarios y roles
-export type UserRole = "ADMINISTRADOR" | "VENDEDOR";
+export type UserRole = "ADMINISTRADOR" | "VENDEDOR" | "OPERADOR_EMBARCACION";
 export interface UserProfile {
   id: string;
   email: string;

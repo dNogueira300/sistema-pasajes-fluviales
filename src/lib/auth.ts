@@ -2,10 +2,8 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/types";
-
-const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -48,7 +46,9 @@ export const authOptions: NextAuthOptions = {
               apellido: true,
               password: true,
               role: true,
-              activo: true, // Agregar este campo para verificar
+              activo: true,
+              estadoOperador: true,
+              embarcacionAsignadaId: true,
             },
           });
 
@@ -81,6 +81,8 @@ export const authOptions: NextAuthOptions = {
             name: `${user.nombre} ${user.apellido}`,
             username: user.username,
             role: user.role as UserRole,
+            estadoOperador: user.estadoOperador,
+            embarcacionAsignadaId: user.embarcacionAsignadaId,
           };
         } catch (error) {
           console.error("❌ Error en autenticación:", error);
@@ -102,6 +104,8 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
         token.username = user.username;
+        token.estadoOperador = user.estadoOperador;
+        token.embarcacionAsignadaId = user.embarcacionAsignadaId;
       }
       return token;
     },
@@ -111,6 +115,8 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub!;
         session.user.role = token.role as UserRole;
         session.user.username = token.username as string;
+        session.user.estadoOperador = token.estadoOperador;
+        session.user.embarcacionAsignadaId = token.embarcacionAsignadaId;
       }
       return session;
     },

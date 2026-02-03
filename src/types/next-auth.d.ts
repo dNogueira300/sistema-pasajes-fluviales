@@ -2,7 +2,7 @@
 import { DefaultSession, DefaultUser } from "next-auth";
 
 // Definir el tipo de roles como union type
-type UserRole = "ADMINISTRADOR" | "VENDEDOR";
+type UserRole = "ADMINISTRADOR" | "VENDEDOR" | "OPERADOR_EMBARCACION";
 
 declare module "next-auth" {
   /**
@@ -13,23 +13,24 @@ declare module "next-auth" {
       id: string;
       username: string;
       role: UserRole;
+      estadoOperador?: string | null;
+      embarcacionAsignadaId?: string | null;
     } & DefaultSession["user"];
   }
 
-  /**
-   * The shape of the user object returned in the OAuth providers' `profile` callback,
-   * or the second parameter of the `session` callback, when using a database.
-   */
   interface User extends DefaultUser {
     username: string;
     role: UserRole;
+    estadoOperador?: string | null;
+    embarcacionAsignadaId?: string | null;
   }
 }
 
 declare module "next-auth/jwt" {
-  /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
   interface JWT {
     username: string;
     role: UserRole;
+    estadoOperador?: string | null;
+    embarcacionAsignadaId?: string | null;
   }
 }

@@ -46,7 +46,7 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-slate-900 border-b border-slate-800 h-20 flex items-center justify-between px-6 relative z-10">
+      <header className="bg-slate-900 border-b border-slate-800 h-20 flex items-center justify-between px-6 relative z-50">
         {/* Toggle sidebar con más espacio */}
         <div className="flex items-center">
           <button
@@ -75,6 +75,8 @@ export default function Header({
                 <p className="text-sm text-slate-400">
                   {user?.role === "ADMINISTRADOR"
                     ? "Administrador"
+                    : user?.role === "OPERADOR_EMBARCACION"
+                    ? "Operador"
                     : "Vendedor"}
                 </p>
               </div>
@@ -93,6 +95,8 @@ export default function Header({
                   <p className="text-sm text-slate-500 mt-2">
                     {user?.role === "ADMINISTRADOR"
                       ? "Administrador del Sistema"
+                      : user?.role === "OPERADOR_EMBARCACION"
+                      ? "Operador de Embarcación"
                       : "Vendedor"}
                   </p>
                 </div>
@@ -232,11 +236,15 @@ export default function Header({
                           className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${
                             user?.role === "ADMINISTRADOR"
                               ? "bg-purple-900/30 text-purple-300 border border-purple-700/50"
+                              : user?.role === "OPERADOR_EMBARCACION"
+                              ? "bg-amber-900/30 text-amber-300 border border-amber-700/50"
                               : "bg-blue-900/30 text-blue-300 border border-blue-700/50"
                           }`}
                         >
                           {user?.role === "ADMINISTRADOR"
                             ? "Administrador"
+                            : user?.role === "OPERADOR_EMBARCACION"
+                            ? "Operador de Embarcación"
                             : "Vendedor"}
                         </span>
                       </div>

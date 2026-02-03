@@ -1,12 +1,12 @@
 // prisma/schema.prisma
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client"
+  output     = "../src/generated/prisma"
+  engineType = "client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") // Para migraciones
 }
 
 model User {
@@ -18,11 +18,20 @@ model User {
   apellido  String
   role      UserRole @default(VENDEDOR)
   activo    Boolean  @default(true)
+  
+  // CAMPOS PARA OPERADOR DE EMBARCACIÓN (CU008)
+  embarcacionAsignadaId String?   // Embarcación asignada (solo para OPERADOR_EMBARCACION)
+  fechaAsignacion       DateTime? // Fecha de asignación de embarcación
+  estadoOperador        String?   // ACTIVO/INACTIVO (solo para OPERADOR_EMBARCACION)
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
   // Relaciones 
-  ventas    Venta[]
-  anulaciones Anulacion[] // Relación con las anulaciones realizadas por el usuario
+  ventas              Venta[]
+  anulaciones         Anulacion[]
+  controlesEmbarque   ControlEmbarque[] // Registros de embarque realizados por el operador
+  embarcacionAsignada Embarcacion? @relation(fields: [embarcacionAsignadaId], references: [id])
 
   // ÍNDICES OPTIMIZADOS PARA LOGIN
   @@index([email])
@@ -30,7 +39,8 @@ model User {
   @@index([activo])
   @@index([email, activo])
   @@index([username, activo])
-
+  @@index([embarcacionAsignadaId])
+  @@index([role, estadoOperador])
 
   @@map("usuarios")
 }
@@ -63,6 +73,7 @@ model Ruta {
   updatedAt        DateTime          @updatedAt
   embarcacionRutas EmbarcacionRuta[]
   ventas           Venta[]
+  controlesEmbarque ControlEmbarque[]
 
   @@index([activa])
   @@index([puertoOrigen, puertoDestino])
@@ -80,6 +91,8 @@ model Embarcacion {
   updatedAt        DateTime          @updatedAt
   embarcacionRutas EmbarcacionRuta[]
   ventas           Venta[]
+  controlesEmbarque ControlEmbarque[]
+  operadoresAsignados User[] // Operadores asignados a esta embarcación
 
   @@index([estado])
   @@map("embarcaciones")
@@ -140,7 +153,7 @@ model Venta {
   subtotal        Decimal     @db.Decimal(10, 2)
   impuestos       Decimal     @default(0) @db.Decimal(10, 2)
   total           Decimal     @db.Decimal(10, 2)
-  // NUEVOS CAMPOS PARA PAGO HÍBRIDO
+  // CAMPOS PARA PAGO HÍBRIDO
   tipoPago         String      @default("UNICO") // "UNICO" o "HIBRIDO"
   metodoPago       String      @default("EFECTIVO")
   metodosPago      Json?       // Array de métodos para pago híbrido
@@ -149,13 +162,15 @@ model Venta {
   fechaVenta      DateTime    @default(now())
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  
   // Relaciones
   cliente         Cliente     @relation(fields: [clienteId], references: [id])
   embarcacion     Embarcacion @relation(fields: [embarcacionId], references: [id])
   ruta            Ruta        @relation(fields: [rutaId], references: [id])
   vendedor        User        @relation(fields: [userId], references: [id])
   puertoEmbarque  PuertoEmbarque @relation(fields: [puertoEmbarqueId], references: [id]) 
-  anulacion Anulacion? // Relación con la posible anulación de la venta
+  anulacion       Anulacion?
+  controlEmbarque ControlEmbarque? // Relación con el control de embarque
 
   // Índices para optimización de consultas
   @@index([fechaVenta])
@@ -168,10 +183,10 @@ model Venta {
   @@index([userId, fechaVenta])
   @@index([rutaId])
   @@index([embarcacionId])
-  
 
   @@map("ventas")
 }
+
 // Modelo para llevar el contador diario de ventas
 model ContadorVentas {
   id        String   @id @default(cuid())
@@ -206,6 +221,43 @@ model Anulacion {
   @@map("anulaciones")
 }
 
+// NUEVO MODELO PARA CU009 - Control de Embarque/Desembarque
+model ControlEmbarque {
+  id              String          @id @default(cuid())
+  ventaId         String          @unique
+  operadorId      String
+  embarcacionId   String
+  rutaId          String
+  fechaViaje      DateTime
+  horaViaje       String
+  estadoEmbarque  EstadoEmbarque  @default(PENDIENTE)
+  tipoRegistro    TipoRegistro    @default(EMBARQUE)
+  horaRegistro    DateTime?       // Hora en que se marcó como embarcado/no embarcado
+  observaciones   String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  // Relaciones
+  venta           Venta           @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  operador        User            @relation(fields: [operadorId], references: [id])
+  embarcacion     Embarcacion     @relation(fields: [embarcacionId], references: [id])
+  ruta            Ruta            @relation(fields: [rutaId], references: [id])
+  
+  // Índices para optimización de consultas
+  @@index([ventaId])
+  @@index([operadorId])
+  @@index([embarcacionId])
+  @@index([rutaId])
+  @@index([fechaViaje])
+  @@index([horaViaje])
+  @@index([estadoEmbarque])
+  @@index([embarcacionId, fechaViaje, horaViaje])
+  @@index([embarcacionId, fechaViaje, estadoEmbarque])
+  @@index([operadorId, fechaViaje])
+  
+  @@map("control_embarque")
+}
+
 model Configuracion {
   id        String   @id @default(cuid())
   clave     String   @unique
@@ -218,9 +270,11 @@ model Configuracion {
   @@map("configuraciones")
 }
 
+// ENUMS
 enum UserRole {
   ADMINISTRADOR
   VENDEDOR
+  OPERADOR_EMBARCACION  // Nuevo rol para CU008
 }
 
 enum EstadoEmbarcacion {
@@ -233,4 +287,16 @@ enum EstadoVenta {
   CONFIRMADA
   ANULADA
   REEMBOLSADA
+}
+
+// NUEVOS ENUMS PARA CU009
+enum EstadoEmbarque {
+  PENDIENTE
+  EMBARCADO
+  NO_EMBARCADO
+}
+
+enum TipoRegistro {
+  EMBARQUE
+  DESEMBARQUE
 }

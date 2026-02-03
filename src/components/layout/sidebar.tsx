@@ -16,14 +16,17 @@ import {
   BarChart3,
   Ban,
   MapPin,
+  Anchor,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UserRole } from "@/types";
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles?: ("ADMINISTRADOR" | "VENDEDOR")[];
+  roles?: UserRole[];
   description?: string;
 }
 
@@ -39,6 +42,7 @@ const navigation: NavItem[] = [
     name: "Ventas",
     href: "/dashboard/ventas",
     icon: ShoppingCart,
+    roles: ["ADMINISTRADOR", "VENDEDOR"],
     description: "Gestionar venta de pasajes",
   },
   {
@@ -52,6 +56,7 @@ const navigation: NavItem[] = [
     name: "Clientes",
     href: "/dashboard/clientes",
     icon: Users,
+    roles: ["ADMINISTRADOR", "VENDEDOR"],
     description: "Gestionar información de clientes",
   },
   {
@@ -76,6 +81,13 @@ const navigation: NavItem[] = [
     description: "Gestionar embarcaciones",
   },
   {
+    name: "Operadores",
+    href: "/dashboard/operadores",
+    icon: Anchor,
+    roles: ["ADMINISTRADOR"],
+    description: "Gestionar operadores de embarcación",
+  },
+  {
     name: "Usuarios",
     href: "/dashboard/usuarios",
     icon: UserPlus,
@@ -86,6 +98,7 @@ const navigation: NavItem[] = [
     name: "Reportes",
     href: "/dashboard/reportes",
     icon: BarChart3,
+    roles: ["ADMINISTRADOR", "VENDEDOR"],
     description: "Reportes y estadísticas",
   },
   {
@@ -94,6 +107,13 @@ const navigation: NavItem[] = [
     icon: Settings,
     roles: ["ADMINISTRADOR"],
     description: "Configuraciones del sistema",
+  },
+  {
+    name: "Control de Embarque",
+    href: "/dashboard/control-embarque",
+    icon: ClipboardCheck,
+    roles: ["OPERADOR_EMBARCACION"],
+    description: "Control de embarque y desembarque",
   },
 ];
 

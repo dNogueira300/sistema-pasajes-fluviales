@@ -33,8 +33,15 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Local implementations
+PROMPT_CLAUDE_CODE_BACKEND.md
+PROMPT_CLAUDE_CODE_FRONTEND.md
+
 # vercel
 .vercel
+
+# Claude
+.CLAUDE.md
 
 # typescript
 *.tsbuildinfo
