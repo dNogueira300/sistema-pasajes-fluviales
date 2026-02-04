@@ -204,6 +204,32 @@ export function useActualizarEstadoEmbarque() {
   return { actualizar, isLoading, error };
 }
 
+export function useEliminarRegistroEmbarque() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const eliminar = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/control-embarque/${id}/estado`, {
+        method: "DELETE",
+      });
+      const json = (await res.json()) as ApiResponse<unknown>;
+      if (!res.ok || !json.success) {
+        const errMsg = json.error || "Error al eliminar registro";
+        setError(errMsg);
+        throw new Error(errMsg);
+      }
+      return json;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { eliminar, isLoading, error };
+}
+
 export function useGenerarReporte() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

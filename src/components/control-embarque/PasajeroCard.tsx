@@ -12,7 +12,8 @@ interface PasajeroCardProps {
 
 export default function PasajeroCard({ pasajero, onClick, embarqueHabilitado = true, horaViaje }: PasajeroCardProps) {
   const estado = pasajero.controlEmbarque?.estadoEmbarque || "PENDIENTE";
-  const puedeMarcar = estado === "PENDIENTE" && embarqueHabilitado;
+  // Permitir clic si el embarque está habilitado (tanto para PENDIENTE como para estados ya registrados)
+  const puedeInteractuar = embarqueHabilitado;
 
   const estadoConfig = {
     PENDIENTE: {
@@ -25,23 +26,27 @@ export default function PasajeroCard({ pasajero, onClick, embarqueHabilitado = t
       cursor: embarqueHabilitado ? "cursor-pointer" : "cursor-not-allowed",
     },
     EMBARCADO: {
-      bg: "bg-green-900/10 border-green-700/30",
+      bg: embarqueHabilitado
+        ? "bg-green-900/10 border-green-700/30 hover:border-green-600/50"
+        : "bg-green-900/10 border-green-700/30",
       icon: <CheckCircle className="h-5 w-5 text-green-400" />,
       badge: "bg-green-900/40 text-green-400",
       label: "Embarcado",
-      cursor: "cursor-default",
+      cursor: embarqueHabilitado ? "cursor-pointer" : "cursor-default",
     },
     NO_EMBARCADO: {
-      bg: "bg-red-900/10 border-red-700/30",
+      bg: embarqueHabilitado
+        ? "bg-red-900/10 border-red-700/30 hover:border-red-600/50"
+        : "bg-red-900/10 border-red-700/30",
       icon: <XCircle className="h-5 w-5 text-red-400" />,
       badge: "bg-red-900/40 text-red-400",
       label: "No Embarcado",
-      cursor: "cursor-default",
+      cursor: embarqueHabilitado ? "cursor-pointer" : "cursor-default",
     },
   }[estado];
 
   const handleClick = () => {
-    if (puedeMarcar) {
+    if (puedeInteractuar) {
       onClick(pasajero);
     }
   };

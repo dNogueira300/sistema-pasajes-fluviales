@@ -246,7 +246,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="px-4 pb-4">
               <div className="text-sm text-slate-500 text-center space-y-1">
                 <p className="font-semibold">Sistema v1.0.0</p>
-                <p className="text-xs">© 2025 Alto Impacto Travel</p>
+                <p className="text-xs">© {new Date().getFullYear()} Alto Impacto Travel</p>
               </div>
             </div>
           )}

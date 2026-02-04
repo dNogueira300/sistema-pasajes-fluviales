@@ -10,12 +10,14 @@ import {
   useListaPasajeros,
   useEstadisticas,
   useActualizarEstadoEmbarque,
+  useEliminarRegistroEmbarque,
 } from "@/hooks/use-control-embarque";
 import type { PasajeroEmbarque } from "@/hooks/use-control-embarque";
 import EstadisticasPanel from "@/components/control-embarque/EstadisticasPanel";
 import BuscadorPasajero from "@/components/control-embarque/BuscadorPasajero";
 import PasajeroCard from "@/components/control-embarque/PasajeroCard";
 import ModalCambiarEstado from "@/components/control-embarque/ModalCambiarEstado";
+import ModalEditarEstado from "@/components/control-embarque/ModalEditarEstado";
 import GenerarReportePDF from "@/components/control-embarque/GenerarReportePDF";
 
 interface PageProps {
@@ -29,10 +31,15 @@ export default function ListaPasajerosPage({ params }: PageProps) {
   const { pasajeros, isLoading, mutate: mutatePasajeros } = useListaPasajeros(fecha, hora);
   const { estadisticas, mutate: mutateEstadisticas } = useEstadisticas(fecha, hora);
   const { actualizar } = useActualizarEstadoEmbarque();
+  const { eliminar } = useEliminarRegistroEmbarque();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPasajero, setSelectedPasajero] = useState<PasajeroEmbarque | null>(null);
   const [horaActual, setHoraActual] = useState(new Date());
+
+  // Determinar si el pasajero seleccionado ya tiene estado registrado
+  const pasajeroYaRegistrado = selectedPasajero?.controlEmbarque?.estadoEmbarque &&
+    selectedPasajero.controlEmbarque.estadoEmbarque !== "PENDIENTE";
 
   // Actualizar hora actual cada 30 segundos para verificar si el embarque está habilitado
   useEffect(() => {
@@ -88,6 +95,23 @@ export default function ListaPasajerosPage({ params }: PageProps) {
       }
     },
     [selectedPasajero, actualizar, mutatePasajeros, mutateEstadisticas]
+  );
+
+  const handleQuitarRegistro = useCallback(
+    async () => {
+      if (!selectedPasajero?.controlEmbarque) return;
+
+      try {
+        await eliminar(selectedPasajero.controlEmbarque.id);
+        toast.success("Registro eliminado. El pasajero volvió a estado PENDIENTE");
+        setSelectedPasajero(null);
+        mutatePasajeros();
+        mutateEstadisticas();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Error al eliminar registro");
+      }
+    },
+    [selectedPasajero, eliminar, mutatePasajeros, mutateEstadisticas]
   );
 
   // Get first pasajero data for header info
@@ -189,13 +213,24 @@ export default function ListaPasajerosPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Modal */}
-      {selectedPasajero && (
+      {/* Modal para pasajeros PENDIENTES */}
+      {selectedPasajero && !pasajeroYaRegistrado && (
         <ModalCambiarEstado
           isOpen={!!selectedPasajero}
           pasajero={selectedPasajero}
           onClose={() => setSelectedPasajero(null)}
           onConfirm={handleConfirmEstado}
+        />
+      )}
+
+      {/* Modal para pasajeros ya registrados (EMBARCADO/NO_EMBARCADO) */}
+      {selectedPasajero && pasajeroYaRegistrado && (
+        <ModalEditarEstado
+          isOpen={!!selectedPasajero}
+          pasajero={selectedPasajero}
+          onClose={() => setSelectedPasajero(null)}
+          onCambiarEstado={handleConfirmEstado}
+          onQuitarRegistro={handleQuitarRegistro}
         />
       )}
     </div>
