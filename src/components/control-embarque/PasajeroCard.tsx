@@ -6,18 +6,23 @@ import type { PasajeroEmbarque } from "@/hooks/use-control-embarque";
 interface PasajeroCardProps {
   pasajero: PasajeroEmbarque;
   onClick: (pasajero: PasajeroEmbarque) => void;
+  embarqueHabilitado?: boolean;
+  horaViaje?: string;
 }
 
-export default function PasajeroCard({ pasajero, onClick }: PasajeroCardProps) {
+export default function PasajeroCard({ pasajero, onClick, embarqueHabilitado = true, horaViaje }: PasajeroCardProps) {
   const estado = pasajero.controlEmbarque?.estadoEmbarque || "PENDIENTE";
+  const puedeMarcar = estado === "PENDIENTE" && embarqueHabilitado;
 
   const estadoConfig = {
     PENDIENTE: {
-      bg: "bg-slate-800/50 border-slate-700/50 hover:border-blue-600/50",
-      icon: <Clock className="h-5 w-5 text-slate-400" />,
-      badge: "bg-slate-700 text-slate-300",
-      label: "Pendiente",
-      cursor: "cursor-pointer",
+      bg: embarqueHabilitado
+        ? "bg-slate-800/50 border-slate-700/50 hover:border-blue-600/50"
+        : "bg-slate-800/30 border-slate-700/30 opacity-60",
+      icon: <Clock className={`h-5 w-5 ${embarqueHabilitado ? "text-slate-400" : "text-slate-500"}`} />,
+      badge: embarqueHabilitado ? "bg-slate-700 text-slate-300" : "bg-slate-800 text-slate-500",
+      label: embarqueHabilitado ? "Pendiente" : `Disponible a las ${horaViaje || "--:--"}`,
+      cursor: embarqueHabilitado ? "cursor-pointer" : "cursor-not-allowed",
     },
     EMBARCADO: {
       bg: "bg-green-900/10 border-green-700/30",
@@ -36,7 +41,7 @@ export default function PasajeroCard({ pasajero, onClick }: PasajeroCardProps) {
   }[estado];
 
   const handleClick = () => {
-    if (estado === "PENDIENTE") {
+    if (puedeMarcar) {
       onClick(pasajero);
     }
   };

@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { validarCrearUsuario } from "@/lib/validations/usuario";
 
 // GET - Obtener usuarios con filtros y paginación
 export async function GET(request: NextRequest) {
@@ -55,8 +56,8 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    if (role && ["ADMINISTRADOR", "VENDEDOR"].includes(role)) {
-      where.role = role as "ADMINISTRADOR" | "VENDEDOR";
+    if (role && ["ADMINISTRADOR", "VENDEDOR", "OPERADOR_EMBARCACION"].includes(role)) {
+      where.role = role as "ADMINISTRADOR" | "VENDEDOR" | "OPERADOR_EMBARCACION";
     }
 
     if (activo !== null && activo !== undefined) {
@@ -78,8 +79,18 @@ export async function GET(request: NextRequest) {
           apellido: true,
           role: true,
           activo: true,
+          estadoOperador: true,
+          embarcacionAsignadaId: true,
+          fechaAsignacion: true,
           createdAt: true,
           updatedAt: true,
+          embarcacionAsignada: {
+            select: {
+              id: true,
+              nombre: true,
+              capacidad: true,
+            },
+          },
           _count: {
             select: {
               ventas: true,
@@ -132,68 +143,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, username, password, nombre, apellido, role, activo } = body;
 
-    // Validaciones básicas
-    if (!email || !email.trim()) {
+    // Validación con Zod (doble validación: cliente + servidor)
+    const validacion = validarCrearUsuario(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
       return NextResponse.json(
-        { error: "El email es requerido" },
+        { error: primerError.message },
         { status: 400 }
       );
     }
 
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: "Formato de email inválido" },
-        { status: 400 }
-      );
-    }
-
-    if (!username || username.trim().length < 3) {
-      return NextResponse.json(
-        { error: "El username debe tener al menos 3 caracteres" },
-        { status: 400 }
-      );
-    }
-
-    // Validar contraseña (mínimo 8 caracteres, 1 mayúscula, 1 minúscula, 1 número)
-    if (!password || password.length < 8) {
-      return NextResponse.json(
-        { error: "La contraseña debe tener al menos 8 caracteres" },
-        { status: 400 }
-      );
-    }
-
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
-    if (!passwordRegex.test(password)) {
-      return NextResponse.json(
-        {
-          error:
-            "La contraseña debe contener al menos 1 mayúscula, 1 minúscula y 1 número",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!nombre || nombre.trim().length < 2) {
-      return NextResponse.json(
-        { error: "El nombre debe tener al menos 2 caracteres" },
-        { status: 400 }
-      );
-    }
-
-    if (!apellido || apellido.trim().length < 2) {
-      return NextResponse.json(
-        { error: "El apellido debe tener al menos 2 caracteres" },
-        { status: 400 }
-      );
-    }
-
-    if (role && !["ADMINISTRADOR", "VENDEDOR"].includes(role)) {
-      return NextResponse.json({ error: "Rol no válido" }, { status: 400 });
-    }
+    const { email, username, password, nombre, apellido, role, activo, embarcacionAsignadaId, estadoOperador } = validacion.data;
 
     // Verificar unicidad de email
     const usuarioExistenteEmail = await prisma.user.findUnique({
@@ -222,6 +183,37 @@ export async function POST(request: NextRequest) {
     // Encriptar contraseña
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Si es OPERADOR_EMBARCACION y tiene embarcación asignada, verificar disponibilidad
+    if (role === "OPERADOR_EMBARCACION" && embarcacionAsignadaId) {
+      // Verificar que la embarcación existe
+      const embarcacion = await prisma.embarcacion.findUnique({
+        where: { id: embarcacionAsignadaId },
+      });
+
+      if (!embarcacion) {
+        return NextResponse.json(
+          { error: "La embarcación seleccionada no existe" },
+          { status: 400 }
+        );
+      }
+
+      // Verificar que no haya otro operador ACTIVO para esta embarcación
+      const operadorExistente = await prisma.user.findFirst({
+        where: {
+          embarcacionAsignadaId: embarcacionAsignadaId,
+          estadoOperador: "ACTIVO",
+          role: "OPERADOR_EMBARCACION",
+        },
+      });
+
+      if (operadorExistente) {
+        return NextResponse.json(
+          { error: "Esta embarcación ya tiene un operador activo asignado" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Preparar datos de creación con tipos explícitos
     const datosCreacion: Prisma.UserCreateInput = {
       email: email.trim().toLowerCase(),
@@ -231,6 +223,14 @@ export async function POST(request: NextRequest) {
       apellido: apellido.trim(),
       role: role || "VENDEDOR",
       activo: activo !== undefined ? activo : true,
+      // Campos específicos para OPERADOR_EMBARCACION
+      ...(role === "OPERADOR_EMBARCACION" && {
+        estadoOperador: estadoOperador || "ACTIVO",
+        ...(embarcacionAsignadaId && {
+          embarcacionAsignada: { connect: { id: embarcacionAsignadaId } },
+          fechaAsignacion: new Date(),
+        }),
+      }),
     };
 
     const usuario = await prisma.user.create({
@@ -243,8 +243,18 @@ export async function POST(request: NextRequest) {
         apellido: true,
         role: true,
         activo: true,
+        estadoOperador: true,
+        embarcacionAsignadaId: true,
+        fechaAsignacion: true,
         createdAt: true,
         updatedAt: true,
+        embarcacionAsignada: {
+          select: {
+            id: true,
+            nombre: true,
+            capacidad: true,
+          },
+        },
         _count: {
           select: {
             ventas: true,

@@ -19,6 +19,7 @@ import {
   Key,
   Activity,
   AlertTriangle,
+  Ship,
 } from "lucide-react";
 import {
   Usuario,
@@ -314,7 +315,7 @@ export default function GestionUsuarios() {
     const iconos: Record<UserRole, React.ReactNode> = {
       ADMINISTRADOR: <Shield className="h-4 w-4" />,
       VENDEDOR: <Users className="h-4 w-4" />,
-      OPERADOR_EMBARCACION: <Users className="h-4 w-4" />,
+      OPERADOR_EMBARCACION: <Ship className="h-4 w-4" />,
     };
     return iconos[role];
   }, []);
@@ -524,6 +525,7 @@ export default function GestionUsuarios() {
                     <option value="">Todos los roles</option>
                     <option value="ADMINISTRADOR">Administradores</option>
                     <option value="VENDEDOR">Vendedores</option>
+                    <option value="OPERADOR_EMBARCACION">Operadores</option>
                   </select>
                 </div>
 
@@ -661,7 +663,7 @@ export default function GestionUsuarios() {
                           )}`}
                         >
                           {getRolIcon(usuario.role)}
-                          <span className="ml-1">{usuario.role}</span>
+                          <span className="ml-1">{usuario.role === "OPERADOR_EMBARCACION" ? "Operador" : usuario.role}</span>
                         </span>
                         <div className="relative group">
                           <button className="p-1 text-slate-400 hover:text-slate-300 transition-colors">
@@ -672,6 +674,7 @@ export default function GestionUsuarios() {
                               {Object.values([
                                 "ADMINISTRADOR",
                                 "VENDEDOR",
+                                "OPERADOR_EMBARCACION",
                               ] as UserRole[]).map(
                                 (rol) =>
                                   rol !== usuario.role && (
@@ -682,7 +685,7 @@ export default function GestionUsuarios() {
                                       }
                                       className="block w-full px-4 py-2 text-left text-sm text-slate-200 hover:bg-slate-700 transition-colors"
                                     >
-                                      Cambiar a {rol}
+                                      Cambiar a {rol === "OPERADOR_EMBARCACION" ? "Operador" : rol}
                                     </button>
                                   )
                               )}

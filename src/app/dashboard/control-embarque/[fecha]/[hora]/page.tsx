@@ -1,7 +1,7 @@
 "use client";
 
-import { use, useState, useCallback, useMemo } from "react";
-import { ArrowLeft, Ship, MapPin, Calendar, Clock } from "lucide-react";
+import { use, useState, useCallback, useMemo, useEffect } from "react";
+import { ArrowLeft, Ship, MapPin, Calendar, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
@@ -32,6 +32,23 @@ export default function ListaPasajerosPage({ params }: PageProps) {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPasajero, setSelectedPasajero] = useState<PasajeroEmbarque | null>(null);
+  const [horaActual, setHoraActual] = useState(new Date());
+
+  // Actualizar hora actual cada 30 segundos para verificar si el embarque está habilitado
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHoraActual(new Date());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Verificar si el embarque está habilitado (hora actual >= hora de viaje)
+  const embarqueHabilitado = useMemo(() => {
+    const [horaViaje, minutoViaje] = hora.split(":").map(Number);
+    const [year, month, day] = fecha.split("-").map(Number);
+    const fechaHoraViaje = new Date(year, month - 1, day, horaViaje, minutoViaje, 0, 0);
+    return horaActual >= fechaHoraViaje;
+  }, [fecha, hora, horaActual]);
 
   // Filter pasajeros by search
   const filteredPasajeros = useMemo(() => {
@@ -121,6 +138,22 @@ export default function ListaPasajerosPage({ params }: PageProps) {
         </div>
       )}
 
+      {/* Alert when boarding is not yet enabled */}
+      {!embarqueHabilitado && (
+        <div className="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-amber-300">
+              Control de embarque no disponible
+            </p>
+            <p className="text-xs text-amber-400/80 mt-0.5">
+              El registro de embarque estará habilitado a partir de las {hora}.
+              Puede ver la lista de pasajeros pero no podrá marcar el estado de embarque hasta esa hora.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Search bar + PDF button */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="flex-1">
@@ -145,7 +178,13 @@ export default function ListaPasajerosPage({ params }: PageProps) {
       ) : (
         <div className="space-y-2">
           {filteredPasajeros.map((p) => (
-            <PasajeroCard key={p.id} pasajero={p} onClick={handlePasajeroClick} />
+            <PasajeroCard
+              key={p.id}
+              pasajero={p}
+              onClick={handlePasajeroClick}
+              embarqueHabilitado={embarqueHabilitado}
+              horaViaje={hora}
+            />
           ))}
         </div>
       )}

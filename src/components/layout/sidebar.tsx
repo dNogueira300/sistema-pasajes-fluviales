@@ -16,7 +16,6 @@ import {
   BarChart3,
   Ban,
   MapPin,
-  Anchor,
   ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -81,18 +80,11 @@ const navigation: NavItem[] = [
     description: "Gestionar embarcaciones",
   },
   {
-    name: "Operadores",
-    href: "/dashboard/operadores",
-    icon: Anchor,
-    roles: ["ADMINISTRADOR"],
-    description: "Gestionar operadores de embarcación",
-  },
-  {
     name: "Usuarios",
     href: "/dashboard/usuarios",
     icon: UserPlus,
     roles: ["ADMINISTRADOR"],
-    description: "Administrar usuarios del sistema",
+    description: "Administrar usuarios y operadores",
   },
   {
     name: "Reportes",

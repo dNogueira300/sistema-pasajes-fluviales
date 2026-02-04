@@ -10,7 +10,10 @@
       "WebFetch(domain:www.prisma.io)",
       "Bash(node:*)",
       "Bash(npm install:*)",
-      "Bash(Get-ChildItem -Path \"D:\\\\UNAP\\\\CICLO_2025_II\\\\TALLER_DE_SOFTWARE_I\\\\Proyecto\\\\sistema-pasajes-fluviales\\\\src\\\\app\\\\dashboard\\\\control-embarque\" -Recurse -Name)"
+      "Bash(Get-ChildItem -Path \"D:\\\\UNAP\\\\CICLO_2025_II\\\\TALLER_DE_SOFTWARE_I\\\\Proyecto\\\\sistema-pasajes-fluviales\\\\src\\\\app\\\\dashboard\\\\control-embarque\" -Recurse -Name)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint)",
+      "Bash(npx next lint:*)"
     ]
   }
 }

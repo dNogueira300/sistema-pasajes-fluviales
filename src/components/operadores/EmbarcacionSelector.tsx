@@ -74,38 +74,42 @@ export default function EmbarcacionSelector({
     }
   }, [isOpen]);
 
-  // Cargar embarcaciones con verificación de ocupación en paralelo
+  // Cargar embarcaciones con verificación de ocupación
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Cargar embarcaciones activas
         const resEmb = await fetch("/api/embarcaciones/activas");
         const dataEmb: EmbarcacionOption[] | { error: string } = await resEmb.json();
 
         if (Array.isArray(dataEmb)) {
           setEmbarcaciones(dataEmb);
 
-          // Cargar todas las verificaciones de ocupación en paralelo
-          const ocupadasPromises = dataEmb.map(async (emb) => {
-            const resOp = await fetch(
-              `/api/operadores?embarcacionId=${emb.id}&estado=ACTIVO&limit=1`
-            );
-            const dataOp = (await resOp.json()) as {
-              success: boolean;
-              data: { id: string }[];
-            };
-            if (dataOp.success && dataOp.data.length > 0) {
-              const operadorId = dataOp.data[0].id;
-              if (operadorId !== excludeOperadorId) {
-                return emb.id;
-              }
-            }
-            return null;
-          });
-
-          const ocupadasResults = await Promise.all(ocupadasPromises);
-          const ocupadasSet = new Set<string>(
-            ocupadasResults.filter((id): id is string => id !== null)
+          // Cargar usuarios OPERADOR_EMBARCACION con estado ACTIVO para verificar ocupación
+          const resUsuarios = await fetch(
+            `/api/usuarios?role=OPERADOR_EMBARCACION&limit=100`
           );
+          const dataUsuarios = (await resUsuarios.json()) as {
+            usuarios: Array<{
+              id: string;
+              embarcacionAsignadaId: string | null;
+              estadoOperador: string | null;
+            }>;
+          };
+
+          // Crear set de embarcaciones ocupadas (con operador ACTIVO asignado)
+          const ocupadasSet = new Set<string>();
+          if (dataUsuarios.usuarios) {
+            dataUsuarios.usuarios.forEach((usuario) => {
+              if (
+                usuario.embarcacionAsignadaId &&
+                usuario.estadoOperador === "ACTIVO" &&
+                usuario.id !== excludeOperadorId
+              ) {
+                ocupadasSet.add(usuario.embarcacionAsignadaId);
+              }
+            });
+          }
           setOcupadas(ocupadasSet);
         }
       } catch {

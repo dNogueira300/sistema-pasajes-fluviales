@@ -33,6 +33,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         operadorId: true,
         embarcacionId: true,
         fechaViaje: true,
+        horaViaje: true,
         estadoEmbarque: true,
       },
     });
@@ -55,10 +56,23 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Validar que la fecha de viaje no ha pasado
     const ahora = new Date();
     const fechaViaje = new Date(control.fechaViaje);
-    fechaViaje.setHours(23, 59, 59, 999);
-    if (fechaViaje < ahora) {
+    const fechaViajeFin = new Date(fechaViaje);
+    fechaViajeFin.setHours(23, 59, 59, 999);
+    if (fechaViajeFin < ahora) {
       return NextResponse.json(
         { success: false, error: "No se puede modificar un viaje pasado" },
+        { status: 400 }
+      );
+    }
+
+    // Validar que la hora de embarque ya haya llegado
+    const [horaViaje, minutoViaje] = control.horaViaje.split(":").map(Number);
+    const fechaHoraViaje = new Date(fechaViaje);
+    fechaHoraViaje.setHours(horaViaje, minutoViaje, 0, 0);
+    if (ahora < fechaHoraViaje) {
+      const horaFormateada = control.horaViaje;
+      return NextResponse.json(
+        { success: false, error: `El embarque estará disponible a partir de las ${horaFormateada}` },
         { status: 400 }
       );
     }

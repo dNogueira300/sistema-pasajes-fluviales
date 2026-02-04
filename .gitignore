@@ -36,6 +36,7 @@ yarn-error.log*
 # Local implementations
 PROMPT_CLAUDE_CODE_BACKEND.md
 PROMPT_CLAUDE_CODE_FRONTEND.md
+actualizar_flujoVentas.md
 
 # vercel
 .vercel

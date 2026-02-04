@@ -16,10 +16,8 @@ import {
   Search,
   ChevronDown,
   X,
-  Download,
   Printer,
   FileImage,
-  FileText,
 } from "lucide-react";
 
 interface Cliente {
@@ -134,7 +132,7 @@ export default function NuevaVentaForm({
       { codigo: "+1", pais: "Estados Unidos", bandera: "🇺🇸" },
       { codigo: "+34", pais: "España", bandera: "🇪🇸" },
     ],
-    []
+    [],
   );
 
   const [formData, setFormData] = useState<FormData>({
@@ -185,7 +183,7 @@ export default function NuevaVentaForm({
       setPrecioPersonalizado(parseFloat(ruta.precio.toString()));
       setUsarPrecioPersonalizado(false);
     },
-    []
+    [],
   );
 
   // Función para buscar automáticamente al ingresar DNI
@@ -206,7 +204,7 @@ export default function NuevaVentaForm({
 
             if (telefono) {
               const codigoEncontrado = codigosPaises.find((item) =>
-                telefono.startsWith(item.codigo)
+                telefono.startsWith(item.codigo),
               );
 
               if (codigoEncontrado) {
@@ -248,7 +246,7 @@ export default function NuevaVentaForm({
         setBuscandoAutoCliente(false);
       }
     },
-    [codigosPaises]
+    [codigosPaises],
   );
 
   // Efecto para filtrar rutas basado en la búsqueda
@@ -257,7 +255,7 @@ export default function NuevaVentaForm({
       setRutasFiltradas(rutas);
     } else {
       const filtradas = rutas.filter((ruta) =>
-        ruta.nombre.toLowerCase().includes(busquedaRuta.toLowerCase())
+        ruta.nombre.toLowerCase().includes(busquedaRuta.toLowerCase()),
       );
       setRutasFiltradas(filtradas);
     }
@@ -489,7 +487,7 @@ export default function NuevaVentaForm({
   const mostrarNotificacion = (
     tipo: "exito" | "error" | "descargando",
     titulo: string,
-    mensaje: string
+    mensaje: string,
   ) => {
     const notification = document.createElement("div");
     const iconos = {
@@ -533,7 +531,7 @@ export default function NuevaVentaForm({
   const removerNotificacion = (notificationId: string | null) => {
     if (!notificationId) return;
     const notification = document.querySelector(
-      `[data-notification-id="${notificationId}"]`
+      `[data-notification-id="${notificationId}"]`,
     );
     if (notification) {
       notification.classList.add("opacity-0", "transition-opacity");
@@ -546,7 +544,7 @@ export default function NuevaVentaForm({
     const notificacionCarga = mostrarNotificacion(
       "descargando",
       "Preparando ticket...",
-      "Por favor espera"
+      "Por favor espera",
     );
 
     try {
@@ -575,7 +573,7 @@ export default function NuevaVentaForm({
           mostrarNotificacion(
             "error",
             "No se pudo abrir la ventana de impresión",
-            "Verifica que los pop-ups no estén bloqueados"
+            "Verifica que los pop-ups no estén bloqueados",
           );
         }
       } else {
@@ -583,7 +581,7 @@ export default function NuevaVentaForm({
         mostrarNotificacion(
           "error",
           "Error al generar el ticket",
-          "Por favor, intenta nuevamente"
+          "Por favor, intenta nuevamente",
         );
       }
     } catch (error) {
@@ -592,110 +590,7 @@ export default function NuevaVentaForm({
       mostrarNotificacion(
         "error",
         "Error de conexión",
-        "No se pudo generar el ticket"
-      );
-    }
-  };
-
-  // Función para imprimir comprobante A4
-  const imprimirComprobanteA4 = async (ventaId: string) => {
-    const notificacionCarga = mostrarNotificacion(
-      "descargando",
-      "Preparando comprobante A4...",
-      "Por favor espera"
-    );
-
-    try {
-      const response = await fetch(`/api/ventas/${ventaId}/comprobante`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const printWindow = window.open(url, "_blank");
-
-        if (printWindow) {
-          printWindow.onload = () => {
-            removerNotificacion(notificacionCarga);
-            printWindow.print();
-          };
-
-          printWindow.onafterprint = () => {
-            printWindow.close();
-            URL.revokeObjectURL(url);
-          };
-        } else {
-          removerNotificacion(notificacionCarga);
-          mostrarNotificacion(
-            "error",
-            "No se pudo abrir la ventana de impresión",
-            "Verifica que los pop-ups no estén bloqueados"
-          );
-        }
-      } else {
-        removerNotificacion(notificacionCarga);
-        mostrarNotificacion(
-          "error",
-          "Error al generar comprobante A4",
-          "Por favor, intenta nuevamente"
-        );
-      }
-    } catch (error) {
-      console.error("Error imprimiendo comprobante A4:", error);
-      removerNotificacion(notificacionCarga);
-      mostrarNotificacion(
-        "error",
-        "Error de conexión",
-        "No se pudo generar el comprobante A4"
-      );
-    }
-  };
-
-  // Función para descargar comprobante A4 como PDF
-  const descargarComprobanteA4 = async (venta: Venta) => {
-    const nombreCliente = `${venta.cliente.nombre} ${venta.cliente.apellido}`;
-    const nombreArchivo = `${nombreCliente} - ${venta.numeroVenta}.pdf`;
-
-    const notificacionDescarga = mostrarNotificacion(
-      "descargando",
-      "Preparando descarga...",
-      `Comprobante PDF: ${venta.numeroVenta}`
-    );
-
-    try {
-      const response = await fetch(`/api/ventas/${venta.id}/comprobante`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = nombreArchivo;
-        document.body.appendChild(a);
-        a.click();
-
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        removerNotificacion(notificacionDescarga);
-        mostrarNotificacion(
-          "exito",
-          "PDF descargado correctamente",
-          nombreArchivo
-        );
-      } else {
-        removerNotificacion(notificacionDescarga);
-        mostrarNotificacion(
-          "error",
-          "Error al generar PDF",
-          "Por favor, intenta nuevamente"
-        );
-      }
-    } catch (error) {
-      console.error("Error descargando comprobante A4:", error);
-      removerNotificacion(notificacionDescarga);
-      mostrarNotificacion(
-        "error",
-        "Error de conexión",
-        "No se pudo descargar el PDF"
+        "No se pudo generar el ticket",
       );
     }
   };
@@ -708,7 +603,7 @@ export default function NuevaVentaForm({
     const notificacionDescarga = mostrarNotificacion(
       "descargando",
       "Generando imagen...",
-      `Comprobante PNG: ${venta.numeroVenta}`
+      `Comprobante PNG: ${venta.numeroVenta}`,
     );
 
     try {
@@ -728,7 +623,7 @@ export default function NuevaVentaForm({
       mostrarNotificacion(
         "exito",
         "Imagen descargada correctamente",
-        nombreArchivo
+        nombreArchivo,
       );
     } catch (error) {
       console.error("Error generando imagen del comprobante:", error);
@@ -736,7 +631,7 @@ export default function NuevaVentaForm({
       mostrarNotificacion(
         "error",
         "Error al generar imagen",
-        "Por favor, intenta nuevamente"
+        "Por favor, intenta nuevamente",
       );
     }
   };
@@ -776,10 +671,10 @@ export default function NuevaVentaForm({
 
   const rutaSeleccionada = rutas.find((r) => r.id === formData.rutaId);
   const embarcacionSeleccionada = rutaSeleccionada?.embarcacionRutas.find(
-    (er) => er.embarcacion.id === formData.embarcacionId
+    (er) => er.embarcacion.id === formData.embarcacionId,
   );
   const puertoSeleccionado = puertosEmbarque.find(
-    (p) => p.id === formData.puertoEmbarqueId
+    (p) => p.id === formData.puertoEmbarqueId,
   );
 
   // 1. Agregar función auxiliar para normalizar días (eliminar acentos y trim)
@@ -817,7 +712,7 @@ export default function NuevaVentaForm({
 
     // Normalizar TODOS los días operativos para la comparación
     const diasOperativosNormalizados = diasOperativos.map((d) =>
-      normalizarDia(d)
+      normalizarDia(d),
     );
 
     // Comparar con días normalizados (sin acentos, sin espacios, uppercase)
@@ -849,7 +744,7 @@ export default function NuevaVentaForm({
         const diaSemana = obtenerDiaSemana(fecha);
         setError(
           `La embarcación seleccionada no opera los días ${diaSemana}. ` +
-            `Esta ruta opera: ${diasOperativos.join(", ")}`
+            `Esta ruta opera: ${diasOperativos.join(", ")}`,
         );
       } else {
         // Fecha válida: limpiar error de días (si existe)
@@ -918,7 +813,7 @@ export default function NuevaVentaForm({
     if (formData.rutaId && formData.embarcacionId) {
       const rutaSeleccionada = rutas.find((r) => r.id === formData.rutaId);
       const embarcacionRuta = rutaSeleccionada?.embarcacionRutas.find(
-        (er) => er.embarcacion.id === formData.embarcacionId
+        (er) => er.embarcacion.id === formData.embarcacionId,
       );
 
       if (embarcacionRuta) {
@@ -931,7 +826,7 @@ export default function NuevaVentaForm({
           const diaSemana = obtenerDiaSemana(formData.fechaViaje);
           const diaNormalizado = normalizarDia(diaSemana);
           const diasNormalizados = nuevosDiasOperativos.map((d) =>
-            normalizarDia(d)
+            normalizarDia(d),
           );
 
           const esValida = diasNormalizados.includes(diaNormalizado);
@@ -940,7 +835,7 @@ export default function NuevaVentaForm({
             // La fecha ya no es válida con la nueva embarcación
             setError(
               `La embarcación seleccionada no opera los días ${diaSemana}. ` +
-                `Esta ruta opera: ${nuevosDiasOperativos.join(", ")}`
+                `Esta ruta opera: ${nuevosDiasOperativos.join(", ")}`,
             );
           } else {
             // La fecha sigue siendo válida, limpiar error usando forma funcional
@@ -968,7 +863,7 @@ export default function NuevaVentaForm({
   // Función para calcular diferencia en horas entre dos horarios
   const calcularDiferenciaHoras = (
     horaInicio: string,
-    horaFin: string
+    horaFin: string,
   ): number => {
     if (!horaInicio || !horaFin) return 0;
 
@@ -1002,12 +897,12 @@ export default function NuevaVentaForm({
         // Validar diferencia mínima de 1 hora
         const diferenciaHoras = calcularDiferenciaHoras(
           formData.horaEmbarque,
-          formData.horaViaje
+          formData.horaViaje,
         );
 
         if (diferenciaHoras < 1) {
           setError(
-            "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje"
+            "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje",
           );
         } else {
           // Solo limpiar error si era un error de horarios
@@ -1042,8 +937,8 @@ export default function NuevaVentaForm({
                   s === step
                     ? "bg-blue-600 text-white shadow-lg"
                     : s < step
-                    ? "bg-green-600 text-white shadow-lg"
-                    : "bg-slate-600/50 text-slate-300"
+                      ? "bg-green-600 text-white shadow-lg"
+                      : "bg-slate-600/50 text-slate-300"
                 }`}
               >
                 {s < step ? <CheckCircle className="h-5 w-5" /> : s}
@@ -1052,16 +947,40 @@ export default function NuevaVentaForm({
           </div>
         </div>
         <div className="grid grid-cols-4 gap-2 text-xs text-slate-400">
-          <span className={step === 1 ? "font-semibold text-blue-400 text-center" : "text-center"}>
-            1. Datos del Cliente
+          <span
+            className={
+              step === 1
+                ? "font-semibold text-blue-400 text-center"
+                : "text-center"
+            }
+          >
+            1. Disponibilidad
           </span>
-          <span className={step === 2 ? "font-semibold text-blue-400 text-center" : "text-center"}>
-            2. Detalles del Viaje
+          <span
+            className={
+              step === 2
+                ? "font-semibold text-blue-400 text-center"
+                : "text-center"
+            }
+          >
+            2. Datos del Cliente
           </span>
-          <span className={step === 3 ? "font-semibold text-blue-400 text-center" : "text-center"}>
+          <span
+            className={
+              step === 3
+                ? "font-semibold text-blue-400 text-center"
+                : "text-center"
+            }
+          >
             3. Realizar Pago
           </span>
-          <span className={step === 4 ? "font-semibold text-blue-400 text-center" : "text-center"}>
+          <span
+            className={
+              step === 4
+                ? "font-semibold text-blue-400 text-center"
+                : "text-center"
+            }
+          >
             4. Confirmación
           </span>
         </div>
@@ -1069,8 +988,8 @@ export default function NuevaVentaForm({
 
       {/* Contenedor de contenido */}
       <div className="p-6">
-        {/* STEP 1: Datos del Cliente */}
-        {step === 1 && (
+        {/* STEP 2: Datos del Cliente */}
+        {step === 2 && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-100 flex items-center">
               <User className="h-5 w-5 mr-2" />
@@ -1099,8 +1018,8 @@ export default function NuevaVentaForm({
                         ? dniValido
                           ? "border-green-500/50"
                           : buscandoAutoCliente
-                          ? "border-blue-500/50"
-                          : "border-yellow-500/50"
+                            ? "border-blue-500/50"
+                            : "border-yellow-500/50"
                         : "border-slate-600/50"
                     }`}
                     placeholder="12345678"
@@ -1150,7 +1069,9 @@ export default function NuevaVentaForm({
                               Cliente nuevo
                             </p>
                             <p className="text-xs text-yellow-200 mt-1">
-                              No se encontró un cliente con este DNI. Por favor, complete los datos del nuevo cliente en los campos siguientes.
+                              No se encontró un cliente con este DNI. Por favor,
+                              complete los datos del nuevo cliente en los campos
+                              siguientes.
                             </p>
                           </div>
                         </div>
@@ -1232,7 +1153,8 @@ export default function NuevaVentaForm({
                       } else if (trimmedValue.length > 50) {
                         setErroresValidacion((prev) => ({
                           ...prev,
-                          nombre: "El nombre no puede tener más de 50 caracteres",
+                          nombre:
+                            "El nombre no puede tener más de 50 caracteres",
                         }));
                       } else {
                         setErroresValidacion((prev) => ({
@@ -1278,12 +1200,14 @@ export default function NuevaVentaForm({
                       if (trimmedValue.length > 0 && trimmedValue.length < 2) {
                         setErroresValidacion((prev) => ({
                           ...prev,
-                          apellido: "El apellido debe tener al menos 2 caracteres",
+                          apellido:
+                            "El apellido debe tener al menos 2 caracteres",
                         }));
                       } else if (trimmedValue.length > 50) {
                         setErroresValidacion((prev) => ({
                           ...prev,
-                          apellido: "El apellido no puede tener más de 50 caracteres",
+                          apellido:
+                            "El apellido no puede tener más de 50 caracteres",
                         }));
                       } else {
                         setErroresValidacion((prev) => ({
@@ -1379,12 +1303,12 @@ export default function NuevaVentaForm({
           </div>
         )}
 
-        {/* STEP 2: Detalles del Viaje */}
-        {step === 2 && (
+        {/* STEP 1: Verificación de Disponibilidad */}
+        {step === 1 && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-100 flex items-center">
               <MapPin className="h-5 w-5 mr-2" />
-              Detalles del Viaje
+              Verificación de Disponibilidad
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1504,7 +1428,7 @@ export default function NuevaVentaForm({
                           setDireccionViaje("ORIGEN_DESTINO");
                           actualizarDatosRuta(
                             rutaSeleccionada,
-                            "ORIGEN_DESTINO"
+                            "ORIGEN_DESTINO",
                           );
                         }}
                         className={`p-4 rounded-xl border transition-all duration-200 ${
@@ -1518,7 +1442,7 @@ export default function NuevaVentaForm({
                             {limpiarNombrePuerto(rutaSeleccionada.puertoOrigen)}{" "}
                             →{" "}
                             {limpiarNombrePuerto(
-                              rutaSeleccionada.puertoDestino
+                              rutaSeleccionada.puertoDestino,
                             )}
                           </div>
                         </div>
@@ -1530,7 +1454,7 @@ export default function NuevaVentaForm({
                           setDireccionViaje("DESTINO_ORIGEN");
                           actualizarDatosRuta(
                             rutaSeleccionada,
-                            "DESTINO_ORIGEN"
+                            "DESTINO_ORIGEN",
                           );
                         }}
                         className={`p-4 rounded-xl border transition-all duration-200 ${
@@ -1542,7 +1466,7 @@ export default function NuevaVentaForm({
                         <div className="text-center">
                           <div className="font-medium text-lg">
                             {limpiarNombrePuerto(
-                              rutaSeleccionada.puertoDestino
+                              rutaSeleccionada.puertoDestino,
                             )}{" "}
                             →{" "}
                             {limpiarNombrePuerto(rutaSeleccionada.puertoOrigen)}
@@ -1565,7 +1489,7 @@ export default function NuevaVentaForm({
                         <span className="text-sm font-semibold text-green-400">
                           S/{" "}
                           {parseFloat(
-                            rutaSeleccionada.precio.toString()
+                            rutaSeleccionada.precio.toString(),
                           ).toFixed(2)}
                         </span>
                       </div>
@@ -1583,7 +1507,7 @@ export default function NuevaVentaForm({
                             setFormData((prev) => ({
                               ...prev,
                               precioFinal: parseFloat(
-                                rutaSeleccionada.precio.toString()
+                                rutaSeleccionada.precio.toString(),
                               ),
                             }));
                           }}
@@ -1595,7 +1519,7 @@ export default function NuevaVentaForm({
                         >
                           Usar precio base (S/{" "}
                           {parseFloat(
-                            rutaSeleccionada.precio.toString()
+                            rutaSeleccionada.precio.toString(),
                           ).toFixed(2)}
                           )
                         </label>
@@ -1787,18 +1711,18 @@ export default function NuevaVentaForm({
                       if (formData.horaEmbarque && nuevaHoraViaje) {
                         if (formData.horaEmbarque >= nuevaHoraViaje) {
                           setErrorHorarios(
-                            "La hora de embarque debe ser ANTES de la hora de viaje"
+                            "La hora de embarque debe ser ANTES de la hora de viaje",
                           );
                         } else {
                           // Validar diferencia mínima de 1 hora
                           const diferenciaHoras = calcularDiferenciaHoras(
                             formData.horaEmbarque,
-                            nuevaHoraViaje
+                            nuevaHoraViaje,
                           );
 
                           if (diferenciaHoras < 1) {
                             setErrorHorarios(
-                              "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje"
+                              "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje",
                             );
                           } else {
                             setErrorHorarios(""); // Limpiar error si es válido
@@ -1843,18 +1767,18 @@ export default function NuevaVentaForm({
                     if (formData.horaViaje && nuevaHoraEmbarque) {
                       if (nuevaHoraEmbarque >= formData.horaViaje) {
                         setErrorHorarios(
-                          "La hora de embarque debe ser ANTES de la hora de viaje"
+                          "La hora de embarque debe ser ANTES de la hora de viaje",
                         );
                       } else {
                         // Validar diferencia mínima de 1 hora
                         const diferenciaHoras = calcularDiferenciaHoras(
                           nuevaHoraEmbarque,
-                          formData.horaViaje
+                          formData.horaViaje,
                         );
 
                         if (diferenciaHoras < 1) {
                           setErrorHorarios(
-                            "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje"
+                            "La hora de embarque debe ser al menos 1 hora antes de la hora de viaje",
                           );
                         } else {
                           setErrorHorarios(""); // Limpiar error si es válido
@@ -1950,7 +1874,7 @@ export default function NuevaVentaForm({
                     >
                       {disponibilidad.puedeVender
                         ? "¡Asientos Disponibles!"
-                        : "Capacidad Insuficiente"}
+                        : "Sin asientos disponibles"}
                     </h4>
 
                     {/* Información de la embarcación */}
@@ -2030,7 +1954,7 @@ export default function NuevaVentaForm({
                           {Math.round(
                             (disponibilidad.vendidos /
                               disponibilidad.capacidadTotal) *
-                              100
+                              100,
                           )}
                           %
                         </span>
@@ -2041,12 +1965,12 @@ export default function NuevaVentaForm({
                             disponibilidad.vendidos === 0
                               ? "bg-green-400"
                               : disponibilidad.vendidos <
-                                disponibilidad.capacidadTotal * 0.7
-                              ? "bg-green-500"
-                              : disponibilidad.vendidos <
-                                disponibilidad.capacidadTotal
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
+                                  disponibilidad.capacidadTotal * 0.7
+                                ? "bg-green-500"
+                                : disponibilidad.vendidos <
+                                    disponibilidad.capacidadTotal
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
                           }`}
                           style={{
                             width: `${
@@ -2062,7 +1986,6 @@ export default function NuevaVentaForm({
                 </div>
               </div>
             )}
-
           </div>
         )}
 
@@ -2090,10 +2013,7 @@ export default function NuevaVentaForm({
                   }
                   className="w-full px-4 py-3 border border-slate-600/50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700/50 text-slate-100 backdrop-blur-sm transition-all duration-200 shadow-sm hover:border-slate-500/70 hover:bg-slate-800"
                 >
-                  <option
-                    value="UNICO"
-                    className="bg-slate-800 text-slate-100"
-                  >
+                  <option value="UNICO" className="bg-slate-800 text-slate-100">
                     Pago Único
                   </option>
                   <option
@@ -2257,7 +2177,7 @@ export default function NuevaVentaForm({
                         type="button"
                         onClick={() => {
                           const newMetodosPago = formData.metodosPago.filter(
-                            (_, i) => i !== index
+                            (_, i) => i !== index,
                           );
                           setFormData((prev) => ({
                             ...prev,
@@ -2289,9 +2209,7 @@ export default function NuevaVentaForm({
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">
-                            Total pagado:
-                          </span>
+                          <span className="text-slate-400">Total pagado:</span>
                           <span className="font-medium text-slate-200">
                             S/ {calcularTotales().totalPagado.toFixed(2)}
                           </span>
@@ -2308,13 +2226,13 @@ export default function NuevaVentaForm({
                                 Math.abs(calcularTotales().faltaPagar) < 0.01
                                   ? "text-green-400"
                                   : calcularTotales().faltaPagar > 0
-                                  ? "text-red-400"
-                                  : "text-yellow-400"
+                                    ? "text-red-400"
+                                    : "text-yellow-400"
                               }`}
                             >
                               S/{" "}
                               {Math.abs(calcularTotales().faltaPagar).toFixed(
-                                2
+                                2,
                               )}
                             </span>
                           </div>
@@ -2392,7 +2310,8 @@ export default function NuevaVentaForm({
                   <div className="space-y-2 text-sm text-slate-200">
                     <p>
                       <span className="text-slate-400">Ruta:</span>{" "}
-                      {formData.origenSeleccionado} - {formData.destinoSeleccionado}
+                      {formData.origenSeleccionado} -{" "}
+                      {formData.destinoSeleccionado}
                     </p>
                     <p>
                       <span className="text-slate-400">Embarcación:</span>{" "}
@@ -2482,7 +2401,7 @@ export default function NuevaVentaForm({
                   <span className="text-blue-100">
                     S/{" "}
                     {(formData.precioFinal * formData.cantidadPasajes).toFixed(
-                      2
+                      2,
                     )}
                   </span>
                 </div>
@@ -2528,9 +2447,24 @@ export default function NuevaVentaForm({
             <button
               onClick={() => setStep(step + 1)}
               disabled={
-                (step === 1 && (!formData.cliente.dni || !formData.cliente.nombre || !formData.cliente.apellido || buscandoAutoCliente)) ||
-                (step === 2 && (!disponibilidad?.puedeVender || !formData.rutaId || !formData.embarcacionId || !formData.puertoEmbarqueId || !formData.fechaViaje || !formData.horaViaje || !formData.horaEmbarque || !!errorHorarios || !!(error && error.includes("no opera")))) ||
-                (step === 3 && formData.tipoPago === "HIBRIDO" && Math.abs(calcularTotales().faltaPagar) >= 0.01)
+                (step === 1 &&
+                  (!disponibilidad?.puedeVender ||
+                    !formData.rutaId ||
+                    !formData.embarcacionId ||
+                    !formData.puertoEmbarqueId ||
+                    !formData.fechaViaje ||
+                    !formData.horaViaje ||
+                    !formData.horaEmbarque ||
+                    !!errorHorarios ||
+                    !!(error && error.includes("no opera")))) ||
+                (step === 2 &&
+                  (!formData.cliente.dni ||
+                    !formData.cliente.nombre ||
+                    !formData.cliente.apellido ||
+                    buscandoAutoCliente)) ||
+                (step === 3 &&
+                  formData.tipoPago === "HIBRIDO" &&
+                  Math.abs(calcularTotales().faltaPagar) >= 0.01)
               }
               className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
@@ -2582,7 +2516,8 @@ export default function NuevaVentaForm({
                 </span>{" "}
                 por un total de{" "}
                 <span className="font-bold text-green-400">
-                  S/ {(formData.precioFinal * formData.cantidadPasajes).toFixed(2)}
+                  S/{" "}
+                  {(formData.precioFinal * formData.cantidadPasajes).toFixed(2)}
                 </span>
                 .
               </p>
@@ -2596,7 +2531,8 @@ export default function NuevaVentaForm({
                 <div className="flex justify-between">
                   <span className="text-slate-400">Ruta:</span>
                   <span className="text-slate-100 font-medium text-right">
-                    {formData.origenSeleccionado} → {formData.destinoSeleccionado}
+                    {formData.origenSeleccionado} →{" "}
+                    {formData.destinoSeleccionado}
                   </span>
                 </div>
                 <div className="flex justify-between">

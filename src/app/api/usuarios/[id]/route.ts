@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { validarActualizarUsuario } from "@/lib/validations/usuario";
 
 // GET - Obtener usuario por ID
 export async function GET(
@@ -29,8 +30,18 @@ export async function GET(
         apellido: true,
         role: true,
         activo: true,
+        estadoOperador: true,
+        embarcacionAsignadaId: true,
+        fechaAsignacion: true,
         createdAt: true,
         updatedAt: true,
+        embarcacionAsignada: {
+          select: {
+            id: true,
+            nombre: true,
+            capacidad: true,
+          },
+        },
         _count: {
           select: {
             ventas: true,
@@ -70,7 +81,18 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { email, username, password, nombre, apellido, role, activo } = body;
+
+    // Validación con Zod (doble validación: cliente + servidor)
+    const validacion = validarActualizarUsuario(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
+      return NextResponse.json(
+        { error: primerError.message },
+        { status: 400 }
+      );
+    }
+
+    const { email, username, password, nombre, apellido, role, activo, embarcacionAsignadaId, estadoOperador } = validacion.data;
 
     // Verificar que el usuario existe
     const usuarioExistente = await prisma.user.findUnique({
@@ -92,18 +114,10 @@ export async function PUT(
       );
     }
 
-    // Validaciones de email si se está actualizando
+    // Validaciones de unicidad de email si se está actualizando
     if (email && email !== usuarioExistente.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return NextResponse.json(
-          { error: "Formato de email inválido" },
-          { status: 400 }
-        );
-      }
-
       const usuarioConMismoEmail = await prisma.user.findUnique({
-        where: { email: email.trim().toLowerCase() },
+        where: { email: email.toLowerCase() },
       });
 
       if (usuarioConMismoEmail && usuarioConMismoEmail.id !== id) {
@@ -114,17 +128,10 @@ export async function PUT(
       }
     }
 
-    // Validaciones de username si se está actualizando
+    // Validaciones de unicidad de username si se está actualizando
     if (username && username !== usuarioExistente.username) {
-      if (username.trim().length < 3) {
-        return NextResponse.json(
-          { error: "El username debe tener al menos 3 caracteres" },
-          { status: 400 }
-        );
-      }
-
       const usuarioConMismoUsername = await prisma.user.findUnique({
-        where: { username: username.trim().toLowerCase() },
+        where: { username: username.toLowerCase() },
       });
 
       if (usuarioConMismoUsername && usuarioConMismoUsername.id !== id) {
@@ -135,23 +142,47 @@ export async function PUT(
       }
     }
 
-    // Validaciones de otros campos
-    if (nombre !== undefined && nombre.trim().length < 2) {
-      return NextResponse.json(
-        { error: "El nombre debe tener al menos 2 caracteres" },
-        { status: 400 }
-      );
-    }
+    // Validaciones específicas para OPERADOR_EMBARCACION
+    if (role === "OPERADOR_EMBARCACION" || usuarioExistente.role === "OPERADOR_EMBARCACION") {
+      // Si se asigna embarcación, verificar disponibilidad
+      if (embarcacionAsignadaId && embarcacionAsignadaId !== usuarioExistente.embarcacionAsignadaId) {
+        // Verificar que la embarcación existe
+        const embarcacion = await prisma.embarcacion.findUnique({
+          where: { id: embarcacionAsignadaId },
+        });
 
-    if (apellido !== undefined && apellido.trim().length < 2) {
-      return NextResponse.json(
-        { error: "El apellido debe tener al menos 2 caracteres" },
-        { status: 400 }
-      );
-    }
+        if (!embarcacion) {
+          return NextResponse.json(
+            { error: "La embarcación seleccionada no existe" },
+            { status: 400 }
+          );
+        }
 
-    if (role && !["ADMINISTRADOR", "VENDEDOR"].includes(role)) {
-      return NextResponse.json({ error: "Rol no válido" }, { status: 400 });
+        // Verificar que no haya otro operador ACTIVO para esta embarcación
+        const operadorExistente = await prisma.user.findFirst({
+          where: {
+            embarcacionAsignadaId: embarcacionAsignadaId,
+            estadoOperador: "ACTIVO",
+            role: "OPERADOR_EMBARCACION",
+            id: { not: id }, // Excluir al usuario actual
+          },
+        });
+
+        if (operadorExistente) {
+          return NextResponse.json(
+            { error: "Esta embarcación ya tiene un operador activo asignado" },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Validar estadoOperador si se proporciona
+      if (estadoOperador && !["ACTIVO", "INACTIVO"].includes(estadoOperador)) {
+        return NextResponse.json(
+          { error: "Estado de operador no válido" },
+          { status: 400 }
+        );
+      }
     }
 
     // Validar contraseña si se proporciona
@@ -198,9 +229,42 @@ export async function PUT(
     }
     if (role !== undefined) {
       datosActualizados.role = role;
+
+      // Si cambia de rol a no-operador, limpiar campos de operador
+      if (role !== "OPERADOR_EMBARCACION") {
+        datosActualizados.embarcacionAsignada = { disconnect: true };
+        datosActualizados.estadoOperador = null;
+        datosActualizados.fechaAsignacion = null;
+      }
     }
     if (activo !== undefined) {
       datosActualizados.activo = activo;
+    }
+
+    // Campos específicos para OPERADOR_EMBARCACION
+    const esOperador = role === "OPERADOR_EMBARCACION" ||
+      (role === undefined && usuarioExistente.role === "OPERADOR_EMBARCACION");
+
+    if (esOperador) {
+      // Manejar asignación de embarcación
+      if (embarcacionAsignadaId !== undefined) {
+        if (embarcacionAsignadaId) {
+          datosActualizados.embarcacionAsignada = { connect: { id: embarcacionAsignadaId } };
+          // Solo actualizar fecha de asignación si cambió la embarcación
+          if (embarcacionAsignadaId !== usuarioExistente.embarcacionAsignadaId) {
+            datosActualizados.fechaAsignacion = new Date();
+          }
+        } else {
+          // Desasignar embarcación
+          datosActualizados.embarcacionAsignada = { disconnect: true };
+          datosActualizados.fechaAsignacion = null;
+        }
+      }
+
+      // Manejar estado del operador
+      if (estadoOperador !== undefined) {
+        datosActualizados.estadoOperador = estadoOperador;
+      }
     }
 
     const usuario = await prisma.user.update({
@@ -214,8 +278,18 @@ export async function PUT(
         apellido: true,
         role: true,
         activo: true,
+        estadoOperador: true,
+        embarcacionAsignadaId: true,
+        fechaAsignacion: true,
         createdAt: true,
         updatedAt: true,
+        embarcacionAsignada: {
+          select: {
+            id: true,
+            nombre: true,
+            capacidad: true,
+          },
+        },
         _count: {
           select: {
             ventas: true,

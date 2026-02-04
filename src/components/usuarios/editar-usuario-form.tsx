@@ -1,15 +1,27 @@
 // components/usuarios/editar-usuario-form.tsx
 "use client";
 import { useState, useEffect, Fragment } from "react";
-import { X, ChevronsUpDown, Check, AlertTriangle } from "lucide-react";
+import { X, ChevronsUpDown, Check, AlertTriangle, Ship, Edit3 } from "lucide-react";
 import { Listbox, Transition } from "@headlessui/react";
 import { Usuario, UserRole, ActualizarUsuarioData } from "@/types";
+import EmbarcacionSelector from "@/components/operadores/EmbarcacionSelector";
+
+// Extender el tipo Usuario para incluir campos de operador
+interface UsuarioConOperador extends Usuario {
+  embarcacionAsignadaId?: string | null;
+  estadoOperador?: string | null;
+  embarcacionAsignada?: {
+    id: string;
+    nombre: string;
+    capacidad: number;
+  } | null;
+}
 
 interface EditarUsuarioFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (id: string, datos: ActualizarUsuarioData) => Promise<boolean>;
-  usuario: Usuario | null;
+  usuario: UsuarioConOperador | null;
   loading?: boolean;
   error?: string | null;
 }
@@ -27,6 +39,12 @@ const rolesUsuario = [
     descripcion: "Acceso completo al sistema",
     color: "text-purple-400",
   },
+  {
+    id: "OPERADOR_EMBARCACION" as UserRole,
+    nombre: "Operador de Embarcación",
+    descripcion: "Control de embarque y pasajeros",
+    color: "text-green-400",
+  },
 ];
 
 export default function EditarUsuarioForm({
@@ -43,6 +61,8 @@ export default function EditarUsuarioForm({
     apellido: "",
     role: "VENDEDOR",
     activo: true,
+    embarcacionAsignadaId: null,
+    estadoOperador: "ACTIVO",
   });
 
   const [erroresValidacion, setErroresValidacion] = useState<{
@@ -50,6 +70,8 @@ export default function EditarUsuarioForm({
   }>({});
 
   const [mostrarConfirmacionDesactivar, setMostrarConfirmacionDesactivar] =
+    useState(false);
+  const [mostrarConfirmacionActualizar, setMostrarConfirmacionActualizar] =
     useState(false);
 
   // Efecto para cargar datos del usuario cuando se abre el modal
@@ -62,6 +84,8 @@ export default function EditarUsuarioForm({
         apellido: usuario.apellido,
         role: usuario.role,
         activo: usuario.activo,
+        embarcacionAsignadaId: usuario.embarcacionAsignadaId || null,
+        estadoOperador: (usuario.estadoOperador as "ACTIVO" | "INACTIVO") || "ACTIVO",
       });
       setErroresValidacion({});
     }
@@ -114,11 +138,23 @@ export default function EditarUsuarioForm({
 
     if (!usuario || !validarFormulario()) return;
 
+    setMostrarConfirmacionActualizar(true);
+  };
+
+  const confirmarActualizacion = async () => {
+    if (!usuario) return;
+
     const resultado = await onSubmit(usuario.id, formulario);
 
     if (resultado) {
       onClose();
+    } else {
+      setMostrarConfirmacionActualizar(false);
     }
+  };
+
+  const cancelarConfirmacionActualizar = () => {
+    setMostrarConfirmacionActualizar(false);
   };
 
   const handleInputChange = (
@@ -446,9 +482,98 @@ export default function EditarUsuarioForm({
                         <strong>Vendedor:</strong> Puede realizar ventas,
                         gestionar clientes y ver reportes básicos
                       </div>
+                      <div>
+                        <strong>Operador de Embarcación:</strong> Control de
+                        embarque y gestión de pasajeros en la embarcación asignada
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Sección de Embarcación - Solo visible para OPERADOR_EMBARCACION */}
+                {formulario.role === "OPERADOR_EMBARCACION" && (
+                  <div className="space-y-4 p-4 bg-green-900/20 border border-green-700/30 rounded-xl">
+                    <div className="flex items-center gap-2 text-green-300">
+                      <Ship className="h-5 w-5" />
+                      <h4 className="font-medium">Asignación de Embarcación</h4>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Embarcación Asignada
+                      </label>
+                      <EmbarcacionSelector
+                        value={formulario.embarcacionAsignadaId || ""}
+                        onChange={(embarcacionId) =>
+                          setFormulario((prev) => ({
+                            ...prev,
+                            embarcacionAsignadaId: embarcacionId || null,
+                          }))
+                        }
+                        excludeOperadorId={usuario?.id}
+                      />
+                      <p className="mt-1 text-xs text-slate-400">
+                        Seleccione la embarcación que operará este usuario
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Estado del Operador
+                      </label>
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="estadoOperadorEdit"
+                            value="ACTIVO"
+                            checked={formulario.estadoOperador === "ACTIVO"}
+                            onChange={() =>
+                              setFormulario((prev) => ({
+                                ...prev,
+                                estadoOperador: "ACTIVO",
+                              }))
+                            }
+                            className="w-4 h-4 text-green-600 bg-slate-700 border-slate-600 focus:ring-green-500"
+                          />
+                          <span className="text-sm text-green-400">Activo</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="estadoOperadorEdit"
+                            value="INACTIVO"
+                            checked={formulario.estadoOperador === "INACTIVO"}
+                            onChange={() =>
+                              setFormulario((prev) => ({
+                                ...prev,
+                                estadoOperador: "INACTIVO",
+                              }))
+                            }
+                            className="w-4 h-4 text-red-600 bg-slate-700 border-slate-600 focus:ring-red-500"
+                          />
+                          <span className="text-sm text-slate-400">Inactivo</span>
+                        </label>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Solo los operadores activos pueden controlar embarques
+                      </p>
+                    </div>
+
+                    {/* Info de embarcación actual si existe */}
+                    {usuario?.embarcacionAsignada && (
+                      <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-600/30">
+                        <p className="text-xs text-slate-400 mb-1">Embarcación actual:</p>
+                        <p className="text-sm text-slate-200 font-medium">
+                          {usuario.embarcacionAsignada.nombre}
+                          <span className="text-slate-400 font-normal ml-2">
+                            (Cap: {usuario.embarcacionAsignada.capacidad})
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <label className="flex items-center space-x-3">
@@ -573,6 +698,91 @@ export default function EditarUsuarioForm({
                   className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl font-medium transition-all duration-200"
                 >
                   Sí, desactivar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para actualizar usuario */}
+      {mostrarConfirmacionActualizar && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60]">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full mx-4 shadow-2xl border border-slate-600/50">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="bg-blue-900/30 p-3 rounded-xl">
+                  <Edit3 className="h-6 w-6 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-100">
+                  Confirmar actualización
+                </h3>
+              </div>
+
+              <p className="text-slate-300 mb-4">
+                ¿Estás seguro de que deseas actualizar los datos de este usuario?
+              </p>
+
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Nombre:</span>
+                    <span className="text-slate-200 font-medium">
+                      {formulario.nombre} {formulario.apellido}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Email:</span>
+                    <span className="text-slate-200">{formulario.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Username:</span>
+                    <span className="text-slate-200">@{formulario.username}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Rol:</span>
+                    <span className={`font-medium ${
+                      formulario.role === "ADMINISTRADOR"
+                        ? "text-purple-400"
+                        : formulario.role === "OPERADOR_EMBARCACION"
+                        ? "text-green-400"
+                        : "text-blue-400"
+                    }`}>
+                      {rolesUsuario.find(r => r.id === formulario.role)?.nombre || formulario.role}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Estado:</span>
+                    <span className={formulario.activo ? "text-green-400" : "text-red-400"}>
+                      {formulario.activo ? "Activo" : "Inactivo"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={cancelarConfirmacionActualizar}
+                  disabled={loading}
+                  className="px-4 py-2 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmarActualizacion}
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Guardando...</span>
+                    </div>
+                  ) : (
+                    "Sí, actualizar"
+                  )}
                 </button>
               </div>
             </div>

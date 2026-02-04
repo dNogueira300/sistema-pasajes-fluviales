@@ -68,6 +68,9 @@ export interface CrearUsuarioData {
   apellido: string;
   role?: UserRole;
   activo?: boolean;
+  // Campos específicos para OPERADOR_EMBARCACION
+  embarcacionAsignadaId?: string;
+  estadoOperador?: "ACTIVO" | "INACTIVO";
 }
 
 // Datos para actualizar un usuario
@@ -79,6 +82,9 @@ export interface ActualizarUsuarioData {
   apellido?: string;
   role?: UserRole;
   activo?: boolean;
+  // Campos específicos para OPERADOR_EMBARCACION
+  embarcacionAsignadaId?: string | null;
+  estadoOperador?: "ACTIVO" | "INACTIVO";
 }
 
 // Estadísticas de usuarios
