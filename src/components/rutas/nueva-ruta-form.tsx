@@ -2,7 +2,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  X,
   AlertTriangle,
   CheckCircle,
   Plus,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 import { CrearRutaConEmbarcaciones, CrearEmbarcacionRutaData } from "@/types";
 import SeleccionarEmbarcaciones from "./seleccionar-embarcaciones";
+import Modal from "@/components/ui/Modal";
 
 interface NuevaRutaFormProps {
   isOpen: boolean;
@@ -74,8 +74,7 @@ export default function NuevaRutaForm({
   const [nombreExiste, setNombreExiste] = useState(false);
   const [mensajeNombre, setMensajeNombre] = useState("");
 
-  // Refs para el control de scroll
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Ref para el control de scroll del contenedor de embarcaciones
   const embarcacionesContainerRef = useRef<HTMLDivElement>(null);
 
   const resetFormulario = useCallback(() => {
@@ -426,507 +425,510 @@ export default function NuevaRutaForm({
     }
   }, [isOpen, resetFormulario]);
 
-  if (!isOpen) return null;
-
   const hayErroresValidacion =
     (validationErrors && validationErrors.length > 0 && !cambiosDesdeError) ||
     Object.keys(erroresValidacion).length > 0;
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-5xl w-full max-h-[95vh] flex flex-col shadow-2xl drop-shadow-2xl border border-slate-600/50">
-        {/* Header fijo */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl flex-shrink-0">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-100">Nueva Ruta</h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Paso {pasoActual} de 2:{" "}
-              {pasoActual === 1
-                ? "Información de la Ruta"
-                : "Asignación de Embarcaciones"}
-            </p>
-          </div>
+  // Determinar si hay cambios para el prop hasChanges del Modal
+  const hasChanges =
+    datosBasicos.nombre !== "" ||
+    datosBasicos.puertoOrigen !== "" ||
+    datosBasicos.puertoDestino !== "" ||
+    datosBasicos.precio !== 0 ||
+    datosBasicos.activa !== true ||
+    embarcaciones.length > 0;
+
+  // Construir el footer del modal
+  const footerContent = (
+    <div className="flex justify-between w-full">
+      <div>
+        {pasoActual === 2 && (
           <button
-            onClick={onClose}
-            className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
+            type="button"
+            onClick={handlePasoAnterior}
+            disabled={loading}
+            className="flex items-center space-x-2 px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
           >
-            <X className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
+            <span>Anterior</span>
           </button>
-        </div>
+        )}
+      </div>
 
-        {/* Indicador de pasos */}
-        <div className="flex items-center justify-center p-4 border-b border-slate-600/30 bg-slate-700/30">
-          <div className="flex items-center space-x-4">
-            {/* Paso 1 */}
-            <div className="flex items-center">
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold transition-all duration-200 ${
-                  pasoActual === 1
-                    ? "bg-blue-600 text-white"
-                    : "bg-green-600 text-white"
-                }`}
-              >
-                {pasoActual > 1 ? <CheckCircle className="h-5 w-5" /> : "1"}
-              </div>
-              <span
-                className={`ml-2 text-sm font-medium ${
-                  pasoActual === 1 ? "text-blue-400" : "text-green-400"
-                }`}
-              >
-                Información
-              </span>
-            </div>
+      <div className="flex space-x-4">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={loading}
+          className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+        >
+          Cancelar
+        </button>
 
-            {/* Línea divisoria */}
-            <div className="w-16 h-0.5 bg-slate-600"></div>
-
-            {/* Paso 2 */}
-            <div className="flex items-center">
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold transition-all duration-200 ${
-                  pasoActual === 2
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-600 text-slate-400"
-                }`}
-              >
-                2
-              </div>
-              <span
-                className={`ml-2 text-sm font-medium ${
-                  pasoActual === 2 ? "text-blue-400" : "text-slate-400"
-                }`}
-              >
-                Embarcaciones
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Contenido scrolleable */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <form id="nueva-ruta-form" onSubmit={handleSubmit}>
-              {/* PASO 1: Información de la Ruta */}
-              {pasoActual === 1 && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Nombre de la Ruta *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={datosBasicos.nombre}
-                      onChange={(e) =>
-                        handleInputChange("nombre", e.target.value)
-                      }
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                        erroresValidacion.nombre
-                          ? "border-red-500/50 focus:border-red-500"
-                          : "border-slate-600/50 focus:border-blue-500"
-                      }`}
-                      placeholder="Ej: Iquitos - Yurimaguas"
-                    />
-                    {erroresValidacion.nombre && (
-                      <p className="mt-1 text-sm text-red-400">
-                        {erroresValidacion.nombre}
-                      </p>
-                    )}
-                    {nombreExiste && datosBasicos.nombre.trim() && (
-                      <div className="mt-2 flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
-                        <svg
-                          className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                          />
-                        </svg>
-                        <p className="text-xs text-red-300">{mensajeNombre}</p>
-                      </div>
-                    )}
-                    {!nombreExiste && datosBasicos.nombre.trim().length > 0 && (
-                      <div className="mt-2 flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
-                        <svg
-                          className="h-4 w-4 text-green-400 flex-shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <p className="text-xs text-green-300">
-                          Nombre disponible
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Origen *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={datosBasicos.puertoOrigen}
-                        onChange={(e) =>
-                          handleInputChange("puertoOrigen", e.target.value)
-                        }
-                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                          erroresValidacion.puertoOrigen
-                            ? "border-red-500/50 focus:border-red-500"
-                            : "border-slate-600/50 focus:border-blue-500"
-                        }`}
-                        placeholder="Ej: Iquitos"
-                      />
-                      {erroresValidacion.puertoOrigen && (
-                        <p className="mt-1 text-sm text-red-400">
-                          {erroresValidacion.puertoOrigen}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Destino *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={datosBasicos.puertoDestino}
-                        onChange={(e) =>
-                          handleInputChange("puertoDestino", e.target.value)
-                        }
-                        className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                          erroresValidacion.puertoDestino
-                            ? "border-red-500/50 focus:border-red-500"
-                            : "border-slate-600/50 focus:border-blue-500"
-                        }`}
-                        placeholder="Ej: Yurimaguas"
-                      />
-                      {erroresValidacion.puertoDestino && (
-                        <p className="mt-1 text-sm text-red-400">
-                          {erroresValidacion.puertoDestino}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Validación en tiempo real de trayecto */}
-                  {trayectoExiste &&
-                    datosBasicos.puertoOrigen.trim() &&
-                    datosBasicos.puertoDestino.trim() && (
-                      <div className="flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
-                        <svg
-                          className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                          />
-                        </svg>
-                        <p className="text-xs text-red-300">{mensajeTrayecto}</p>
-                      </div>
-                    )}
-                  {!trayectoExiste &&
-                    datosBasicos.puertoOrigen.trim() &&
-                    datosBasicos.puertoDestino.trim() &&
-                    datosBasicos.puertoOrigen.trim().toLowerCase() !==
-                      datosBasicos.puertoDestino.trim().toLowerCase() && (
-                      <div className="flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
-                        <svg
-                          className="h-4 w-4 text-green-400 flex-shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        <p className="text-xs text-green-300">
-                          Combinación origen-destino disponible
-                        </p>
-                      </div>
-                    )}
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Precio *
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 z-10">
-                        S/
-                      </span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        max="1000"
-                        required
-                        value={datosBasicos.precio || ""}
-                        onChange={(e) => handlePrecioChange(e.target.value)}
-                        onBlur={(e) => {
-                          // Validación adicional al perder foco
-                          if (
-                            e.target.value &&
-                            parseFloat(e.target.value) < 0.01
-                          ) {
-                            setErroresValidacion((prev) => ({
-                              ...prev,
-                              precio: "El precio mínimo es 0.01 soles",
-                            }));
-                          }
-                        }}
-                        className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                          erroresValidacion.precio
-                            ? "border-red-500/50 focus:border-red-500"
-                            : "border-slate-600/50 focus:border-blue-500"
-                        }`}
-                        placeholder="0.00"
-                      />
-                    </div>
-                    {erroresValidacion.precio && (
-                      <p className="mt-1 text-sm text-red-400">
-                        {erroresValidacion.precio}
-                      </p>
-                    )}
-                    <p className="mt-1 text-xs text-slate-400">
-                      Precio entre 0.01 y 1000 soles peruanos (máximo 4 dígitos
-                      en total)
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-slate-300">
-                      Estado de la Ruta
-                    </label>
-                    <div className="flex items-center space-x-4">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleInputChange("activa", !datosBasicos.activa)
-                        }
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 shadow-lg ${
-                          datosBasicos.activa
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-slate-600 hover:bg-slate-500"
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
-                            datosBasicos.activa
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                          }`}
-                        />
-                      </button>
-                      <span
-                        className={`text-sm font-medium transition-colors duration-200 ${
-                          datosBasicos.activa
-                            ? "text-green-400"
-                            : "text-slate-400"
-                        }`}
-                      >
-                        {datosBasicos.activa
-                          ? "Activa para ventas"
-                          : "Inactiva"}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300">
-                      Las rutas activas estarán disponibles para seleccionar en
-                      las ventas
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* PASO 2: Asignación de Embarcaciones */}
-              {pasoActual === 2 && (
-                <div className="space-y-6">
-                  {/* Header con botón fijo */}
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-slate-100">
-                      Embarcaciones para la Ruta
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={handleAgregarEmbarcacion}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Agregar Embarcación</span>
-                    </button>
-                  </div>
-
-                  {/* Contenedor de embarcaciones */}
-                  <div
-                    ref={embarcacionesContainerRef}
-                    className="max-h-96 overflow-y-auto bg-slate-700/20 rounded-xl p-4 border border-slate-600/30"
-                  >
-                    <SeleccionarEmbarcaciones
-                      embarcacionesSeleccionadas={embarcaciones}
-                      onChange={handleEmbarcacionesChange}
-                      mostrarBotonAgregar={false}
-                      onErroresDisponibilidad={setHayErroresDisponibilidad}
-                    />
-                  </div>
-
-                  {erroresValidacion.embarcaciones && (
-                    <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
-                      <div className="flex items-center">
-                        <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
-                        <p className="text-red-300 text-sm">
-                          {erroresValidacion.embarcaciones}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Errores de validación globales */}
-                  {(error ||
-                    (validationErrors && validationErrors.length > 0)) && (
-                    <div className="space-y-3">
-                      {error && !error.toLowerCase().includes("nombre") && (
-                        <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
-                          <div className="flex items-center">
-                            <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
-                            <div>
-                              <p className="text-red-300 font-medium">
-                                Error general
-                              </p>
-                              <p className="text-red-200 text-sm mt-1">
-                                {error}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {validationErrors &&
-                        validationErrors.length > 0 &&
-                        mostrarErroresEmbarcaciones && (
-                          <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
-                            <div className="flex items-start">
-                              <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <p className="text-orange-300 font-medium">
-                                  Errores de validación de embarcaciones
-                                </p>
-                                <ul className="text-orange-200 text-sm mt-2 space-y-1">
-                                  {validationErrors.map((errorMsg, index) => (
-                                    <li
-                                      key={index}
-                                      className="flex items-start"
-                                    >
-                                      <span className="mr-2">•</span>
-                                      <span>{errorMsg}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-
-        {/* Footer con botones de navegación */}
-        <div className="flex justify-between p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-b-2xl flex-shrink-0">
-          <div>
-            {pasoActual === 2 && (
-              <button
-                type="button"
-                onClick={handlePasoAnterior}
-                disabled={loading}
-                className="flex items-center space-x-2 px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Anterior</span>
-              </button>
-            )}
-          </div>
-
-          <div className="flex space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-            >
-              Cancelar
-            </button>
-
-            {pasoActual === 1 ? (
-              <button
-                type="button"
-                onClick={handleSiguientePaso}
-                disabled={
-                  loading ||
-                  !datosBasicos.nombre.trim() ||
-                  !datosBasicos.puertoOrigen.trim() ||
-                  !datosBasicos.puertoDestino.trim() ||
-                  datosBasicos.precio <= 0 ||
-                  datosBasicos.precio > 1000 ||
-                  datosBasicos.precio.toString().replace(".", "").length > 4 ||
-                  nombreExiste ||
-                  trayectoExiste
-                }
-                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
-              >
-                <span>Siguiente</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
+        {pasoActual === 1 ? (
+          <button
+            type="button"
+            onClick={handleSiguientePaso}
+            disabled={
+              loading ||
+              !datosBasicos.nombre.trim() ||
+              !datosBasicos.puertoOrigen.trim() ||
+              !datosBasicos.puertoDestino.trim() ||
+              datosBasicos.precio <= 0 ||
+              datosBasicos.precio > 1000 ||
+              datosBasicos.precio.toString().replace(".", "").length > 4 ||
+              nombreExiste ||
+              trayectoExiste
+            }
+            className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+          >
+            <span>Siguiente</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            form="nueva-ruta-form"
+            disabled={
+              loading || embarcaciones.length === 0 || hayErroresValidacion || hayErroresDisponibilidad
+            }
+            className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Guardando...</span>
+              </>
             ) : (
-              <button
-                type="submit"
-                form="nueva-ruta-form"
-                disabled={
-                  loading || embarcaciones.length === 0 || hayErroresValidacion || hayErroresDisponibilidad
-                }
-                className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Crear Ruta</span>
-                  </>
-                )}
-              </button>
+              <>
+                <CheckCircle className="h-4 w-4" />
+                <span>Crear Ruta</span>
+              </>
             )}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Nueva Ruta"
+      maxWidth="5xl"
+      hasChanges={hasChanges}
+      footer={footerContent}
+    >
+      {/* Subtitle con paso actual */}
+      <div className="px-6 pt-4">
+        <p className="text-sm text-slate-400">
+          Paso {pasoActual} de 2:{" "}
+          {pasoActual === 1
+            ? "Información de la Ruta"
+            : "Asignación de Embarcaciones"}
+        </p>
+      </div>
+
+      {/* Indicador de pasos */}
+      <div className="flex items-center justify-center p-4 border-b border-slate-600/30 bg-slate-700/30">
+        <div className="flex items-center space-x-4">
+          {/* Paso 1 */}
+          <div className="flex items-center">
+            <div
+              className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold transition-all duration-200 ${
+                pasoActual === 1
+                  ? "bg-blue-600 text-white"
+                  : "bg-green-600 text-white"
+              }`}
+            >
+              {pasoActual > 1 ? <CheckCircle className="h-5 w-5" /> : "1"}
+            </div>
+            <span
+              className={`ml-2 text-sm font-medium ${
+                pasoActual === 1 ? "text-blue-400" : "text-green-400"
+              }`}
+            >
+              Información
+            </span>
+          </div>
+
+          {/* Línea divisoria */}
+          <div className="w-16 h-0.5 bg-slate-600"></div>
+
+          {/* Paso 2 */}
+          <div className="flex items-center">
+            <div
+              className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold transition-all duration-200 ${
+                pasoActual === 2
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-600 text-slate-400"
+              }`}
+            >
+              2
+            </div>
+            <span
+              className={`ml-2 text-sm font-medium ${
+                pasoActual === 2 ? "text-blue-400" : "text-slate-400"
+              }`}
+            >
+              Embarcaciones
+            </span>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Contenido del formulario */}
+      <div className="p-6">
+        <form id="nueva-ruta-form" onSubmit={handleSubmit}>
+          {/* PASO 1: Información de la Ruta */}
+          {pasoActual === 1 && (
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Nombre de la Ruta *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={datosBasicos.nombre}
+                  onChange={(e) =>
+                    handleInputChange("nombre", e.target.value)
+                  }
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                    erroresValidacion.nombre
+                      ? "border-red-500/50 focus:border-red-500"
+                      : "border-slate-600/50 focus:border-blue-500"
+                  }`}
+                  placeholder="Ej: Iquitos - Yurimaguas"
+                />
+                {erroresValidacion.nombre && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.nombre}
+                  </p>
+                )}
+                {nombreExiste && datosBasicos.nombre.trim() && (
+                  <div className="mt-2 flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
+                    <svg
+                      className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                    <p className="text-xs text-red-300">{mensajeNombre}</p>
+                  </div>
+                )}
+                {!nombreExiste && datosBasicos.nombre.trim().length > 0 && (
+                  <div className="mt-2 flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
+                    <svg
+                      className="h-4 w-4 text-green-400 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <p className="text-xs text-green-300">
+                      Nombre disponible
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Origen *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={datosBasicos.puertoOrigen}
+                    onChange={(e) =>
+                      handleInputChange("puertoOrigen", e.target.value)
+                    }
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                      erroresValidacion.puertoOrigen
+                        ? "border-red-500/50 focus:border-red-500"
+                        : "border-slate-600/50 focus:border-blue-500"
+                    }`}
+                    placeholder="Ej: Iquitos"
+                  />
+                  {erroresValidacion.puertoOrigen && (
+                    <p className="mt-1 text-sm text-red-400">
+                      {erroresValidacion.puertoOrigen}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Destino *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={datosBasicos.puertoDestino}
+                    onChange={(e) =>
+                      handleInputChange("puertoDestino", e.target.value)
+                    }
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                      erroresValidacion.puertoDestino
+                        ? "border-red-500/50 focus:border-red-500"
+                        : "border-slate-600/50 focus:border-blue-500"
+                    }`}
+                    placeholder="Ej: Yurimaguas"
+                  />
+                  {erroresValidacion.puertoDestino && (
+                    <p className="mt-1 text-sm text-red-400">
+                      {erroresValidacion.puertoDestino}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Validación en tiempo real de trayecto */}
+              {trayectoExiste &&
+                datosBasicos.puertoOrigen.trim() &&
+                datosBasicos.puertoDestino.trim() && (
+                  <div className="flex items-start space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
+                    <svg
+                      className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                    <p className="text-xs text-red-300">{mensajeTrayecto}</p>
+                  </div>
+                )}
+              {!trayectoExiste &&
+                datosBasicos.puertoOrigen.trim() &&
+                datosBasicos.puertoDestino.trim() &&
+                datosBasicos.puertoOrigen.trim().toLowerCase() !==
+                  datosBasicos.puertoDestino.trim().toLowerCase() && (
+                  <div className="flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
+                    <svg
+                      className="h-4 w-4 text-green-400 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <p className="text-xs text-green-300">
+                      Combinación origen-destino disponible
+                    </p>
+                  </div>
+                )}
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Precio *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 z-10">
+                    S/
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    max="1000"
+                    required
+                    value={datosBasicos.precio || ""}
+                    onChange={(e) => handlePrecioChange(e.target.value)}
+                    onBlur={(e) => {
+                      // Validación adicional al perder foco
+                      if (
+                        e.target.value &&
+                        parseFloat(e.target.value) < 0.01
+                      ) {
+                        setErroresValidacion((prev) => ({
+                          ...prev,
+                          precio: "El precio mínimo es 0.01 soles",
+                        }));
+                      }
+                    }}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                      erroresValidacion.precio
+                        ? "border-red-500/50 focus:border-red-500"
+                        : "border-slate-600/50 focus:border-blue-500"
+                    }`}
+                    placeholder="0.00"
+                  />
+                </div>
+                {erroresValidacion.precio && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.precio}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-slate-400">
+                  Precio entre 0.01 y 1000 soles peruanos (máximo 4 dígitos
+                  en total)
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-slate-300">
+                  Estado de la Ruta
+                </label>
+                <div className="flex items-center space-x-4">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleInputChange("activa", !datosBasicos.activa)
+                    }
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 shadow-lg ${
+                      datosBasicos.activa
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-slate-600 hover:bg-slate-500"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                        datosBasicos.activa
+                          ? "translate-x-6"
+                          : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                  <span
+                    className={`text-sm font-medium transition-colors duration-200 ${
+                      datosBasicos.activa
+                        ? "text-green-400"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {datosBasicos.activa
+                      ? "Activa para ventas"
+                      : "Inactiva"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  Las rutas activas estarán disponibles para seleccionar en
+                  las ventas
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* PASO 2: Asignación de Embarcaciones */}
+          {pasoActual === 2 && (
+            <div className="space-y-6">
+              {/* Header con botón fijo */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-slate-100">
+                  Embarcaciones para la Ruta
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleAgregarEmbarcacion}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Agregar Embarcación</span>
+                </button>
+              </div>
+
+              {/* Contenedor de embarcaciones */}
+              <div
+                ref={embarcacionesContainerRef}
+                className="max-h-96 overflow-y-auto bg-slate-700/20 rounded-xl p-4 border border-slate-600/30"
+              >
+                <SeleccionarEmbarcaciones
+                  embarcacionesSeleccionadas={embarcaciones}
+                  onChange={handleEmbarcacionesChange}
+                  mostrarBotonAgregar={false}
+                  onErroresDisponibilidad={setHayErroresDisponibilidad}
+                />
+              </div>
+
+              {erroresValidacion.embarcaciones && (
+                <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                    <p className="text-red-300 text-sm">
+                      {erroresValidacion.embarcaciones}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Errores de validación globales */}
+              {(error ||
+                (validationErrors && validationErrors.length > 0)) && (
+                <div className="space-y-3">
+                  {error && !error.toLowerCase().includes("nombre") && (
+                    <div className="bg-red-900/40 border border-red-700/50 rounded-xl p-4 backdrop-blur-sm">
+                      <div className="flex items-center">
+                        <AlertTriangle className="h-5 w-5 text-red-400 mr-3 flex-shrink-0" />
+                        <div>
+                          <p className="text-red-300 font-medium">
+                            Error general
+                          </p>
+                          <p className="text-red-200 text-sm mt-1">
+                            {error}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {validationErrors &&
+                    validationErrors.length > 0 &&
+                    mostrarErroresEmbarcaciones && (
+                      <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 backdrop-blur-sm">
+                        <div className="flex items-start">
+                          <AlertTriangle className="h-5 w-5 text-orange-400 mr-3 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-orange-300 font-medium">
+                              Errores de validación de embarcaciones
+                            </p>
+                            <ul className="text-orange-200 text-sm mt-2 space-y-1">
+                              {validationErrors.map((errorMsg, index) => (
+                                <li
+                                  key={index}
+                                  className="flex items-start"
+                                >
+                                  <span className="mr-2">•</span>
+                                  <span>{errorMsg}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              )}
+            </div>
+          )}
+        </form>
+      </div>
+    </Modal>
   );
 }

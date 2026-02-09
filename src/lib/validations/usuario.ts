@@ -11,15 +11,18 @@ const usernameSchema = z
   .string()
   .min(3, "El username debe tener al menos 3 caracteres")
   .max(30, "El username no puede tener más de 30 caracteres")
-  .regex(/^[a-zA-Z0-9_]+$/, "El username solo puede contener letras, números y guiones bajos")
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    "El username solo puede contener letras, números y guiones bajos",
+  )
   .transform((val) => val.toLowerCase().trim());
 
 const passwordSchema = z
   .string()
-  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .min(12, "La contraseña debe tener al menos 12 caracteres")
   .regex(
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/,
-    "La contraseña debe contener al menos 1 mayúscula, 1 minúscula y 1 número"
+    "La contraseña debe contener al menos 1 mayúscula, 1 minúscula y 1 número",
   );
 
 const nombreSchema = z
@@ -34,9 +37,12 @@ const apellidoSchema = z
   .max(50, "El apellido no puede tener más de 50 caracteres")
   .transform((val) => val.trim());
 
-const roleSchema = z.enum(["ADMINISTRADOR", "VENDEDOR", "OPERADOR_EMBARCACION"], {
-  message: "Rol no válido",
-});
+const roleSchema = z.enum(
+  ["ADMINISTRADOR", "VENDEDOR", "OPERADOR_EMBARCACION"],
+  {
+    message: "Rol no válido",
+  },
+);
 
 const estadoOperadorSchema = z.enum(["ACTIVO", "INACTIVO"], {
   message: "Estado de operador no válido",
@@ -65,9 +71,10 @@ export const crearUsuarioSchema = z
       return true;
     },
     {
-      message: "El estado del operador es requerido para operadores de embarcación",
+      message:
+        "El estado del operador es requerido para operadores de embarcación",
       path: ["estadoOperador"],
-    }
+    },
   );
 
 // Schema para actualizar usuario
@@ -91,17 +98,19 @@ export const actualizarUsuarioSchema = z
     },
     {
       message: "Debe proporcionar al menos un campo para actualizar",
-    }
+    },
   );
 
 // Schema para cambiar contraseña
-export const cambiarContrasenaSchema = z.object({
-  password: passwordSchema,
-  confirmarPassword: z.string().min(1, "Debe confirmar la contraseña"),
-}).refine((data) => data.password === data.confirmarPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmarPassword"],
-});
+export const cambiarContrasenaSchema = z
+  .object({
+    password: passwordSchema,
+    confirmarPassword: z.string().min(1, "Debe confirmar la contraseña"),
+  })
+  .refine((data) => data.password === data.confirmarPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmarPassword"],
+  });
 
 // Tipos exportados
 export type CrearUsuarioInput = z.infer<typeof crearUsuarioSchema>;

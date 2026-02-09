@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useRequireAuth } from "@/hooks/use-auth";
 import { Menu, User, LogOut, Settings, ChevronDown } from "lucide-react";
+import Modal from "@/components/ui/Modal";
 
 interface HeaderProps {
   isSidebarOpen: boolean;
@@ -43,6 +44,17 @@ export default function Header({
     setShowUserMenu(false);
     setShowProfileModal(true);
   };
+
+  const profileFooterContent = (
+    <div className="flex justify-end">
+      <button
+        onClick={() => setShowProfileModal(false)}
+        className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-medium transition-all duration-200"
+      >
+        Cerrar
+      </button>
+    </div>
+  );
 
   return (
     <>
@@ -148,181 +160,149 @@ export default function Header({
       </header>
 
       {/* Modal de Perfil */}
-      {showProfileModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-2xl w-full shadow-2xl drop-shadow-2xl border border-slate-600/50 my-8">
-            <div className="flex items-center justify-between p-6 border-b border-slate-600/50 sticky top-0 bg-slate-800/95 backdrop-blur-md rounded-t-2xl z-10">
-              <h2 className="text-xl font-semibold text-slate-100">
-                Mi Perfil
-              </h2>
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
+      <Modal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        title="Mi Perfil"
+        maxWidth="2xl"
+        hasChanges={false}
+        footer={profileFooterContent}
+      >
+        <div className="p-6 space-y-6">
+          {/* Información Personal */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+              Información Personal
+            </h3>
 
-            <div className="p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
-              <div className="space-y-6">
-                {/* Información Personal */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
-                    Información Personal
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">
-                        Nombre Completo
-                      </label>
-                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
-                        {user?.name}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">
-                        Usuario
-                      </label>
-                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
-                        {user?.username}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información de Contacto */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
-                    Información de Contacto
-                  </h3>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-400 mb-2">
-                      Correo Electrónico
-                    </label>
-                    <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
-                      {user?.email}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información del Sistema */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
-                    Información del Sistema
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">
-                        Rol
-                      </label>
-                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${
-                            user?.role === "ADMINISTRADOR"
-                              ? "bg-purple-900/30 text-purple-300 border border-purple-700/50"
-                              : user?.role === "OPERADOR_EMBARCACION"
-                              ? "bg-amber-900/30 text-amber-300 border border-amber-700/50"
-                              : "bg-blue-900/30 text-blue-300 border border-blue-700/50"
-                          }`}
-                        >
-                          {user?.role === "ADMINISTRADOR"
-                            ? "Administrador"
-                            : user?.role === "OPERADOR_EMBARCACION"
-                            ? "Operador de Embarcación"
-                            : "Vendedor"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">
-                        ID de Usuario
-                      </label>
-                      <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200 font-mono text-xs">
-                        {user?.id}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Nota informativa */}
-                <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
-                  <div className="flex items-start space-x-3">
-                    <svg
-                      className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-medium text-blue-300 mb-1">
-                        Información
-                      </h4>
-                      {user?.role === "ADMINISTRADOR" ? (
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <p className="text-xs text-blue-200 flex-1 min-w-[200px]">
-                            Diríjase al módulo de{" "}
-                            <span className="font-semibold">
-                              Gestión de Usuarios
-                            </span>{" "}
-                            si desea modificar su perfil.
-                          </p>
-                          <button
-                            onClick={() => {
-                              setShowProfileModal(false);
-                              handleUserPerfil();
-                            }}
-                            className="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-blue-100 text-xs rounded-lg font-medium transition-all duration-200 flex-shrink-0"
-                          >
-                            Ir a Gestión de Usuarios
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-blue-200">
-                          Para modificar tu información de perfil, contacta con
-                          el administrador del sistema.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  Nombre Completo
+                </label>
+                <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
+                  {user?.name}
                 </div>
               </div>
 
-              <div className="flex justify-end mt-6">
-                <button
-                  onClick={() => setShowProfileModal(false)}
-                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl font-medium transition-all duration-200"
-                >
-                  Cerrar
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  Usuario
+                </label>
+                <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
+                  {user?.username}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Información de Contacto */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+              Información de Contacto
+            </h3>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-2">
+                Correo Electrónico
+              </label>
+              <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200">
+                {user?.email}
+              </div>
+            </div>
+          </div>
+
+          {/* Información del Sistema */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-slate-200 border-b border-slate-600/50 pb-2">
+              Información del Sistema
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  Rol
+                </label>
+                <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl">
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium ${
+                      user?.role === "ADMINISTRADOR"
+                        ? "bg-purple-900/30 text-purple-300 border border-purple-700/50"
+                        : user?.role === "OPERADOR_EMBARCACION"
+                        ? "bg-amber-900/30 text-amber-300 border border-amber-700/50"
+                        : "bg-blue-900/30 text-blue-300 border border-blue-700/50"
+                    }`}
+                  >
+                    {user?.role === "ADMINISTRADOR"
+                      ? "Administrador"
+                      : user?.role === "OPERADOR_EMBARCACION"
+                      ? "Operador de Embarcación"
+                      : "Vendedor"}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  ID de Usuario
+                </label>
+                <div className="px-4 py-3 bg-slate-700/30 border border-slate-600/50 rounded-xl text-slate-200 font-mono text-xs">
+                  {user?.id}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Nota informativa */}
+          <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
+            <div className="flex items-start space-x-3">
+              <svg
+                className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-blue-300 mb-1">
+                  Información
+                </h4>
+                {user?.role === "ADMINISTRADOR" ? (
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-xs text-blue-200 flex-1 min-w-[200px]">
+                      Diríjase al módulo de{" "}
+                      <span className="font-semibold">
+                        Gestión de Usuarios
+                      </span>{" "}
+                      si desea modificar su perfil.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setShowProfileModal(false);
+                        handleUserPerfil();
+                      }}
+                      className="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-blue-100 text-xs rounded-lg font-medium transition-all duration-200 flex-shrink-0"
+                    >
+                      Ir a Gestión de Usuarios
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-blue-200">
+                    Para modificar tu información de perfil, contacta con
+                    el administrador del sistema.
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
-      )}
+      </Modal>
     </>
   );
 }

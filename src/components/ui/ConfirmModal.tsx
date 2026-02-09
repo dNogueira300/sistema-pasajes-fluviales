@@ -86,7 +86,12 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full shadow-2xl border border-slate-600/50 animate-in fade-in zoom-in-95 duration-200">
+      {/* Overlay para cerrar al hacer clic fuera */}
+      <div
+        className="absolute inset-0"
+        onClick={() => { if (!isLoading) onClose(); }}
+      />
+      <div className="relative bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full shadow-2xl border border-slate-600/50 animate-in fade-in zoom-in-95 duration-200">
         {/* Header con botón de cerrar */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
           <div className="flex items-center gap-3">

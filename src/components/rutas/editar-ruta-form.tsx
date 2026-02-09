@@ -2,7 +2,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  X,
   AlertTriangle,
   CheckCircle,
   Plus,
@@ -17,6 +16,7 @@ import {
 } from "@/types";
 import { useEmbarcacionRutas } from "@/hooks/use-embarcacion-rutas";
 import SeleccionarEmbarcaciones from "./seleccionar-embarcaciones";
+import Modal from "@/components/ui/Modal";
 
 interface EditarRutaFormProps {
   isOpen: boolean;
@@ -96,8 +96,7 @@ export default function EditarRutaForm({
   const [nombreExiste, setNombreExiste] = useState(false);
   const [mensajeNombre, setMensajeNombre] = useState("");
 
-  // Refs para el control de scroll
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Ref para el control de scroll de embarcaciones
   const embarcacionesContainerRef = useRef<HTMLDivElement>(null);
 
   // Debug: Log de props recibidas
@@ -656,38 +655,115 @@ export default function EditarRutaForm({
     }, 100);
   }, [embarcaciones, ruta?.id]);
 
-  if (!isOpen || !ruta) return null;
+  if (!ruta) return null;
 
   const hayErroresValidacion =
     (validationErrors && validationErrors.length > 0 && !cambiosDesdeError) ||
     Object.keys(erroresValidacion).length > 0;
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-5xl w-full max-h-[95vh] flex flex-col shadow-2xl drop-shadow-2xl border border-slate-600/50">
-        {/* Header fijo */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl flex-shrink-0">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-100">
-              Editar Ruta
-            </h2>
-            <p className="text-sm text-slate-400 mt-1">
-              Paso {pasoActual} de 2:{" "}
-              {pasoActual === 1
-                ? "Información de la Ruta"
-                : "Asignación de Embarcaciones"}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+  // Determinar si hay cambios para el prop hasChanges del Modal
+  const hasChanges =
+    datosBasicos.nombre !== ruta.nombre ||
+    datosBasicos.puertoOrigen !== ruta.puertoOrigen ||
+    datosBasicos.puertoDestino !== ruta.puertoDestino ||
+    datosBasicos.precio !== ruta.precio ||
+    datosBasicos.activa !== ruta.activa ||
+    huboCambiosEmbarcaciones;
 
-        {/* Indicador de pasos */}
-        <div className="flex items-center justify-center p-4 border-b border-slate-600/30 bg-slate-700/30">
+  // Construir el footer del modal
+  const footerContent = (
+    <div className="flex justify-between w-full">
+      <div>
+        {pasoActual === 2 && (
+          <button
+            type="button"
+            onClick={handlePasoAnterior}
+            disabled={loading}
+            className="flex items-center space-x-2 px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Anterior</span>
+          </button>
+        )}
+      </div>
+
+      <div className="flex space-x-4">
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={loading}
+          className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+        >
+          Cancelar
+        </button>
+
+        {pasoActual === 1 ? (
+          <button
+            type="button"
+            onClick={(e) => handleSiguientePaso(e)}
+            disabled={
+              loading ||
+              !datosBasicos.nombre.trim() ||
+              !datosBasicos.puertoOrigen.trim() ||
+              !datosBasicos.puertoDestino.trim() ||
+              datosBasicos.precio <= 0 ||
+              datosBasicos.precio > 1000 ||
+              datosBasicos.precio.toString().replace(".", "").length > 4 ||
+              nombreExiste ||
+              trayectoExiste
+            }
+            className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+          >
+            <span>Siguiente</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            form="editar-ruta-form"
+            disabled={
+              loading || embarcaciones.length === 0 || hayErroresValidacion || hayErroresDisponibilidad
+            }
+            className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Guardando...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                <span>Actualizar Ruta</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Editar Ruta"
+      maxWidth="5xl"
+      hasChanges={hasChanges}
+      footer={footerContent}
+    >
+      {/* Subtitle con paso actual */}
+      <div className="px-6 pt-4">
+        <p className="text-sm text-slate-400">
+          Paso {pasoActual} de 2:{" "}
+          {pasoActual === 1
+            ? "Información de la Ruta"
+            : "Asignación de Embarcaciones"}
+        </p>
+      </div>
+
+      {/* Indicador de pasos */}
+      <div className="flex items-center justify-center p-4 border-b border-slate-600/30 bg-slate-700/30">
           <div className="flex items-center space-x-4">
             {/* Paso 1 */}
             <div className="flex items-center">
@@ -734,8 +810,7 @@ export default function EditarRutaForm({
           </div>
         </div>
 
-        {/* Contenido scrolleable principal */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+        {/* Contenido del formulario */}
           <div className="p-6">
             <form id="editar-ruta-form" onSubmit={handleSubmit}>
               {/* PASO 1: Información de la Ruta */}
@@ -1103,79 +1178,6 @@ export default function EditarRutaForm({
               )}
             </form>
           </div>
-        </div>
-
-        {/* Footer con botones de navegación */}
-        <div className="flex justify-between p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-b-2xl flex-shrink-0">
-          <div>
-            {pasoActual === 2 && (
-              <button
-                type="button"
-                onClick={handlePasoAnterior}
-                disabled={loading}
-                className="flex items-center space-x-2 px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Anterior</span>
-              </button>
-            )}
-          </div>
-
-          <div className="flex space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-            >
-              Cancelar
-            </button>
-
-            {pasoActual === 1 ? (
-              <button
-                type="button"
-                onClick={(e) => handleSiguientePaso(e)}
-                disabled={
-                  loading ||
-                  !datosBasicos.nombre.trim() ||
-                  !datosBasicos.puertoOrigen.trim() ||
-                  !datosBasicos.puertoDestino.trim() ||
-                  datosBasicos.precio <= 0 ||
-                  datosBasicos.precio > 1000 ||
-                  datosBasicos.precio.toString().replace(".", "").length > 4 ||
-                  nombreExiste ||
-                  trayectoExiste
-                }
-                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
-              >
-                <span>Siguiente</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                form="editar-ruta-form"
-                disabled={
-                  loading || embarcaciones.length === 0 || hayErroresValidacion || hayErroresDisponibilidad
-                }
-                className="flex items-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Actualizar Ruta</span>
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

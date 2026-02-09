@@ -1,8 +1,9 @@
 // components/usuarios/cambiar-contrasena-form.tsx
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { X, Eye, EyeOff, Key, AlertTriangle, Check } from "lucide-react";
+import { Eye, EyeOff, Key, AlertTriangle, Check } from "lucide-react";
 import { Usuario, ActualizarUsuarioData } from "@/types";
+import Modal from "@/components/ui/Modal";
 
 interface CambiarContrasenaFormProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ interface PasswordRequirement {
 const passwordRequirements: PasswordRequirement[] = [
   {
     id: "length",
-    label: "Mínimo 8 caracteres",
+    label: "Mínimo 12 caracteres",
     test: (password) => password.length >= 8,
   },
   {
@@ -148,7 +149,7 @@ export default function CambiarContrasenaForm({
   useEffect(() => {
     if (formulario.confirmarPassword.length > 0) {
       setPasswordsCoinciden(
-        formulario.password === formulario.confirmarPassword
+        formulario.password === formulario.confirmarPassword,
       );
     } else {
       setPasswordsCoinciden(true);
@@ -162,7 +163,7 @@ export default function CambiarContrasenaForm({
     }
   }, [isOpen]);
 
-  if (!isOpen || !usuario) return null;
+  if (!usuario) return null;
 
   const canSubmit =
     formulario.password &&
@@ -170,29 +171,53 @@ export default function CambiarContrasenaForm({
     allRequirementsPassed &&
     formulario.password === formulario.confirmarPassword;
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-md w-full max-h-[90vh] overflow-hidden shadow-2xl drop-shadow-2xl border border-slate-600/50 flex flex-col">
-        {/* Header fijo */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-600/50 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="bg-yellow-600 p-2 rounded-lg">
-              <Key className="h-5 w-5 text-white" />
-            </div>
-            <h2 className="text-xl font-semibold text-slate-100">
-              Cambiar Contraseña
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-all duration-200"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+  // Check if there are changes
+  const hasChanges = formulario.password !== "" || formulario.confirmarPassword !== "";
 
-        {/* Contenido scrollable */}
-        <div className="overflow-y-auto flex-1 p-6">
+  const footerContent = (
+    <div className="flex justify-end space-x-4">
+      <button
+        type="button"
+        onClick={onClose}
+        disabled={loading}
+        className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        form="cambiar-contrasena-form"
+        disabled={loading || !canSubmit}
+        className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
+      >
+        {loading ? (
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>Cambiando...</span>
+          </div>
+        ) : (
+          "Cambiar Contraseña"
+        )}
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Cambiar Contraseña"
+        icon={
+          <div className="bg-yellow-600 p-2 rounded-lg">
+            <Key className="h-5 w-5 text-white" />
+          </div>
+        }
+        maxWidth="md"
+        hasChanges={hasChanges}
+        footer={footerContent}
+      >
+        <div className="p-6">
           {/* Información del usuario */}
           <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
             <h3 className="text-sm font-medium text-slate-300 mb-2">
@@ -207,7 +232,11 @@ export default function CambiarContrasenaForm({
             </div>
           </div>
 
-          <form id="cambiar-contrasena-form" onSubmit={handleSubmitClick} className="space-y-6">
+          <form
+            id="cambiar-contrasena-form"
+            onSubmit={handleSubmitClick}
+            className="space-y-6"
+          >
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Nueva Contraseña *
@@ -271,22 +300,36 @@ export default function CambiarContrasenaForm({
                   {erroresValidacion.confirmarPassword}
                 </p>
               )}
-              {!passwordsCoinciden && formulario.confirmarPassword.length > 0 && (
-                <div className="mt-2 flex items-center space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
-                  <X className="h-4 w-4 text-red-400 flex-shrink-0" />
-                  <p className="text-xs text-red-300">
-                    Las contraseñas no coinciden
-                  </p>
-                </div>
-              )}
-              {passwordsCoinciden && formulario.confirmarPassword.length > 0 && (
-                <div className="mt-2 flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
-                  <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
-                  <p className="text-xs text-green-300">
-                    Las contraseñas coinciden
-                  </p>
-                </div>
-              )}
+              {!passwordsCoinciden &&
+                formulario.confirmarPassword.length > 0 && (
+                  <div className="mt-2 flex items-center space-x-2 bg-red-900/30 border border-red-700/50 rounded-lg p-2">
+                    <svg
+                      className="h-4 w-4 text-red-400 flex-shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    <p className="text-xs text-red-300">
+                      Las contraseñas no coinciden
+                    </p>
+                  </div>
+                )}
+              {passwordsCoinciden &&
+                formulario.confirmarPassword.length > 0 && (
+                  <div className="mt-2 flex items-center space-x-2 bg-green-900/30 border border-green-700/50 rounded-lg p-2">
+                    <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
+                    <p className="text-xs text-green-300">
+                      Las contraseñas coinciden
+                    </p>
+                  </div>
+                )}
             </div>
 
             {/* Validación en tiempo real de requisitos */}
@@ -333,36 +376,7 @@ export default function CambiarContrasenaForm({
             </div>
           </form>
         </div>
-
-        {/* Footer fijo */}
-        <div className="border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md p-6 flex-shrink-0">
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="px-6 py-3 border border-slate-600/50 rounded-xl text-slate-300 hover:bg-slate-700/50 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              form="cambiar-contrasena-form"
-              disabled={loading || !canSubmit}
-              className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white rounded-xl font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl active:shadow-lg shadow-lg"
-            >
-              {loading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Cambiando...</span>
-                </div>
-              ) : (
-                "Cambiar Contraseña"
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
+      </Modal>
 
       {/* Modal de confirmación */}
       {mostrarConfirmacion && (
@@ -379,7 +393,8 @@ export default function CambiarContrasenaForm({
               </div>
 
               <p className="text-slate-300 mb-6">
-                ¿Estás seguro de que deseas cambiar la contraseña de este usuario?
+                ¿Estás seguro de que deseas cambiar la contraseña de este
+                usuario?
                 <br />
                 <br />
                 <span className="text-sm text-slate-400">
@@ -387,7 +402,8 @@ export default function CambiarContrasenaForm({
                   <strong className="text-slate-200">
                     {usuario?.nombre} {usuario?.apellido}
                   </strong>{" "}
-                  deberá usar la nueva contraseña en su próximo inicio de sesión.
+                  deberá usar la nueva contraseña en su próximo inicio de
+                  sesión.
                 </span>
               </p>
 
@@ -420,6 +436,6 @@ export default function CambiarContrasenaForm({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
