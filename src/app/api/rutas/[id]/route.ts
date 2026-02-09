@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { actualizarRutaSchema } from "@/lib/validations/ruta";
 
 // GET - Obtener ruta por ID
 export async function GET(
@@ -60,7 +61,17 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { nombre, puertoOrigen, puertoDestino, precio, activa } = body;
+
+    const validacion = actualizarRutaSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
+      return NextResponse.json(
+        { error: primerError.message },
+        { status: 400 }
+      );
+    }
+
+    const { nombre, puertoOrigen, puertoDestino, precio, activa } = validacion.data;
 
     // Verificar que la ruta existe
     const rutaExistente = await prisma.ruta.findUnique({
@@ -75,11 +86,11 @@ export async function PUT(
     }
 
     // Si se está actualizando el nombre, verificar que no exista otra ruta con el mismo nombre
-    if (nombre && nombre.trim() !== rutaExistente.nombre) {
+    if (nombre && nombre !== rutaExistente.nombre) {
       const rutaConMismoNombre = await prisma.ruta.findFirst({
         where: {
           nombre: {
-            equals: nombre.trim(),
+            equals: nombre,
             mode: "insensitive",
           },
           id: {
@@ -96,47 +107,11 @@ export async function PUT(
       }
     }
 
-    // Validaciones de datos
-    if (nombre !== undefined && !nombre.trim()) {
-      return NextResponse.json(
-        { error: "El nombre de la ruta no puede estar vacío" },
-        { status: 400 }
-      );
-    }
-
-    if (puertoOrigen !== undefined && !puertoOrigen.trim()) {
-      return NextResponse.json(
-        { error: "El puerto de origen no puede estar vacío" },
-        { status: 400 }
-      );
-    }
-
-    if (puertoDestino !== undefined && !puertoDestino.trim()) {
-      return NextResponse.json(
-        { error: "El puerto de destino no puede estar vacío" },
-        { status: 400 }
-      );
-    }
-
-    if (precio !== undefined && precio <= 0) {
-      return NextResponse.json(
-        { error: "El precio debe ser mayor a 0" },
-        { status: 400 }
-      );
-    }
-
-    if (precio !== undefined && precio > 1000) {
-      return NextResponse.json(
-        { error: "El precio no puede ser mayor a 1000 soles" },
-        { status: 400 }
-      );
-    }
-
     // Validar puertos si se están actualizando
     const nuevoPuertoOrigen =
-      puertoOrigen?.trim() || rutaExistente.puertoOrigen;
+      puertoOrigen || rutaExistente.puertoOrigen;
     const nuevoPuertoDestino =
-      puertoDestino?.trim() || rutaExistente.puertoDestino;
+      puertoDestino || rutaExistente.puertoDestino;
 
     if (nuevoPuertoOrigen.toLowerCase() === nuevoPuertoDestino.toLowerCase()) {
       return NextResponse.json(
@@ -185,13 +160,13 @@ export async function PUT(
     const datosActualizados: Prisma.RutaUpdateInput = {};
 
     if (nombre !== undefined) {
-      datosActualizados.nombre = nombre.trim();
+      datosActualizados.nombre = nombre;
     }
     if (puertoOrigen !== undefined) {
-      datosActualizados.puertoOrigen = puertoOrigen.trim();
+      datosActualizados.puertoOrigen = puertoOrigen;
     }
     if (puertoDestino !== undefined) {
-      datosActualizados.puertoDestino = puertoDestino.trim();
+      datosActualizados.puertoDestino = puertoDestino;
     }
     if (precio !== undefined) {
       datosActualizados.precio = new Prisma.Decimal(precio);

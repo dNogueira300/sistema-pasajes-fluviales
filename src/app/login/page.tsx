@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { Eye, EyeOff, Ship, User, Lock, AlertCircle } from "lucide-react";
+import { sanitizeText } from "@/lib/utils/sanitize";
 
 export default function LoginPage() {
   const { status } = useSession();
@@ -53,15 +54,15 @@ export default function LoginPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      mostrarError("La contraseña debe tener al menos 6 caracteres.");
+    if (formData.password.length < 8) {
+      mostrarError("La contraseña debe tener al menos 8 caracteres.");
       setIsLoading(false);
       return;
     }
 
     try {
       const result = await signIn("credentials", {
-        email: formData.email.trim(),
+        email: sanitizeText(formData.email),
         password: formData.password,
         redirect: false,
       });
@@ -79,7 +80,7 @@ export default function LoginPage() {
             break;
           case "UserInactive":
             mostrarError(
-              "Tu cuenta está desactivada. Contacta al administrador."
+              "Tu cuenta está desactivada. Contacta al administrador.",
             );
             break;
           case "TooManyAttempts":

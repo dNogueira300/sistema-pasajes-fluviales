@@ -7,6 +7,7 @@ import {
   actualizarCliente,
   eliminarCliente,
 } from "@/lib/actions/clientes";
+import { actualizarClienteSchema } from "@/lib/validations/cliente";
 
 // GET - Obtener cliente por ID
 export async function GET(
@@ -54,24 +55,18 @@ export async function PUT(
     const params = await context.params;
     const clienteId = params.id;
     const body = await request.json();
+
+    const validacion = actualizarClienteSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
+      return NextResponse.json(
+        { error: primerError.message },
+        { status: 400 }
+      );
+    }
+
     const { dni, nombre, apellido, telefono, email, nacionalidad, direccion } =
-      body;
-
-    // Validaciones básicas
-    if (!dni || !nombre || !apellido) {
-      return NextResponse.json(
-        { error: "DNI, nombre y apellido son requeridos" },
-        { status: 400 }
-      );
-    }
-
-    // Validar formato de DNI
-    if (dni.length < 8) {
-      return NextResponse.json(
-        { error: "El DNI debe tener al menos 8 dígitos" },
-        { status: 400 }
-      );
-    }
+      validacion.data;
 
     const cliente = await actualizarCliente(clienteId, {
       dni,

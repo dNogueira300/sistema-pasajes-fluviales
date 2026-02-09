@@ -6,6 +6,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { validarCrearUsuario } from "@/lib/validations/usuario";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 // GET - Obtener usuarios con filtros y paginación
 export async function GET(request: NextRequest) {
@@ -18,7 +19,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     // Parámetros de filtrado
-    const busqueda = searchParams.get("busqueda");
+    const busquedaRaw = searchParams.get("busqueda");
+    const busqueda = busquedaRaw ? sanitizeSearch(busquedaRaw) : null;
     const role = searchParams.get("role");
     const activo = searchParams.get("activo");
     const page = parseInt(searchParams.get("page") || "1");

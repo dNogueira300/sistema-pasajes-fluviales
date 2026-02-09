@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getClientes, crearCliente } from "@/lib/actions/clientes";
+import { crearClienteSchema } from "@/lib/validations/cliente";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 // GET - Obtener clientes con filtros
 export async function GET(request: NextRequest) {
@@ -15,7 +17,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const filtros = {
-      busqueda: searchParams.get("busqueda"),
+      busqueda: searchParams.get("busqueda")
+        ? sanitizeSearch(searchParams.get("busqueda")!)
+        : null,
       nacionalidad: searchParams.get("nacionalidad"),
       page: parseInt(searchParams.get("page") || "1"),
       limit: parseInt(searchParams.get("limit") || "10"),
@@ -40,24 +44,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    const validacion = crearClienteSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
+      return NextResponse.json(
+        { error: primerError.message },
+        { status: 400 }
+      );
+    }
+
     const { dni, nombre, apellido, telefono, email, nacionalidad, direccion } =
-      body;
-
-    // Validaciones básicas
-    if (!dni || !nombre || !apellido) {
-      return NextResponse.json(
-        { error: "DNI, nombre y apellido son requeridos" },
-        { status: 400 }
-      );
-    }
-
-    // Validar formato de DNI
-    if (dni.length < 8) {
-      return NextResponse.json(
-        { error: "El DNI debe tener al menos 8 dígitos" },
-        { status: 400 }
-      );
-    }
+      validacion.data;
 
     const cliente = await crearCliente({
       dni,

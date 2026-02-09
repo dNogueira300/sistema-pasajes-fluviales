@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { actualizarEmbarcacionSchema } from "@/lib/validations/embarcacion";
 
 // GET - Obtener embarcación por ID
 export async function GET(
@@ -60,7 +61,17 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { nombre, capacidad, estado, tipo } = body;
+
+    const validacion = actualizarEmbarcacionSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
+      return NextResponse.json(
+        { error: primerError.message },
+        { status: 400 }
+      );
+    }
+
+    const { nombre, capacidad, estado, tipo } = validacion.data;
 
     // Verificar que la embarcación existe
     const embarcacionExistente = await prisma.embarcacion.findUnique({
@@ -75,11 +86,11 @@ export async function PUT(
     }
 
     // Si se está actualizando el nombre, verificar que no exista otra embarcación con el mismo nombre
-    if (nombre && nombre.trim() !== embarcacionExistente.nombre) {
+    if (nombre && nombre !== embarcacionExistente.nombre) {
       const embarcacionConMismoNombre = await prisma.embarcacion.findFirst({
         where: {
           nombre: {
-            equals: nombre.trim(),
+            equals: nombre,
             mode: "insensitive",
           },
           id: {
@@ -96,46 +107,20 @@ export async function PUT(
       }
     }
 
-    // Validaciones de datos
-    if (nombre !== undefined && !nombre.trim()) {
-      return NextResponse.json(
-        { error: "El nombre de la embarcación no puede estar vacío" },
-        { status: 400 }
-      );
-    }
-
-    if (capacidad !== undefined && capacidad <= 0) {
-      return NextResponse.json(
-        { error: "La capacidad debe ser mayor a 0" },
-        { status: 400 }
-      );
-    }
-
-    if (capacidad !== undefined && capacidad > 500) {
-      return NextResponse.json(
-        { error: "La capacidad no puede ser mayor a 500 pasajeros" },
-        { status: 400 }
-      );
-    }
-
-    if (estado && !["ACTIVA", "MANTENIMIENTO", "INACTIVA"].includes(estado)) {
-      return NextResponse.json({ error: "Estado no válido" }, { status: 400 });
-    }
-
     // Preparar datos de actualización con tipos explícitos de Prisma
     const datosActualizados: Prisma.EmbarcacionUpdateInput = {};
 
     if (nombre !== undefined) {
-      datosActualizados.nombre = nombre.trim();
+      datosActualizados.nombre = nombre;
     }
     if (capacidad !== undefined) {
-      datosActualizados.capacidad = parseInt(capacidad);
+      datosActualizados.capacidad = capacidad;
     }
     if (estado !== undefined) {
       datosActualizados.estado = estado;
     }
     if (tipo !== undefined) {
-      datosActualizados.tipo = tipo?.trim() || null;
+      datosActualizados.tipo = tipo || null;
     }
 
     const embarcacion = await prisma.embarcacion.update({

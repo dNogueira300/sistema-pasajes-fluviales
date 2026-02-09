@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { crearRutaSchema } from "@/lib/validations/ruta";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 // GET - Obtener rutas con filtros y paginación
 export async function GET(request: NextRequest) {
@@ -16,7 +18,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     // Parámetros de filtrado
-    const busqueda = searchParams.get("busqueda");
+    const busquedaRaw = searchParams.get("busqueda");
+    const busqueda = busquedaRaw ? sanitizeSearch(busquedaRaw) : null;
     const activa = searchParams.get("activa");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -110,61 +113,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { nombre, puertoOrigen, puertoDestino, precio, activa } = body;
 
-    // Validaciones
-    if (!nombre || nombre.trim().length === 0) {
+    const validacion = crearRutaSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
       return NextResponse.json(
-        { error: "El nombre de la ruta es requerido" },
+        { error: primerError.message },
         { status: 400 }
       );
     }
 
-    if (!puertoOrigen || puertoOrigen.trim().length === 0) {
-      return NextResponse.json(
-        { error: "El puerto de origen es requerido" },
-        { status: 400 }
-      );
-    }
-
-    if (!puertoDestino || puertoDestino.trim().length === 0) {
-      return NextResponse.json(
-        { error: "El puerto de destino es requerido" },
-        { status: 400 }
-      );
-    }
-
-    if (!precio || precio <= 0) {
-      return NextResponse.json(
-        { error: "El precio debe ser mayor a 0" },
-        { status: 400 }
-      );
-    }
-
-    if (precio > 1000) {
-      return NextResponse.json(
-        { error: "El precio no puede ser mayor a 1000 soles" },
-        { status: 400 }
-      );
-    }
-
-    // Validar que el puerto origen sea diferente al destino
-    if (
-      puertoOrigen.trim().toLowerCase() === puertoDestino.trim().toLowerCase()
-    ) {
-      return NextResponse.json(
-        {
-          error: "El puerto de origen debe ser diferente al puerto de destino",
-        },
-        { status: 400 }
-      );
-    }
+    const { nombre, puertoOrigen, puertoDestino, precio, activa } = validacion.data;
 
     // Verificar que no exista una ruta con el mismo nombre
     const rutaExistentePorNombre = await prisma.ruta.findFirst({
       where: {
         nombre: {
-          equals: nombre.trim(),
+          equals: nombre,
           mode: "insensitive",
         },
       },
@@ -183,13 +148,13 @@ export async function POST(request: NextRequest) {
         AND: [
           {
             puertoOrigen: {
-              equals: puertoOrigen.trim(),
+              equals: puertoOrigen,
               mode: "insensitive",
             },
           },
           {
             puertoDestino: {
-              equals: puertoDestino.trim(),
+              equals: puertoDestino,
               mode: "insensitive",
             },
           },
@@ -200,7 +165,7 @@ export async function POST(request: NextRequest) {
     if (rutaExistentePorTrayecto) {
       return NextResponse.json(
         {
-          error: `Ya existe una ruta con origen "${puertoOrigen.trim()}" y destino "${puertoDestino.trim()}". No se permiten rutas duplicadas con el mismo trayecto.`,
+          error: `Ya existe una ruta con origen "${puertoOrigen}" y destino "${puertoDestino}". No se permiten rutas duplicadas con el mismo trayecto.`,
         },
         { status: 400 }
       );
@@ -208,9 +173,9 @@ export async function POST(request: NextRequest) {
 
     // Preparar datos de creación con tipos explícitos
     const datosCreacion: Prisma.RutaCreateInput = {
-      nombre: nombre.trim(),
-      puertoOrigen: puertoOrigen.trim(),
-      puertoDestino: puertoDestino.trim(),
+      nombre,
+      puertoOrigen,
+      puertoDestino,
       precio: new Prisma.Decimal(precio),
       activa: activa !== undefined ? activa : true,
     };

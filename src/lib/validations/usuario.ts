@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { sanitizeText, sanitizeEmail } from "@/lib/utils/sanitize";
 
 // Validaciones comunes
 const emailSchema = z
   .string()
   .min(1, "El email es obligatorio")
   .email("Formato de email inválido")
-  .transform((val) => val.toLowerCase().trim());
+  .transform((val) => sanitizeEmail(val));
 
 const usernameSchema = z
   .string()
@@ -29,13 +30,13 @@ const nombreSchema = z
   .string()
   .min(2, "El nombre debe tener al menos 2 caracteres")
   .max(50, "El nombre no puede tener más de 50 caracteres")
-  .transform((val) => val.trim());
+  .transform((val) => sanitizeText(val));
 
 const apellidoSchema = z
   .string()
   .min(2, "El apellido debe tener al menos 2 caracteres")
   .max(50, "El apellido no puede tener más de 50 caracteres")
-  .transform((val) => val.trim());
+  .transform((val) => sanitizeText(val));
 
 const roleSchema = z.enum(
   ["ADMINISTRADOR", "VENDEDOR", "OPERADOR_EMBARCACION"],

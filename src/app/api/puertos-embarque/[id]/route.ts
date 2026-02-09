@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { actualizarPuertoSchema } from "@/lib/validations/puerto";
 
 // GET - Obtener puerto por ID
 export async function GET(
@@ -59,7 +60,17 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { nombre, descripcion, direccion, orden, activo } = body;
+
+    const validacion = actualizarPuertoSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
+      return NextResponse.json(
+        { error: primerError.message },
+        { status: 400 }
+      );
+    }
+
+    const { nombre, descripcion, direccion, orden, activo } = validacion.data;
 
     // Verificar que el puerto existe
     const puertoExistente = await prisma.puertoEmbarque.findUnique({
@@ -74,11 +85,11 @@ export async function PUT(
     }
 
     // Si se está actualizando el nombre, verificar que no exista otro puerto con el mismo nombre
-    if (nombre && nombre.trim() !== puertoExistente.nombre) {
+    if (nombre && nombre !== puertoExistente.nombre) {
       const puertoConMismoNombre = await prisma.puertoEmbarque.findFirst({
         where: {
           nombre: {
-            equals: nombre.trim(),
+            equals: nombre,
             mode: "insensitive",
           },
           id: {
@@ -99,19 +110,13 @@ export async function PUT(
     const datosActualizados: Prisma.PuertoEmbarqueUpdateInput = {};
 
     if (nombre !== undefined) {
-      if (!nombre.trim()) {
-        return NextResponse.json(
-          { error: "El nombre del puerto no puede estar vacío" },
-          { status: 400 }
-        );
-      }
-      datosActualizados.nombre = nombre.trim();
+      datosActualizados.nombre = nombre;
     }
     if (descripcion !== undefined) {
-      datosActualizados.descripcion = descripcion?.trim() || null;
+      datosActualizados.descripcion = descripcion || null;
     }
     if (direccion !== undefined) {
-      datosActualizados.direccion = direccion?.trim() || null;
+      datosActualizados.direccion = direccion || null;
     }
     if (orden !== undefined) {
       datosActualizados.orden = orden;

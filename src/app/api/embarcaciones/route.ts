@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { crearEmbarcacionSchema } from "@/lib/validations/embarcacion";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 // GET - Obtener embarcaciones con filtros y paginación
 export async function GET(request: NextRequest) {
@@ -16,7 +18,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     // Parámetros de filtrado
-    const busqueda = searchParams.get("busqueda");
+    const busquedaRaw = searchParams.get("busqueda");
+    const busqueda = busquedaRaw ? sanitizeSearch(busquedaRaw) : null;
     const estado = searchParams.get("estado");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
@@ -104,39 +107,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { nombre, capacidad, estado, tipo } = body;
 
-    // Validaciones
-    if (!nombre || nombre.trim().length === 0) {
+    const validacion = crearEmbarcacionSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
       return NextResponse.json(
-        { error: "El nombre de la embarcación es requerido" },
+        { error: primerError.message },
         { status: 400 }
       );
     }
 
-    if (!capacidad || capacidad <= 0) {
-      return NextResponse.json(
-        { error: "La capacidad debe ser mayor a 0" },
-        { status: 400 }
-      );
-    }
-
-    if (capacidad > 500) {
-      return NextResponse.json(
-        { error: "La capacidad no puede ser mayor a 500 pasajeros" },
-        { status: 400 }
-      );
-    }
-
-    if (estado && !["ACTIVA", "MANTENIMIENTO", "INACTIVA"].includes(estado)) {
-      return NextResponse.json({ error: "Estado no válido" }, { status: 400 });
-    }
+    const { nombre, capacidad, estado, tipo } = validacion.data;
 
     // Verificar que no exista una embarcación con el mismo nombre
     const embarcacionExistente = await prisma.embarcacion.findFirst({
       where: {
         nombre: {
-          equals: nombre.trim(),
+          equals: nombre,
           mode: "insensitive",
         },
       },
@@ -151,10 +138,10 @@ export async function POST(request: NextRequest) {
 
     // Preparar datos de creación con tipos explícitos
     const datosCreacion: Prisma.EmbarcacionCreateInput = {
-      nombre: nombre.trim(),
-      capacidad: parseInt(capacidad),
+      nombre,
+      capacidad,
       estado: estado || "ACTIVA",
-      tipo: tipo?.trim() || null,
+      tipo: tipo || null,
     };
 
     const embarcacion = await prisma.embarcacion.create({

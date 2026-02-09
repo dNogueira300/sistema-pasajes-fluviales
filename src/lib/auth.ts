@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@/types";
+import { sanitizeEmail } from "@/lib/utils/sanitize";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -31,11 +32,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          const sanitizedInput = sanitizeEmail(credentials.email);
+
           const user = await prisma.user.findFirst({
             where: {
               OR: [
-                { email: credentials.email, activo: true },
-                { username: credentials.email, activo: true },
+                { email: sanitizedInput, activo: true },
+                { username: sanitizedInput, activo: true },
               ],
             },
             select: {

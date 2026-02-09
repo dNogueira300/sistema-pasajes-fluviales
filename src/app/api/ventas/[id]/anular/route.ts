@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { anularVentaSchema } from "@/lib/validations/anulacion";
 
 export async function POST(
   request: NextRequest,
@@ -18,20 +19,21 @@ export async function POST(
     const ventaId = decodeURIComponent(params.id);
     const body = await request.json();
 
-    const {
-      motivo,
-      observaciones,
-      tipoAnulacion = "ANULACION",
-      montoReembolso,
-    } = body;
-
-    // Validación del motivo
-    if (!motivo || motivo.trim().length < 3) {
+    const validacion = anularVentaSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
       return NextResponse.json(
-        { error: "El motivo debe tener al menos 3 caracteres" },
+        { error: primerError.message },
         { status: 400 }
       );
     }
+
+    const {
+      motivo,
+      observaciones,
+      tipoAnulacion,
+      montoReembolso,
+    } = validacion.data;
 
     // Verificar que la venta existe
     const venta = await prisma.venta.findUnique({
@@ -124,8 +126,8 @@ export async function POST(
       const anulacion = await tx.anulacion.create({
         data: {
           ventaId,
-          motivo: motivo.trim(),
-          observaciones: observaciones?.trim(),
+          motivo,
+          observaciones: observaciones || undefined,
           usuarioId: session.user.id,
           asientosLiberados: venta.cantidadPasajes,
           montoReembolso: tipoAnulacion === "REEMBOLSO" ? montoReembolso : null,

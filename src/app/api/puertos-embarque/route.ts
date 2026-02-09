@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { crearPuertoSchema } from "@/lib/validations/puerto";
+import { sanitizeSearch } from "@/lib/utils/sanitize";
 
 // GET - Obtener puertos de embarque con filtros y paginación
 export async function GET(request: NextRequest) {
@@ -16,7 +18,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     // Parámetros de filtrado
-    const busqueda = searchParams.get("busqueda");
+    const busquedaRaw = searchParams.get("busqueda");
+    const busqueda = busquedaRaw ? sanitizeSearch(busquedaRaw) : null;
     const activo = searchParams.get("activo");
     const soloActivos = searchParams.get("solo_activos"); // Para compatibilidad con uso anterior
     const page = parseInt(searchParams.get("page") || "1");
@@ -125,21 +128,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { nombre, descripcion, direccion, orden, activo } = body;
 
-    // Validaciones
-    if (!nombre || nombre.trim().length === 0) {
+    const validacion = crearPuertoSchema.safeParse(body);
+    if (!validacion.success) {
+      const primerError = validacion.error.issues[0];
       return NextResponse.json(
-        { error: "El nombre del puerto es requerido" },
+        { error: primerError.message },
         { status: 400 }
       );
     }
+
+    const { nombre, descripcion, direccion, orden, activo } = validacion.data;
 
     // Verificar que no exista un puerto con el mismo nombre
     const puertoExistente = await prisma.puertoEmbarque.findFirst({
       where: {
         nombre: {
-          equals: nombre.trim(),
+          equals: nombre,
           mode: "insensitive",
         },
       },
@@ -154,9 +159,9 @@ export async function POST(request: NextRequest) {
 
     // Preparar datos de creación con tipos explícitos
     const datosCreacion: Prisma.PuertoEmbarqueCreateInput = {
-      nombre: nombre.trim(),
-      descripcion: descripcion?.trim() || null,
-      direccion: direccion?.trim() || null,
+      nombre,
+      descripcion: descripcion || null,
+      direccion: direccion || null,
       orden: orden || 0,
       activo: activo !== undefined ? activo : true,
     };

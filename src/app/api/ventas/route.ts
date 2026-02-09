@@ -9,6 +9,7 @@ import {
   buscarOCrearCliente,
 } from "@/lib/actions/ventas";
 import { EstadoVenta } from "@/types";
+import { sanitizeSearch, sanitizeText } from "@/lib/utils/sanitize";
 
 interface MetodoPago {
   tipo: string;
@@ -33,7 +34,9 @@ export async function GET(request: NextRequest) {
         ? new Date(searchParams.get("fechaFin")!)
         : undefined,
       estado: (searchParams.get("estado") as EstadoVenta) || undefined,
-      busqueda: searchParams.get("busqueda") || undefined,
+      busqueda: searchParams.get("busqueda")
+        ? sanitizeSearch(searchParams.get("busqueda")!)
+        : undefined,
       page: parseInt(searchParams.get("page") || "1"),
       limit: parseInt(searchParams.get("limit") || "10"),
       // Si no es admin, solo mostrar sus propias ventas
@@ -226,7 +229,7 @@ export async function POST(request: NextRequest) {
       tipoPago,
       metodoPago: tipoPago === "UNICO" ? metodoPago : "HIBRIDO",
       metodosPago: tipoPago === "HIBRIDO" ? metodosPago : null,
-      observaciones,
+      observaciones: observaciones ? sanitizeText(observaciones) : undefined,
     };
 
     // Crear la venta
