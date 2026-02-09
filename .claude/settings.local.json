@@ -16,7 +16,10 @@
       "Bash(npx next lint:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx vitest run)",
+      "Bash(curl:*)"
     ]
   }
 }
