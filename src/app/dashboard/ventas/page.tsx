@@ -28,7 +28,10 @@ import {
   TrendingUp,
   DollarSign,
   FileText,
+  Copy,
+  Eye,
 } from "lucide-react";
+import Modal from "@/components/ui/Modal";
 
 interface Filtros {
   fechaInicio: string;
@@ -862,11 +865,7 @@ export default function VentasPage() {
                 {ventas.map((venta) => (
                   <tr
                     key={venta.id}
-                    onClick={() => {
-                      setSelectedVenta(venta);
-                      setShowDetalles(true);
-                    }}
-                    className="hover:bg-slate-700/30 transition-colors align-top cursor-pointer"
+                    className="hover:bg-slate-700/30 transition-colors align-top"
                   >
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-100">
@@ -889,8 +888,23 @@ export default function VentasPage() {
                           maxLength={25}
                         />
                       </div>
-                      <div className="text-sm text-slate-400">
-                        Doc. Identidad: {venta.cliente.dni}
+                      <div className="text-sm text-slate-400 flex items-center">
+                        <span>Doc. Identidad: {venta.cliente.dni}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(venta.cliente.dni);
+                            mostrarNotificacion(
+                              "exito",
+                              "Doc. Identidad copiado",
+                              venta.cliente.dni
+                            );
+                          }}
+                          className="ml-1.5 p-0.5 text-slate-500 hover:text-blue-400 rounded transition-colors"
+                          title="Copiar Doc. Identidad"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -976,6 +990,18 @@ export default function VentasPage() {
                     {/* Columna de acciones actualizada */}
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end space-x-3">
+                        {/* Botón ver detalles */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedVenta(venta);
+                            setShowDetalles(true);
+                          }}
+                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700/50 rounded-xl transition-colors"
+                          title="Ver detalles"
+                        >
+                          <Eye className="h-5 w-5" />
+                        </button>
                         {/* Menú unificado de acciones (3 puntos) */}
                         <div className="relative">
                           <button
@@ -1191,201 +1217,15 @@ export default function VentasPage() {
       )}
 
       {/* Modal Detalles de Venta */}
-      {showDetalles && selectedVenta && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl drop-shadow-2xl border border-slate-600/50 flex flex-col">
-            {/* Header fijo */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-600/50 bg-slate-800/95 backdrop-blur-md rounded-t-2xl flex-shrink-0">
-              <h2 className="text-xl font-semibold text-slate-100">
-                Detalles de Venta - {selectedVenta.numeroVenta}
-              </h2>
-              <button
-                onClick={() => setShowDetalles(false)}
-                className="p-2 text-red-400 hover:bg-red-900/30 rounded-xl transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Contenido scrolleable */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="p-6 space-y-6">
-                {/* Información del cliente */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                    <User className="h-5 w-5 mr-2" />
-                    Cliente
-                  </h3>
-                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Nombre:</span>
-                      <span className="font-medium text-slate-100 text-right">
-                        {selectedVenta.cliente.nombre}{" "}
-                        {selectedVenta.cliente.apellido}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Doc. Identidad:</span>
-                      <span className="font-medium text-slate-100">
-                        {selectedVenta.cliente.dni}
-                      </span>
-                    </div>
-                    {selectedVenta.cliente.telefono && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-300">Teléfono:</span>
-                        <span className="font-medium text-slate-100">
-                          {selectedVenta.cliente.telefono}
-                        </span>
-                      </div>
-                    )}
-                    {selectedVenta.cliente.email && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-300">Email:</span>
-                        <span className="font-medium text-slate-100">
-                          {selectedVenta.cliente.email}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Información del viaje */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                    <MapPin className="h-5 w-5 mr-2" />
-                    Viaje
-                  </h3>
-                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Ruta:</span>
-                      <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                        {selectedVenta.puertoOrigen} -{" "}
-                        {selectedVenta.puertoDestino}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Embarcación:</span>
-                      <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                        {selectedVenta.embarcacion.nombre}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">
-                        Puerto de Embarque:
-                      </span>
-                      <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                        {selectedVenta.puertoEmbarque.nombre}
-                      </span>
-                    </div>
-                    {selectedVenta.puertoEmbarque.direccion && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-300">
-                          Dirección del Puerto:
-                        </span>
-                        <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                          {selectedVenta.puertoEmbarque.direccion}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Fecha de viaje:</span>
-                      <span className="font-medium text-slate-100">
-                        {formatearFechaViaje(selectedVenta.fechaViaje)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">
-                        Cantidad de pasajes:
-                      </span>
-                      <span className="font-medium text-slate-100">
-                        {selectedVenta.cantidadPasajes}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información de pago */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                    <CreditCard className="h-5 w-5 mr-2" />
-                    Pago
-                  </h3>
-                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Método de pago:</span>
-                      <div className="text-right">
-                        {selectedVenta.tipoPago === "HIBRIDO" &&
-                        selectedVenta.metodosPago ? (
-                          <div className="space-y-1">
-                            {selectedVenta.metodosPago.map((metodo, idx) => (
-                              <div
-                                key={idx}
-                                className="font-medium text-slate-100"
-                              >
-                                {metodo.tipo}: S/ {metodo.monto.toFixed(2)}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="font-medium text-slate-100">
-                            {selectedVenta.metodoPago}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Total:</span>
-                      <span className="font-bold text-xl text-slate-100">
-                        S/ {selectedVenta.total.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Estado:</span>
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-xl text-sm font-medium border ${getEstadoColor(
-                          selectedVenta.estado
-                        )}`}
-                      >
-                        {selectedVenta.estado}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información adicional */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
-                    <Clock className="h-5 w-5 mr-2" />
-                    Información Adicional
-                  </h3>
-                  <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Fecha de venta:</span>
-                      <span className="font-medium text-slate-100">
-                        {new Date(selectedVenta.fechaVenta).toLocaleString(
-                          "es-PE"
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-300">Vendedor:</span>
-                      <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
-                        {selectedVenta.vendedor.nombre}{" "}
-                        {selectedVenta.vendedor.apellido}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Espaciado adicional para evitar que el contenido se oculte detrás del footer */}
-                <div className="h-6"></div>
-              </div>
-            </div>
-
-            {/* Footer fijo */}
-            <div className="flex justify-end space-x-4 p-6 border-t border-slate-600/50 bg-slate-800/95 backdrop-blur-md flex-shrink-0 rounded-b-2xl">
+      {selectedVenta && (
+        <Modal
+          isOpen={showDetalles}
+          onClose={() => setShowDetalles(false)}
+          title={`Detalles de Venta - ${selectedVenta.numeroVenta}`}
+          icon={<FileText className="h-5 w-5 text-blue-400" />}
+          maxWidth="4xl"
+          footer={
+            <div className="flex justify-end space-x-4">
               <div className="relative" ref={dropdownRef}>
                 <button
                   className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg transition-all duration-200"
@@ -1398,10 +1238,8 @@ export default function VentasPage() {
                   <span>Opciones</span>
                 </button>
 
-                {/* Menú desplegable de opciones completo */}
                 {showDropdown && (
                   <div className="absolute right-0 bottom-full mb-2 bg-slate-800/95 border border-slate-600/50 rounded-xl shadow-xl overflow-hidden z-50 w-48 backdrop-blur-sm">
-                    {/* Opciones de impresión */}
                     <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
                       Imprimir
                     </div>
@@ -1426,10 +1264,8 @@ export default function VentasPage() {
                       Comprobante A4
                     </button>
 
-                    {/* Separador */}
                     <div className="border-t border-slate-600/50"></div>
 
-                    {/* Opciones de descarga */}
                     <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wide bg-slate-700/50">
                       Descargar
                     </div>
@@ -1460,9 +1296,7 @@ export default function VentasPage() {
               {selectedVenta.estado === "CONFIRMADA" && (
                 <button
                   onClick={() => {
-                    // Cerrar el modal de detalles primero
                     setShowDetalles(false);
-                    // Abrir el modal de anulación
                     handleAnularVenta(selectedVenta);
                   }}
                   className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-lg transition-all duration-200"
@@ -1472,8 +1306,179 @@ export default function VentasPage() {
                 </button>
               )}
             </div>
+          }
+        >
+          <div className="p-6 space-y-6">
+            {/* Información del cliente */}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                <User className="h-5 w-5 mr-2" />
+                Cliente
+              </h3>
+              <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Nombre:</span>
+                  <span className="font-medium text-slate-100 text-right">
+                    {selectedVenta.cliente.nombre}{" "}
+                    {selectedVenta.cliente.apellido}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Doc. Identidad:</span>
+                  <span className="font-medium text-slate-100">
+                    {selectedVenta.cliente.dni}
+                  </span>
+                </div>
+                {selectedVenta.cliente.telefono && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-300">Teléfono:</span>
+                    <span className="font-medium text-slate-100">
+                      {selectedVenta.cliente.telefono}
+                    </span>
+                  </div>
+                )}
+                {selectedVenta.cliente.email && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-300">Email:</span>
+                    <span className="font-medium text-slate-100">
+                      {selectedVenta.cliente.email}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Información del viaje */}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                <MapPin className="h-5 w-5 mr-2" />
+                Viaje
+              </h3>
+              <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Ruta:</span>
+                  <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                    {selectedVenta.puertoOrigen} -{" "}
+                    {selectedVenta.puertoDestino}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Embarcación:</span>
+                  <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                    {selectedVenta.embarcacion.nombre}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-slate-300">
+                    Puerto de Embarque:
+                  </span>
+                  <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                    {selectedVenta.puertoEmbarque.nombre}
+                  </span>
+                </div>
+                {selectedVenta.puertoEmbarque.direccion && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-300">
+                      Dirección del Puerto:
+                    </span>
+                    <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                      {selectedVenta.puertoEmbarque.direccion}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Fecha de viaje:</span>
+                  <span className="font-medium text-slate-100">
+                    {formatearFechaViaje(selectedVenta.fechaViaje)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-300">
+                    Cantidad de pasajes:
+                  </span>
+                  <span className="font-medium text-slate-100">
+                    {selectedVenta.cantidadPasajes}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Información de pago */}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                <CreditCard className="h-5 w-5 mr-2" />
+                Pago
+              </h3>
+              <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Método de pago:</span>
+                  <div className="text-right">
+                    {selectedVenta.tipoPago === "HIBRIDO" &&
+                    selectedVenta.metodosPago ? (
+                      <div className="space-y-1">
+                        {selectedVenta.metodosPago.map((metodo, idx) => (
+                          <div
+                            key={idx}
+                            className="font-medium text-slate-100"
+                          >
+                            {metodo.tipo}: S/ {metodo.monto.toFixed(2)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="font-medium text-slate-100">
+                        {selectedVenta.metodoPago}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Total:</span>
+                  <span className="font-bold text-xl text-slate-100">
+                    S/ {selectedVenta.total.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Estado:</span>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-xl text-sm font-medium border ${getEstadoColor(
+                      selectedVenta.estado
+                    )}`}
+                  >
+                    {selectedVenta.estado}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Información adicional */}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-100 mb-3 flex items-center">
+                <Clock className="h-5 w-5 mr-2" />
+                Información Adicional
+              </h3>
+              <div className="bg-slate-700/50 rounded-xl p-4 space-y-3 backdrop-blur-sm border border-slate-600/50">
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Fecha de venta:</span>
+                  <span className="font-medium text-slate-100">
+                    {new Date(selectedVenta.fechaVenta).toLocaleString(
+                      "es-PE"
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-300">Vendedor:</span>
+                  <span className="font-medium text-slate-100 text-right max-w-[60%] break-words">
+                    {selectedVenta.vendedor.nombre}{" "}
+                    {selectedVenta.vendedor.apellido}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Modal Anular Venta */}
