@@ -294,7 +294,7 @@ export default function LoginPage() {
               <span>Jr. Fitzcarrald 513, Iquitos, Loreto</span>
             </p>
             <p className="mt-2 text-xs text-slate-500">
-              © 2025 Alto Impacto Travel
+              © {new Date().getFullYear()} Alto Impacto Travel
             </p>
             <div className="flex items-center justify-center mt-2 space-x-4 text-xs">
               <div className="flex items-center space-x-1">
