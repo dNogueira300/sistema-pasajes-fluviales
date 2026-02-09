@@ -9,7 +9,7 @@ import {
   Save,
   Building2,
   //CreditCard,
-  Database,
+  //Database,
   Phone,
   Mail,
   MapPin,
@@ -119,12 +119,12 @@ export default function ConfiguracionPage() {
     setConfig((prev) => ({ ...prev, [campo]: valor }));
   };
 
-  const toggleMetodoPago = (metodo: keyof ConfigData) => {
-    setConfig((prev) => ({
-      ...prev,
-      [metodo]: prev[metodo] === "true" ? "false" : "true",
-    }));
-  };
+  // const toggleMetodoPago = (metodo: keyof ConfigData) => {
+  //   setConfig((prev) => ({
+  //     ...prev,
+  //     [metodo]: prev[metodo] === "true" ? "false" : "true",
+  //   }));
+  // };
 
   if (loading) {
     return (
@@ -356,7 +356,7 @@ export default function ConfiguracionPage() {
           </div> */}
 
           {/* Backup Automático */}
-          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-6">
+          {/* <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-6">
             <div className="flex items-center mb-6">
               <div className="bg-purple-600 p-2 rounded-lg mr-3">
                 <Database className="h-5 w-5 text-white" />
@@ -367,7 +367,6 @@ export default function ConfiguracionPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Habilitar/Deshabilitar */}
               <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl">
                 <div>
                   <h3 className="font-medium text-slate-100">
@@ -400,7 +399,6 @@ export default function ConfiguracionPage() {
 
               {config.BACKUP_AUTOMATICO_HABILITADO === "true" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Frecuencia */}
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                       Frecuencia (días)
@@ -419,7 +417,6 @@ export default function ConfiguracionPage() {
                     </select>
                   </div>
 
-                  {/* Hora */}
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                       Hora de Ejecución
@@ -436,7 +433,7 @@ export default function ConfiguracionPage() {
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Botón Guardar */}
           <div className="flex justify-end">
