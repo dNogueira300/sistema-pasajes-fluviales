@@ -90,7 +90,7 @@ const navigation: NavItem[] = [
     name: "Reportes",
     href: "/dashboard/reportes",
     icon: BarChart3,
-    roles: ["ADMINISTRADOR", "VENDEDOR"],
+    roles: ["ADMINISTRADOR"],
     description: "Reportes y estadísticas",
   },
   {
@@ -139,7 +139,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   // Filtrar navegación basada en roles
   const filteredNavigation = navigation.filter(
-    (item) => !item.roles || hasAnyRole(item.roles)
+    (item) => !item.roles || hasAnyRole(item.roles),
   );
 
   return (
@@ -160,10 +160,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           isMobile
             ? cn(
                 "fixed top-0 left-0 z-50 w-64",
-                isOpen ? "translate-x-0" : "-translate-x-full"
+                isOpen ? "translate-x-0" : "-translate-x-full",
               )
             : // En desktop: comportamiento normal con collapse
-              cn("relative", isOpen ? "w-64" : "w-16")
+              cn("relative", isOpen ? "w-64" : "w-16"),
         )}
       >
         <div className="flex flex-col h-full">
@@ -175,13 +175,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 "bg-blue-600 rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-300",
                 isMobile || isOpen
                   ? "p-4 mb-4 rounded-2xl"
-                  : "p-2 mb-2 rounded-lg"
+                  : "p-2 mb-2 rounded-lg",
               )}
             >
               <Ship
                 className={cn(
                   "text-white transition-all duration-300",
-                  isMobile || isOpen ? "h-10 w-10" : "h-6 w-6"
+                  isMobile || isOpen ? "h-10 w-10" : "h-6 w-6",
                 )}
               />
             </div>
@@ -216,7 +216,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     "px-4 py-3.5 rounded-xl text-base font-semibold transition-all duration-200",
                     isActive
                       ? "bg-blue-600/20 text-blue-300 shadow-lg shadow-blue-600/10"
-                      : "text-slate-300 hover:bg-slate-800/50 hover:text-slate-100"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-slate-100",
                   )}
                   title={!isMobile && !isOpen ? item.description : undefined}
                 >
@@ -225,7 +225,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       "flex-shrink-0 h-6 w-6",
                       isActive
                         ? "text-blue-400"
-                        : "text-slate-400 group-hover:text-slate-200"
+                        : "text-slate-400 group-hover:text-slate-200",
                     )}
                   />
                   {(isMobile || isOpen) && (
@@ -246,7 +246,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="px-4 pb-4">
               <div className="text-sm text-slate-500 text-center space-y-1">
                 <p className="font-semibold">Sistema v1.0.0</p>
-                <p className="text-xs">© {new Date().getFullYear()} Alto Impacto Travel</p>
+                <p className="text-xs">
+                  © {new Date().getFullYear()} Alto Impacto Travel
+                </p>
               </div>
             </div>
           )}
