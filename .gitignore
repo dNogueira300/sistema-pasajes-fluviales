@@ -44,6 +44,9 @@ actualizar_flujoVentas.md
 # Claude
 .CLAUDE.md
 
+# Documentación interna
+ESTANDARES_DESARROLLO.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

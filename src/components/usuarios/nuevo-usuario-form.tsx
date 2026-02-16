@@ -61,7 +61,8 @@ export default function NuevoUsuarioForm({
   onSubmit,
   loading = false,
 }: NuevoUsuarioFormProps) {
-  const [formulario, setFormulario] = useState<CrearUsuarioData>(initialFormulario);
+  const [formulario, setFormulario] =
+    useState<CrearUsuarioData>(initialFormulario);
 
   const [erroresValidacion, setErroresValidacion] = useState<{
     [key: string]: string;
@@ -251,7 +252,8 @@ export default function NuevoUsuarioForm({
     formulario.apellido !== initialFormulario.apellido ||
     formulario.role !== initialFormulario.role ||
     formulario.activo !== initialFormulario.activo ||
-    formulario.embarcacionAsignadaId !== initialFormulario.embarcacionAsignadaId ||
+    formulario.embarcacionAsignadaId !==
+      initialFormulario.embarcacionAsignadaId ||
     formulario.estadoOperador !== initialFormulario.estadoOperador ||
     confirmarContrasena !== "";
 
@@ -369,6 +371,35 @@ export default function NuevoUsuarioForm({
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Username *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formulario.username}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value.toLowerCase())
+                  }
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                    erroresValidacion.username
+                      ? "border-red-500/50 focus:border-red-500"
+                      : "border-slate-600/50 focus:border-blue-500"
+                  }`}
+                  placeholder="usuario123"
+                />
+                {erroresValidacion.username && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.username}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-slate-400">
+                  Mínimo 3 caracteres, se convertirá a minúsculas
+                  automáticamente
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Email *
                 </label>
                 <input
@@ -390,38 +421,6 @@ export default function NuevoUsuarioForm({
                     {erroresValidacion.email}
                   </p>
                 )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Username *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formulario.username}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "username",
-                      e.target.value.toLowerCase(),
-                    )
-                  }
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                    erroresValidacion.username
-                      ? "border-red-500/50 focus:border-red-500"
-                      : "border-slate-600/50 focus:border-blue-500"
-                  }`}
-                  placeholder="usuario123"
-                />
-                {erroresValidacion.username && (
-                  <p className="mt-1 text-sm text-red-400">
-                    {erroresValidacion.username}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-slate-400">
-                  Mínimo 3 caracteres, se convertirá a minúsculas
-                  automáticamente
-                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -636,8 +635,8 @@ export default function NuevoUsuarioForm({
                   <div className="space-y-1">
                     <div>
                       <strong>Administrador:</strong> Acceso completo al
-                      sistema, puede gestionar usuarios, embarcaciones, rutas
-                      y ventas
+                      sistema, puede gestionar usuarios, embarcaciones, rutas y
+                      ventas
                     </div>
                     <div>
                       <strong>Vendedor:</strong> Puede realizar ventas,
@@ -645,8 +644,7 @@ export default function NuevoUsuarioForm({
                     </div>
                     <div>
                       <strong>Operador de Embarcación:</strong> Control de
-                      embarque y gestión de pasajeros en la embarcación
-                      asignada
+                      embarque y gestión de pasajeros en la embarcación asignada
                     </div>
                   </div>
                 </div>
@@ -713,9 +711,7 @@ export default function NuevoUsuarioForm({
                           }
                           className="w-4 h-4 text-red-600 bg-slate-700 border-slate-600 focus:ring-red-500"
                         />
-                        <span className="text-sm text-slate-400">
-                          Inactivo
-                        </span>
+                        <span className="text-sm text-slate-400">Inactivo</span>
                       </label>
                     </div>
                     <p className="mt-1 text-xs text-slate-400">

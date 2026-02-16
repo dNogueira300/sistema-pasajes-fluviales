@@ -1,7 +1,13 @@
 // components/usuarios/editar-usuario-form.tsx
 "use client";
 import { useState, useEffect, Fragment } from "react";
-import { ChevronsUpDown, Check, AlertTriangle, Ship, Edit3 } from "lucide-react";
+import {
+  ChevronsUpDown,
+  Check,
+  AlertTriangle,
+  Ship,
+  Edit3,
+} from "lucide-react";
 import { Listbox, Transition } from "@headlessui/react";
 import { Usuario, UserRole, ActualizarUsuarioData } from "@/types";
 import EmbarcacionSelector from "@/components/operadores/EmbarcacionSelector";
@@ -86,7 +92,8 @@ export default function EditarUsuarioForm({
         role: usuario.role,
         activo: usuario.activo,
         embarcacionAsignadaId: usuario.embarcacionAsignadaId || null,
-        estadoOperador: (usuario.estadoOperador as "ACTIVO" | "INACTIVO") || "ACTIVO",
+        estadoOperador:
+          (usuario.estadoOperador as "ACTIVO" | "INACTIVO") || "ACTIVO",
       });
       setErroresValidacion({});
     }
@@ -160,7 +167,7 @@ export default function EditarUsuarioForm({
 
   const handleInputChange = (
     field: keyof ActualizarUsuarioData,
-    value: string | UserRole | boolean
+    value: string | UserRole | boolean,
   ) => {
     setFormulario((prev) => ({
       ...prev,
@@ -239,16 +246,17 @@ export default function EditarUsuarioForm({
     rolesUsuario.find((r) => r.id === formulario.role) || rolesUsuario[0];
 
   // Check if there are changes compared to original usuario
-  const hasChanges = usuario && (
-    formulario.email !== usuario.email ||
-    formulario.username !== usuario.username ||
-    formulario.nombre !== usuario.nombre ||
-    formulario.apellido !== usuario.apellido ||
-    formulario.role !== usuario.role ||
-    formulario.activo !== usuario.activo ||
-    formulario.embarcacionAsignadaId !== (usuario.embarcacionAsignadaId || null) ||
-    formulario.estadoOperador !== (usuario.estadoOperador || "ACTIVO")
-  );
+  const hasChanges =
+    usuario &&
+    (formulario.email !== usuario.email ||
+      formulario.username !== usuario.username ||
+      formulario.nombre !== usuario.nombre ||
+      formulario.apellido !== usuario.apellido ||
+      formulario.role !== usuario.role ||
+      formulario.activo !== usuario.activo ||
+      formulario.embarcacionAsignadaId !==
+        (usuario.embarcacionAsignadaId || null) ||
+      formulario.estadoOperador !== (usuario.estadoOperador || "ACTIVO"));
 
   const footerContent = (
     <div className="flex justify-end space-x-4">
@@ -362,6 +370,35 @@ export default function EditarUsuarioForm({
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Username *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formulario.username || ""}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value.toLowerCase())
+                  }
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
+                    erroresValidacion.username
+                      ? "border-red-500/50 focus:border-red-500"
+                      : "border-slate-600/50 focus:border-blue-500"
+                  }`}
+                  placeholder="usuario123"
+                />
+                {erroresValidacion.username && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {erroresValidacion.username}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-slate-400">
+                  Mínimo 3 caracteres, se convertirá a minúsculas
+                  automáticamente
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Email *
                 </label>
                 <input
@@ -383,38 +420,6 @@ export default function EditarUsuarioForm({
                     {erroresValidacion.email}
                   </p>
                 )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Username *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formulario.username || ""}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "username",
-                      e.target.value.toLowerCase()
-                    )
-                  }
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-700/50 text-slate-100 placeholder-slate-400 backdrop-blur-sm transition-all duration-200 ${
-                    erroresValidacion.username
-                      ? "border-red-500/50 focus:border-red-500"
-                      : "border-slate-600/50 focus:border-blue-500"
-                  }`}
-                  placeholder="usuario123"
-                />
-                {erroresValidacion.username && (
-                  <p className="mt-1 text-sm text-red-400">
-                    {erroresValidacion.username}
-                  </p>
-                )}
-                <p className="mt-1 text-xs text-slate-400">
-                  Mínimo 3 caracteres, se convertirá a minúsculas
-                  automáticamente
-                </p>
               </div>
 
               <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-xl p-4">
@@ -515,8 +520,8 @@ export default function EditarUsuarioForm({
                   <div className="space-y-1">
                     <div>
                       <strong>Administrador:</strong> Acceso completo al
-                      sistema, puede gestionar usuarios, embarcaciones, rutas
-                      y ventas
+                      sistema, puede gestionar usuarios, embarcaciones, rutas y
+                      ventas
                     </div>
                     <div>
                       <strong>Vendedor:</strong> Puede realizar ventas,
@@ -603,7 +608,9 @@ export default function EditarUsuarioForm({
                   {/* Info de embarcación actual si existe */}
                   {usuario?.embarcacionAsignada && (
                     <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-600/30">
-                      <p className="text-xs text-slate-400 mb-1">Embarcación actual:</p>
+                      <p className="text-xs text-slate-400 mb-1">
+                        Embarcación actual:
+                      </p>
                       <p className="text-sm text-slate-200 font-medium">
                         {usuario.embarcacionAsignada.nombre}
                         <span className="text-slate-400 font-normal ml-2">
@@ -645,13 +652,11 @@ export default function EditarUsuarioForm({
                 <div className="text-xs text-blue-200 space-y-1">
                   <div>Ventas realizadas: {usuario._count?.ventas ?? 0}</div>
                   <div>
-                    Anulaciones registradas:{" "}
-                    {usuario._count?.anulaciones ?? 0}
+                    Anulaciones registradas: {usuario._count?.anulaciones ?? 0}
                   </div>
                   <div className="mt-2 text-blue-300">
                     <strong>Nota:</strong> Desactivar este usuario no afectará
-                    las ventas existentes, pero le impedirá acceder al
-                    sistema.
+                    las ventas existentes, pero le impedirá acceder al sistema.
                   </div>
                 </div>
               </div>
@@ -724,7 +729,8 @@ export default function EditarUsuarioForm({
               </div>
 
               <p className="text-slate-300 mb-4">
-                ¿Estás seguro de que deseas actualizar los datos de este usuario?
+                ¿Estás seguro de que deseas actualizar los datos de este
+                usuario?
               </p>
 
               <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
@@ -741,23 +747,32 @@ export default function EditarUsuarioForm({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Username:</span>
-                    <span className="text-slate-200">@{formulario.username}</span>
+                    <span className="text-slate-200">
+                      @{formulario.username}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Rol:</span>
-                    <span className={`font-medium ${
-                      formulario.role === "ADMINISTRADOR"
-                        ? "text-purple-400"
-                        : formulario.role === "OPERADOR_EMBARCACION"
-                        ? "text-green-400"
-                        : "text-blue-400"
-                    }`}>
-                      {rolesUsuario.find(r => r.id === formulario.role)?.nombre || formulario.role}
+                    <span
+                      className={`font-medium ${
+                        formulario.role === "ADMINISTRADOR"
+                          ? "text-purple-400"
+                          : formulario.role === "OPERADOR_EMBARCACION"
+                            ? "text-green-400"
+                            : "text-blue-400"
+                      }`}
+                    >
+                      {rolesUsuario.find((r) => r.id === formulario.role)
+                        ?.nombre || formulario.role}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Estado:</span>
-                    <span className={formulario.activo ? "text-green-400" : "text-red-400"}>
+                    <span
+                      className={
+                        formulario.activo ? "text-green-400" : "text-red-400"
+                      }
+                    >
                       {formulario.activo ? "Activo" : "Inactivo"}
                     </span>
                   </div>
