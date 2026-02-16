@@ -171,8 +171,8 @@ export async function crearUsuario(datos: CrearUsuarioData): Promise<Usuario> {
     throw new Error("El username debe tener al menos 3 caracteres");
   }
 
-  if (!datos.password || datos.password.length < 8) {
-    throw new Error("La contraseña debe tener al menos 8 caracteres");
+  if (!datos.password || datos.password.length < 12) {
+    throw new Error("La contraseña debe tener al menos 12 caracteres");
   }
 
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
@@ -289,8 +289,8 @@ export async function actualizarUsuario(
   // Validar contraseña si se proporciona
   let hashedPassword: string | undefined;
   if (datos.password) {
-    if (datos.password.length < 8) {
-      throw new Error("La contraseña debe tener al menos 8 caracteres");
+    if (datos.password.length < 12) {
+      throw new Error("La contraseña debe tener al menos 12 caracteres");
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;

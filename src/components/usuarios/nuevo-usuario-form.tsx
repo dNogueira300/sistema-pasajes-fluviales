@@ -105,8 +105,8 @@ export default function NuevoUsuarioForm({
     // Validar contraseña
     if (!formulario.password) {
       errores.password = "La contraseña es obligatoria";
-    } else if (formulario.password.length < 8) {
-      errores.password = "La contraseña debe tener al menos 8 caracteres";
+    } else if (formulario.password.length < 12) {
+      errores.password = "La contraseña debe tener al menos 12 caracteres";
     } else {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/;
       if (!passwordRegex.test(formulario.password)) {

@@ -54,8 +54,8 @@ export default function LoginPage() {
       return;
     }
 
-    if (formData.password.length < 8) {
-      mostrarError("La contraseña debe tener al menos 8 caracteres.");
+    if (formData.password.length < 12) {
+      mostrarError("La contraseña debe tener al menos 12 caracteres.");
       setIsLoading(false);
       return;
     }

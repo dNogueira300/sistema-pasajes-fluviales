@@ -188,9 +188,9 @@ export async function PUT(
     // Validar contraseña si se proporciona
     let hashedPassword: string | undefined;
     if (password) {
-      if (password.length < 8) {
+      if (password.length < 12) {
         return NextResponse.json(
-          { error: "La contraseña debe tener al menos 8 caracteres" },
+          { error: "La contraseña debe tener al menos 12 caracteres" },
           { status: 400 }
         );
       }

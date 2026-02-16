@@ -24,7 +24,7 @@ const passwordRequirements: PasswordRequirement[] = [
   {
     id: "length",
     label: "Mínimo 12 caracteres",
-    test: (password) => password.length >= 8,
+    test: (password) => password.length >= 12,
   },
   {
     id: "uppercase",
